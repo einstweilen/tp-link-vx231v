@@ -12,16 +12,35 @@ As I haven't found any VX231v specific documention I ended up using Google Gemin
 * Set a password for 'superadmin'
 * enter your ISP credentials, and head to Advanced > System.
 
-You should now see three additional sub menus:
+You should now see three additional sub menus
 
-* CWMP Settings
-* TR369 Settings
-* SNMP Settings
+<img src="images/new-sub-00.jpg" alt="new menu items Screenshot">
+
+<details>
+  <summary><b>CWMP Settings</b> (Click to show screenshot)</summary>
+  <br>
+  <img src="images/cwmp-00.jpg" alt="CWMP Settings Screenshot" width="800">
+</details>
+
+<details>
+  <summary><b>TR369 Settings</b> (Click to show screenshot)</summary>
+  <br>
+  <img src="images/tr369-00.jpg" alt="TR369 Settings Screenshot" width="800">
+</details>
+
+<details>
+  <summary><b>SNMP Settings</b> (Click to show screenshot)</summary>
+  <br>
+  <img src="images/snmp-00.jpg" alt="SNMP Settings Screenshot" width="800">
+</details>
 
 * Go to **SNMP Settings** and enable the SNMP Agent. But make sure to disable it for WAN.
 Set your Community Strings for Read-only and Write access.
 
-* Go to the **Administration** menu, select the standard user from the dropdown, and set a login password. After that, you can log in normally via the standard IP or use the /superuser path for full access.
+* Go to the **Administration** menu, select the standard user from the dropdown, and set a login password.<details>
+  <img src="images/account-00.jpg" alt="SNMP Settings Screenshot" width="800">
+</details>
+After that, you can log in normally via the standard IP or use the /superuser path for full access.
 
 ## SNMP Python Demo 
 [Check out the SNMP demo script](vx231v-snmp-demo.py). The script lists the connected clients and monitors real-time throughput data and is tested on macos 26.
