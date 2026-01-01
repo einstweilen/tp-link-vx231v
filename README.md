@@ -1,4 +1,4 @@
-# Activate superadmin and SNMP on VX231v
+# Activate superadmin and SNMP on TP-Link VX231v
 __Warning: You can only activate the superadmin account right after a factory reset. This will wipe all your settings!__
 
 I was looking for a simple way to monitor connected clients and real-time traffic.
