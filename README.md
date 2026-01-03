@@ -1,6 +1,6 @@
 # Enabling Superadmin and SNMP on TP-Link VX231v
 
-I sought a simple method to monitor connected clients and real-time traffic.
+I was looking for an easy way to monitor connected clients and real-time traffic.
 
 The PDF manual for the VX231v [VX231v(DE)_UG_REV1.0.0.pdf](https://static.tp-link.com/upload/manual/2024/202408/20240816/1910020944_VX231v%28DE%29_UG_REV1.0.0.pdf) covers **SNMP Settings** in chapter 17.10.
 But these options are inaccessible to **standard users**. To use SNMP features, the **superadmin** account must be activated.
