@@ -1,9 +1,11 @@
-# Activate superadmin and SNMP on TP-Link VX231v
+# Enabling Superadmin and SNMP on TP-Link VX231v
+
+I sought a simple method to monitor connected clients and real-time traffic.
+
+The PDF manual for the VX231v [VX231v(DE)_UG_REV1.0.0.pdf](https://static.tp-link.com/upload/manual/2024/202408/20240816/1910020944_VX231v%28DE%29_UG_REV1.0.0.pdf) covers **SNMP Settings** in chapter 17.10.
+But these options are inaccessible to **standard users**. To use SNMP features, the **superadmin** account must be activated.
+
 __Warning: You can only activate the superadmin account right after a factory reset. This will wipe all your settings!__
-
-I was looking for a simple way to monitor connected clients and real-time traffic.
-
-As I haven't found any VX231v specific documention I ended up using Google Gemini to brute-force/trial-and-error the correct OIDs.
 
 **Steps to enable the superadmin**
 
@@ -42,10 +44,14 @@ Set your Community Strings for Read-only and Write access.
 </details>
 After that, you can log in normally via the standard IP or use the /superuser path for full access.
 
-## SNMP Python Demo 
-[Check out the SNMP demo script](vx231v-snmp-demo.py). The script lists the connected clients and monitors real-time throughput data and is tested on macos 26.
+As I haven't found any VX231v specific documention I ended up using Google Gemini to brute-force/trial-and-error the available OIDs.
 
-### Demo Output
+## SNMP Python Demo 
+[Check out the SNMP Python script](vx231v-snmp-demo.py).
+
+The script lists the connected clients and monitors real-time throughput data and is tested on macos 26.
+
+### Demo Output Python
 
 ```
 Querying ARP table from 192.168.1.1...
@@ -69,6 +75,34 @@ Down:   1.98 Mbps | Up:  50.19 Mbps
 Down:   1.98 Mbps | Up:  49.08 Mbps
 ```
 
-This might not be a complete OID list, but it’s what I’ve found so far.
+## SNMP BASH Demo 
+[Check out the SNMP BASH script](vx231v-snmp-demo.sh).
 
-If there is any offical documention, please let me know.
+
+### Demo Output BASH
+
+```
+TP-Link VX231v SNMP Demo
+
+Router Name      : VX231v
+Firmware Version : 231.0.19
+Uptime d:hh:mm:ss: 2:3:54:20.00
+
+--- IP Networks ---
+Main Network: 192.168.1.1 / 255.255.255.0
+Guest Network: 192.168.210.1 / 255.255.255.0
+
+--- Live Internet Traffic  ---
+Please wait ... sampling interval: 5 seconds
+Download: 1925 kbit/s | Upload: 47970 kbit/s
+
+--- Connected Clients ---
+IP-Address      | MAC-Address      
+192.168.1.52  | b8:27:eb:8e:ca:fe
+192.168.1.53  | e4:5f:1:58:ca:fe 
+192.168.1.90  | 70:4f:57:51:ca:fe
+192.168.1.100 | 14:98:77:4e:ca:fe
+192.168.1.101 | ee:90:2:43:ca:fe 
+192.168.1.103 | ee:90:2:43:ca:fe
+192.168.210.100 | aa:98:bf:1a:ca:fe 
+```
