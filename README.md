@@ -1,4 +1,4 @@
-# Enabling Superadmin and SNMP on TP-Link VX231v
+# Enable superadmin, SNMP, TELNET and iperf3 on VX231v
 
 I was looking for an easy way to monitor connected clients and real-time traffic.
 
@@ -42,6 +42,11 @@ Set your Community Strings for Read-only and Write access.
 * Go to the **Administration** menu, select the standard user from the dropdown, and set a login password.<details>
   <img src="images/account-00.jpg" alt="SNMP Settings Screenshot" width="800">
 </details>
+
+* *Optional*: before leaving the **Administration** menu scroll down to activate **TELNET** and **iperf3**<details>
+  <img src="images/account-01.jpg" alt="TELNET and iperf3 Screenshot" width="800">
+</details>
+
 After that, you can log in normally via the standard IP or use the /superuser path for full access.
 
 As I haven't found any VX231v specific documention I ended up using Google Gemini to brute-force/trial-and-error the available OIDs.
