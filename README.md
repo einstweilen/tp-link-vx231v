@@ -1,4 +1,4 @@
-# Enable superadmin, SNMP, TELNET and iperf3 on VX231v
+# VX231v: Enable superadmin, SNMP, TELNET and iperf3
 
 I was looking for an easy way to monitor connected clients and real-time traffic.
 
@@ -48,6 +48,63 @@ Set your Community Strings for Read-only and Write access.
 </details>
 
 After that, you can log in normally via the standard IP or use the /superuser path for full access.
+
+## TELNET
+Use the superadmin password for Telnet authentication.<br>
+```
+> telnet 192.168.1.1
+Trying 192.168.1.1...
+Connected to 192.168.1.1.
+
+-------------------------------------------------------
+Welcome To Use TP-Link COMMAND-LINE Interface Model.
+-------------------------------------------------------
+TP-Link(conf)#help
+normal mode commands:
+        clear           ---     clear screen
+        exit            ---     leave to the privious mode
+        help            ---     help info
+        history         ---     show histroy commands
+        logout          ---     logout cli model
+        wlctl           ---     wireless config
+config mode commands:
+        config          ---     enter config mode
+        adsl            ---     config adsl
+        igmp            ---     igmp config
+        wan             ---     wan config
+        voip            ---     voip config
+        lan             ---     lan config
+        group           ---     group config
+        dev             ---     device control
+```
+
+## iperf3
+iperf3 -c 192.168.1.1<br>
+_iperf3: error - unable to connect to server_
+
+The **iperf3** server on this router listens on **port 5001** (the legacy iperf2 default port).<br>Therefore, you must specify the port explicitly using **-p 5001**:<br>
+```
+> iperf3 -c 192.168.1.1 -p 5001
+Connecting to host 192.168.1.1, port 5001
+[  5] local 192.168.1.101 port 52616 connected to 192.168.1.1 port 5001
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  82.0 MBytes   687 Mbits/sec                  
+[  5]   1.00-2.00   sec  79.8 MBytes   667 Mbits/sec                  
+[  5]   2.00-3.00   sec  78.1 MBytes   656 Mbits/sec                  
+[  5]   3.00-4.00   sec  79.0 MBytes   662 Mbits/sec                  
+[  5]   4.00-5.00   sec  79.5 MBytes   666 Mbits/sec                  
+[  5]   5.00-6.00   sec  83.6 MBytes   703 Mbits/sec                  
+[  5]   6.00-7.00   sec  79.5 MBytes   667 Mbits/sec                  
+[  5]   7.00-8.00   sec  79.1 MBytes   664 Mbits/sec                  
+[  5]   8.00-9.00   sec  76.9 MBytes   645 Mbits/sec                  
+[  5]   9.00-10.00  sec  84.1 MBytes   705 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec   802 MBytes   672 Mbits/sec                  sender
+[  5]   0.00-10.00  sec   801 MBytes   672 Mbits/sec                  receiver
+
+iperf Done.
+```
 
 As I haven't found any VX231v specific documention I ended up using Google Gemini to brute-force/trial-and-error the available OIDs.
 
