@@ -44,7 +44,7 @@ Set your Community Strings for Read-only and Write access.
 </details>
 
 * *Optional*: before leaving the **Administration** menu scroll down to activate **TELNET** and **iperf3**<details>
-  <img src="images/account-01.jpg" alt="TELNET and iperf3 Screenshot" width="800">
+  <img src="images/account-01.jpg" alt="TELNET and iperf3 Screenshot">
 </details>
 
 After that, you can log in normally via the standard IP or use the /superuser path for full access.
