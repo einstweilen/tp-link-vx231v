@@ -46,12 +46,12 @@ Eigene Übersetzungen können direkt im Quellcode des beiliegenden Hilfsskripts 
         *   _Debian/Raspberry Pi:_ `sudo apt install snmp`
         *   _macOS:_ `brew install net-snmp`
     *   **AI-Analyse (Optional):** Die Anomalie-Erkennung (`_run_ai_analysis`) setzt aktuell macOS voraus. Dazu ein Kurzbefehl `ai-cloud` wie auf dem folgenden Screenshot gezeigt anlegen.<br>
-    Unter Linux/Debian wird die AI-Analyse aktuell noch übersprungen.
+    Unter Linux/Debian wird die AI-Analyse aktuell noch übersprungen.<br>
     <details>
-  <summary><b>ai-cloud shortcut anlegen</b></summary>
-  <br>
-  <img src="images/ai-shortcut-anlegen.jpg" alt="ai-cloud shortcut screenshot" width="800">
-</details>
+        <summary>ai-cloud shortcut anlegen</summary>
+        <br>
+        <img src="images/ai-shortcut-anlegen.jpg" alt="ai-cloud shortcut screenshot" width="800">
+    </details>
 
 2.  **Konfigurationsdatei anlegen:**
     Die Vorlage `config.ini.sample` zu `config.ini` kopieren.
