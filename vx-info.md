@@ -45,8 +45,13 @@ Eigene Übersetzungen können direkt im Quellcode des beiliegenden Hilfsskripts 
     *   **SNMP-Client:** Falls auf dem Router der superadmin Account aktiviert, müssen `snmpget` und `snmpwalk` verfügbar sein.
         *   _Debian/Raspberry Pi:_ `sudo apt install snmp`
         *   _macOS:_ `brew install net-snmp`
-    *   **AI-Analyse (Optional):** Die Anomalie-Erkennung (`_run_ai_analysis`) setzt auf macOS voraus, dass ein funktionierender Kurzbefehl namens `ai-cloud` existiert, der über das Terminal (`shortcuts run ai-cloud`) aufgerufen wird.<br>
-    Unter Linux/Debian wird die AI-Analyse aktuellübersprungen.
+    *   **AI-Analyse (Optional):** Die Anomalie-Erkennung (`_run_ai_analysis`) setzt aktuell macOS voraus. Dazu ein Kurzbefehl `ai-cloud` wie auf dem folgenden Screenshot gezeigt anlegen.<br>
+    Unter Linux/Debian wird die AI-Analyse aktuell noch übersprungen.
+    <details>
+  <summary><b>ai-cloud shortcut anlegen</b></summary>
+  <br>
+  <img src="images/ai-shortcut-anlegen.jpg" alt="ai-cloud shortcut screenshot" width="800">
+</details>
 
 2.  **Konfigurationsdatei anlegen:**
     Die Vorlage `config.ini.sample` zu `config.ini` kopieren.
@@ -77,6 +82,7 @@ Eigene Übersetzungen können direkt im Quellcode des beiliegenden Hilfsskripts 
     ```bash
     python3 vx-info.py --update --log
     ```
+
 
 ## Ausführungsoptionen (CLI)
 
