@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ model_name }} Daten</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #4acbd6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-container {
+            width: 120px;
+            display: inline-block;
+        }
+
+        .form-container {
+            padding: 32px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .field-group {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .field-group:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .field-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="number"], input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+            margin-bottom: 12px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .time-options {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #495057;
+        }
+
+        input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .time-input-group {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .chart-container {
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+            padding: 32px;
+            border-radius: 12px;
+            margin-top: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chart-container img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .fields-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+    </style>
+    <script>
+        const tablesWithTranslations = {{ tables_json|safe }};
+
+        function updateFields(fieldNumber) {
+            const tableId = fieldNumber === 1 ? 'table' : 'table2';
+            const fieldId = fieldNumber === 1 ? 'field' : 'field2';
+
+            const table = document.getElementById(tableId).value;
+            const fieldSelect = document.getElementById(fieldId);
+            const currentValue = fieldSelect.value;
+
+            fieldSelect.innerHTML = fieldNumber === 1 
+                ? '<option value="">-- Feld wählen --</option>'
+                : '<option value="">-- optional --</option>';
+
+            if (table && tablesWithTranslations[table]) {
+                const fields = tablesWithTranslations[table];
+                for (const [fieldName, translation] of Object.entries(fields)) {
+                    const opt = document.createElement('option');
+                    opt.value = fieldName;
+                    let displayText = translation;
+                    displayText = displayText.replace(/Upstream/g, 'Up');
+                    displayText = displayText.replace(/upstream/g, 'Up');
+                    displayText = displayText.replace(/Downstream/g, 'Down');
+                    displayText = displayText.replace(/downstream/g, 'Down');
+                    displayText = displayText.replace(/^(\S+)\s+(.+)$/, '$2 $1');
+                    opt.textContent = displayText;
+                    if (fieldName === currentValue) {
+                        opt.selected = true;
+                    }
+                    fieldSelect.appendChild(opt);
+                }
+            }
+        }
+
+        function toggleMode() {
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            document.getElementById('relative-box').style.display = 
+                mode === 'relative' ? 'block' : 'none';
+            document.getElementById('absolute-box').style.display = 
+                mode === 'absolute' ? 'block' : 'none';
+        }
+
+        function downloadChart(imgElement) {
+            const now = new Date();
+            const timestamp = now.getFullYear() + 
+                             String(now.getMonth() + 1).padStart(2, '0') + 
+                             String(now.getDate()).padStart(2, '0') + '-' +
+                             String(now.getHours()).padStart(2, '0') + 
+                             String(now.getMinutes()).padStart(2, '0');
+
+            const field1 = document.getElementById('field').selectedOptions[0]?.text || 'chart';
+            const field2Select = document.getElementById('field2');
+            const field2 = field2Select.value ? field2Select.selectedOptions[0]?.text : '';
+
+            // Klammern und Text in Klammern entfernen
+            let cleanField1 = field1.replace(/\s*\([^)]*\)/g, '');
+            let cleanField2 = field2 ? field2.replace(/\s*\([^)]*\)/g, '') : '';
+
+            // Upstream/Downstream durch U/D ersetzen
+            cleanField1 = cleanField1.replace(/Upstream/gi, 'U').replace(/Downstream/gi, 'D');
+            cleanField2 = cleanField2.replace(/Upstream/gi, 'U').replace(/Downstream/gi, 'D');
+
+            // Sonderzeichen durch Leerzeichen ersetzen, mehrfache Leerzeichen reduzieren
+            cleanField1 = cleanField1.replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            cleanField2 = cleanField2.replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+            let filename = 'TP ' + cleanField1;
+            if (cleanField2) {
+                filename += ' ' + cleanField2;
+            }
+            filename += ' ' + timestamp + '.png';
+
+            const link = document.createElement('a');
+            link.href = imgElement.src;
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>{{ model_name }} gespeicherte Daten visualisieren</span>
+        </h1>
+
+        <div class="form-container">
+            <form method="POST">
+                <div class="section">
+                    <div class="section-title">Messwerte auswählen</div>
+                    <div class="fields-grid">
+                        <div class="field-group">
+                            <label class="field-label">Tabelle 1</label>
+                            <select name="table" id="table" onchange="updateFields(1)" required>
+                                <option value="">-- auswählen --</option>
+                                {% for t in tables %}
+                                <option value="{{ t }}" {% if t == selected_table %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label class="field-label">Feld 1</label>
+                            <select name="field" id="field" required>
+                                <option value="">-- erst Tabelle wählen --</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">Tabelle 2 (optional)</label>
+                            <select name="table2" id="table2" onchange="updateFields(2)">
+                                <option value="">-- optional --</option>
+                                {% for t in tables %}
+                                <option value="{{ t }}" {% if t == selected_table2 %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label class="field-label">Feld 2 (optional)</label>
+                            <select name="field2" id="field2">
+                                <option value="">-- optional --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Zeitraum festlegen</div>
+
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="mode" value="relative" onchange="toggleMode()" 
+                                {% if mode == 'relative' %}checked{% endif %}>
+                            Relativ
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="mode" value="absolute" onchange="toggleMode()"
+                                {% if mode == 'absolute' %}checked{% endif %}>
+                            Absolut
+                        </label>
+                    </div>
+
+                    <div id="relative-box" class="time-input-group" {% if mode != 'relative' %}style="display:none"{% endif %}>
+                        <label class="field-label">Letzte Tage</label>
+                        <input type="number" name="days" value="{{ days }}" min="1" max="365">
+                    </div>
+
+                    <div id="absolute-box" class="time-input-group" {% if mode != 'absolute' %}style="display:none"{% endif %}>
+                        <label class="field-label">Von</label>
+                        <input type="datetime-local" name="from_dt" value="{{ from_dt }}">
+
+                        <label class="field-label">Bis</label>
+                        <input type="datetime-local" name="to_dt" value="{{ to_dt }}">
+                    </div>
+                </div>
+
+                <button type="submit">Diagramm generieren</button>
+            </form>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            {% if chart_img %}
+            <div class="chart-container">
+                <img src="data:image/png;base64,{{ chart_img }}" alt="Chart" onclick="downloadChart(this)">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        updateFields(1);
+        updateFields(2);
+        {% if selected_field %}
+        document.getElementById('field').value = '{{ selected_field }}';
+        {% endif %}
+        {% if selected_table2 %}
+        document.getElementById('table2').value = '{{ selected_table2 }}';
+        updateFields(2);
+        {% endif %}
+        {% if selected_field2 %}
+        document.getElementById('field2').value = '{{ selected_field2 }}';
+        {% endif %}
+        toggleMode();
+    </script>
+</body>
+</html>

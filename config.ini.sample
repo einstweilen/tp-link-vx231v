@@ -1,0 +1,47 @@
+[Router]
+# IP-Adresse oder Hostname deines Routers
+routerip = 192.168.0.1
+
+[Database]
+# Name der SQLite Datenbank für Log- und Statistikdaten
+db_name = router_data.db
+# Name der Sprachdatenbank für Übersetzungen im Dashboard/Report
+lang_db_name = router_lang.db
+
+[Telnet]
+# Benutzername für den Telnet-Login am Router (oft 'admin' oder 'root')
+username = DEIN_TELNET_BENUTZER
+# Passwort für den Telnet-Login
+password = DEIN_TELNET_PASSWORT
+
+[SNMP]
+# SNMP Community String (Standard oft 'public' oder modellspezifisch)
+community = DEIN_SNMP_COMMUNITY_STRING
+
+[GUI]
+# Benutzername für das Web-Interface des Routers
+username = DEIN_ROUTER_BENUTZER
+# Passwort für das Web-Interface
+password = DEIN_ROUTER_PASSWORT
+
+[Email]
+# Postausgangsserver (SMTP) für den Report-Versand
+smtp_server = mail.dein-provider.de
+smtp_port = 587
+# Absenderadresse
+sender_email = absender@example.com
+# Passwort für das E-Mail-Postfach
+sender_password = DEIN_EMAIL_PASSWORT
+# Empfängeradresse des Berichts
+recipient_email = empfaenger@example.com
+
+[Events]
+# Filter: Welche Ereignistypen sollen NICHT beim Cleanup gelöscht werden
+exclude_types = DHCPD, Mesh
+# Anzahl der Tage, nach denen unwichtige Events gelöscht werden (0 = deaktiviert)
+cleanup_excludes = 3
+
+[Charts]
+# Zeitfenster für Graphen im Stunden (z.B. 48 Stunden)
+hours_back = 48
+start_hour = 0

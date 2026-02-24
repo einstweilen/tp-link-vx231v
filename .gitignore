@@ -1,0 +1,26 @@
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDEs und Editoren
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Temporäre oder lokale Testdateien
+test.json
+last_import.txt
+*.log
+*.ini
+
+# Sample-Datei explizit erlaubt
+!config.ini.sample
+
+# Datenbanken
+router_data.db
+
