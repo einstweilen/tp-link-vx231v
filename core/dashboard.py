@@ -14,8 +14,8 @@ class DataCharter:
         self.db_path = db_path
         self.lang_db_name = self.config.get('Database', 'lang_db_name', fallback='router_lang.db')
         
-        # Determine the root 'templates' directory
-        template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+        # Determine the root 'dashboard' directory
+        template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dashboard'))
         self.app = Flask(__name__, template_folder=template_dir)
         
         self.app.before_request(self.limit_to_local_network)

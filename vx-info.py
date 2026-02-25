@@ -15,7 +15,7 @@ from core.database import DatabaseManager
 from core.telnet_client import TPLinkVX231vTelnet
 from core.playwright_client import TPLinkVX231vPlaywright
 from core.reporter import TPLinkVX231vReport
-from core.webserver import DataCharter
+from core.dashboard import DataCharter
 
 def main():
     config = configparser.ConfigParser()

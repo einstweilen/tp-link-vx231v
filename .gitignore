@@ -18,9 +18,12 @@ last_import.txt
 *.log
 *.ini
 
+# Generierte Dateien
+logs/
+reports/
+
 # Sample-Datei explizit erlaubt
 !config.ini.sample
 
 # Datenbanken
 router_data.db
-

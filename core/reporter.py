@@ -608,7 +608,7 @@ class TPLinkVX231vReport:
         Synthese-Pflicht: Fasse deine Erkenntnisse in maximal zwei bis drei Sätzen als Fließtext zusammen.
         Verbotsliste: Keine Aufzählungen, keine Wiederholung von Rohdaten, keine Kommentare zu Routine-Events oder fehlenden Updates.
         Fokus: Benenne nur das 'Warum' der Störung (z.B. 'Kombination aus sinkendem SNR und steigenden Fehlern deutet auf Leitungsstörung hin').
-        TOP PRIO!!! Prüfe, ob Du tatsächlich maximal drei Sätze verwendet hast, sonst erneut bearbeiten!!!
+        TOP PRIO!!! Prüfe, ob Du tatsächlich maximal drei Sätze verwendet hast, sonst erneut bearbeiten!
 
         CSV Daten:
         """ + output.getvalue() + events_as_text
@@ -756,15 +756,24 @@ class TPLinkVX231vReport:
             html += "</table></td></tr></table></td></tr>"
         html += "</table><p style='padding: 20px; text-align: center; font-size: 10pt; color: #999;'>Automatisch generiert und ohne Unterschrift gültig</p></body></html>"
         
-        if show_browser:
-            try:
-                fd, path = tempfile.mkstemp(suffix='.html')
-                with os.fdopen(fd, 'w', encoding='utf-8') as f:
-                    f.write(html)
-                webbrowser.open('file://' + path)
-                self._log(f"Report im Browser geöffnet: {path}")
-            except Exception as e:
-                print(f"Fehler beim Öffnen des Browsers: {e}")
+        try:
+            os.makedirs('reports', exist_ok=True)
+            timestamp = datetime.now().strftime('%y%m%d_%H%M')
+            filename = f"vx-report_{timestamp}.html"
+            rel_path = os.path.join('reports', filename)
+            with open(rel_path, 'w', encoding='utf-8') as f:
+                f.write(html)
+            print(f"Der Bericht wurde generiert und liegt unter {rel_path}")
+            
+            if show_browser:
+                try:
+                    abs_path = os.path.abspath(rel_path)
+                    webbrowser.open('file://' + abs_path)
+                    self._log(f"Report im Browser geöffnet: {abs_path}")
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"Fehler beim Erstellen des Reports: {e}")
         
         if send_email:
             msg_rel.attach(MIMEText(html, 'html'))
