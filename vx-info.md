@@ -68,7 +68,69 @@ Eigene Übersetzungen können direkt in der router_lang.db oder auch  im Quellco
 ```bash
 curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
 ```
+<br>
+<details>
+<summary>Beispielinstallationsverlauf</summary>
 
+```
+curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+
+==== tp-link-vx231v Installation ====
+[1/11] Klone das Repository...
+Cloning into 'tp-link-vx231v'...
+remote: Enumerating objects: 124, done.
+remote: Counting objects: 100% (124/124), done.
+Receiving objects: 100% (124/124), 2.45 MiB | 4.88 MiB/s, done.
+[2/11] Wechsle in das Verzeichnis...
+[3/11] Erstelle virtuelle Umgebung...
+      Aktiviere virtuelle Umgebung...
+[4/11] Installiere Abhängigkeiten...
+Collecting playwright
+  Downloading playwright-1.42.0-py3-none-macosx_11_0_arm64.whl
+Successfully installed playwright-1.42.0 requests
+[5/11] Installiere Chromium in Playwright...
+Downloading Chromium 123.0.6312.4 (playwright build v1105)...
+Playwright build of Chromium is installed.
+[6/11] OPTIONAL: SNMP / TELNET verwenden
+      Falls Sie mit dem superadmin Account Ihres Routers
+      SNMP und Telnet aktiviert haben, können Sie
+      Routerdaten auch per SNMP abrufen.
+      Dafür benötigen Sie 'snmpget' und 'snmpwalk'.
+      Möchten Sie SNMP-Tools jetzt installieren? (j/N) j
+      Installiere net-snmp via Homebrew (macOS)...
+      🍺  net-snmp wurde erfolgreich installiert!
+[7/11] OPTIONAL: AI-Analyse Einrichtung (nur macOS)...
+      Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt.
+      Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden,
+      wie in der Dokumentation beschrieben.
+      Haben Sie den Kurzbefehl 'ai-cloud' bereits angelegt oder möchten Sie dies später tun? [Enter]
+[8/11] Überprüfe Konfigurationsdatei...
+      -> config.ini wurde aus der Vorlage (config.ini.sample) erstellt.
+[9/11] Konfigurationsdatei anpassen
+      Bitte passen Sie nun die Zugangsdaten in der config.ini an.
+      Drücken Sie [Enter], um die Datei im Editor zu öffnen...
+[10/11] Teste das Skript...
+GUI Scraping
+  ✓  Login in Routerweboberfläche erfolgreich
+Telnet Konfiguration
+  ✓  telnet Login erfolgreich
+SNMP Konfiguration
+  ✓  snmp Zugriff erfolgreich
+eMail Konfiguration
+  ✓  eMail erfolgreich versendet
+==== Installation abgeschlossen! ====
+[11/11] Skript in Cronjob eintragen
+Vorschlag für Ihre crontab:
+Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
+0 * * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --update --log
+Täglich um 06:10 Uhr: Statusbericht generieren und per E-Mail versenden
+10 6 * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --report-send
+Möchten Sie jetzt 'crontab -e' öffnen? (j/N) n
+Übersprungen. Sie können die Crontab später jederzeit mit 'crontab -e' bearbeiten.
+Fertig!
+```
+</details>
+<br>
 
 1.  **Voraussetzungen installieren:**
     Neben Python 3 und den Modulen aus `requirements.txt` werden plattformabhängige Systemwerkzeuge benötigt:
@@ -131,17 +193,21 @@ curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.
 Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 
 *   `--update`: Fragt grundlegende Daten (Systemstatus, DSL-Werte, Client-Liste) primär über Telnet/SNMP ab und speichert sie in der Datenbank. Sind Telnet/SNMP nicht verfügbar, wird das Web-Scraping-Interface genutzt.
+<br>
 *   `--log`: Lädt das vollständige Systemprotokoll ("Logbuch") des Routers via Playwright-(Web-Scraping) herunter und importiert neue Ereignisse (wie DHCP/Mesh). Häufig in Kombination mit `--update` genutzt.
-
+<br>
 *   `--gui`: Erzwingt den Datenabruf (Systemstatus, DSL, Clients) ausschließlich über das Web-Scraping-Interface anstelle von Telnet/SNMP.
-
+<br>
 *   `--report-show`: Generiert den HTML-Statusbericht basierend auf den aktuellen Datenbankwerten und öffnet diesen direkt im Standard-Browser.
+<br>
 *   `--report-send`: Generiert den HTML-Statusbericht und versendet diesen über die in der `config.ini` hinterlegte E-Mail-Adresse.
-
+<br>
 *   `--output [DATEI]`: Schreibt die ausgelesenen Basisdaten zusätzlich als Rohdaten in eine JSON-Datei.
+<br>
 *   `--json-only`: Unterdrückt die standardmäßigen tabellarischen Konsolenausgaben während eines Abrufs.
-
+<br>
 *   `--test`: Testet alle installierten Technologien (Telnet, SNMP, Playwright) und verifiziert die in der `config.ini` hinterlegten Zugangsdaten sowie die E-Mail-Konfiguration. Idealerweise nach der Ersteinrichtung aufzurufen.
+<br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
 
 *   `--dashboard`: Startet einen lokalen Webserver (Standard: Port 31311) zur interaktiven Anzeige historischer Metriken.
