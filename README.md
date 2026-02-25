@@ -20,14 +20,12 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 **Inhalte:**
 * Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
 * Speicherung der Daten in einer Datenbank
+* Automatisierte Generierung von HTML-Statusberichten
 <details>
     <summary>Beispiel: Statusreport</summary>
     <br>
     <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
 </details>
-
-* Automatisierte Generierung von HTML-Statusberichten
-
 * Lokales Web-Dashboard zur Visualisierung
 <details>
     <summary>Beispiel: Web-Dashboard</summary>
@@ -35,9 +33,8 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
     <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
 </details>
 
-
-
 <br>
+
 **Schnelle Installation:**
 ```bash
 curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
@@ -105,6 +102,7 @@ Fertig!
 ```
 </details>
 <br>
+
 
 [Zur Installationsanleitung: VX-Info Tracker](vx-info.md)
 
