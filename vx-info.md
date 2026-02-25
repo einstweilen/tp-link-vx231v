@@ -2,31 +2,73 @@
 
 Ein Set aus Python-Skripten zum automatisierten Auslesen, Speichern und Darstellen von Router-Daten des TP-Link VX231v.
 
+## Entstehungsgeschichte
+
+Ausgangspunkt war der Wunsch, die DSL-Leitungswerte und die aktuell verbundenen Clients im Heimnetzwerk regelmäßig zu erfassen und darzustellen.
+
+Eine Zusammenfassung der wichtigsten in den letzten 24 Stunden erfassten Daten sollte visuell aufbereitet und als täglicher Report automatisch per E-Mail versendet werden.
+
+Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden.
+
+Da der Router keine allgemein zugängliche API bietet, wurden die Daten zuerst nur über Web-Scraping ausgelesen. 
+Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.
+
+Hierbei ist zu beachten, dass Telnet und SNMP zwar in der Firmware des Routers vorhanden sind, aber der superadmin Account auf dem Router aktiviert sein muss, um Telnet und SNMP nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung **[Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)** beschrieben.
+
+**Alle Funktionen** des Skripts können **auch ohne aktivierten superadmin Account** genutzt werden, allerdings ist dann das Web-Scraping die einzige Methode der Datenabfrage, was die langsamste und unsicherste Methode der Datenabfrage ist, so dass auch schonmal eine Abfrage fehlschlagen kann. Im Verzeichnis `logs/` finden sich dann entsprechende Fehlermeldungen.<br>
+Ohne superadmin Account wechselt das Skript **automatisch** zurück zum Webscraping Modus, alternativ kann man diesen Modus **trotz** aktiviertem superadmin Account mit `--gui` erzwingen.
+
+
+
 ## Funktionen
 
 ### 1. Abfrage der Routerdaten via Telnet, SNMP und Web-Scraping
-Das Skript nutzt Telnet und SNMP für den primären Abruf von Systemzuständen und DSL-Werten. Für detaillierte Ereignisprotokolle, die über diese Schnittstellen nicht zugänglich sind, erfolgt ein automatisierter Login in die Weboberfläche mithilfe von Playwright.
+Das Skript nutzt bei aktiviertem **superadmin Account** Telnet und SNMP für den primären Abruf von Systemzuständen und DSL-Werten.
+Für Daten, die über diese Schnittstellen nicht zugänglich sind, erfolgt ein automatisierter Login in die Weboberfläche mithilfe von Playwright.
+Ist der **superadmin Account** nicht aktiviert, erfolgt der Datenabruf automatisch ausschließlich über das Web-Scraping-Interface.
+
+Das Webscraping ist die langsamste Methode der Datenabfrage, daher sollte wenn möglich Telnet und SNMP genutzt werden.
+
 
 ### 2. Routerclients
 Verbundene Geräte im Heim- und Gastnetzwerk werden registriert und deren Verbindungsdauer anhand von DHCP- und Mesh-Ereignissen aus dem Router-Log ermittelt.
 Dies ermöglicht die Generierung eines Anwesenheitscharts.
 
-### 3. Report-Generierung (HTML und E-Mail)
-Die aufgezeichneten DSL-Werte, Systemzustände und Client-Aktivitäten werden in einem Bericht zusammengefasst.
-Dieser Bericht kann im Standard-Browser geöffnet oder zeitgesteuert via SMTP versendet werden.
+
+### 3. Report-Generierung
+Die aufgezeichneten Daten werden in einem Bericht zusammengefasst.<br>
+Der Bericht kann im Browser geöffnet oder zeitgesteuert als eMail versendet werden.
+
+<details>
+    <summary>Beispiel: Statusreport</summary>
+    <br>
+    <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
+</details>
 
 ### 4. Lokales Web-Dashboard
-Mit Flask werden die historischen Datenbankwerte als interaktive Diagramme zur Verfügung gestellt. Der Zugriff erfolgt über ein lokales Web-Interface, in dem spezifische Datenpunkte detailliert betrachtet werden können.
+Für den schnellen Überblick der aufgezeichneten Daten können diese als interaktive Diagramme dargestellt werden. Der Zugriff erfolgt über ein lokales Web-Interface, in dem die anzuzeigen Daten und der Zeitraum ausgewählt werden können.
 
-### 5. Datenspeicherung in SQLite
-Sämtliche ausgelesenen Werte und Logs werden in eine SQLite-Datenbank geschrieben.
-Standardmäßig werden DHCP und MESH Einträge nach drei Tagen gelöscht, in der `config.ini` (unter `[Events]`) kann die Anzahl der Tage konfiguriert werden
+<details>
+    <summary>Beispiel: Web-Dashboard</summary>
+    <br>
+    <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
+</details>
+
+### 5. Lokale Datenspeicherung
+Sämtliche ausgelesenen Werte und Logs werden in eine SQLite-Datenbank geschrieben.<br>
+Standardmäßig werden DHCP und MESH Einträge nach drei Tagen aus der DB gelöscht; in der `config.ini` (unter `[Events]`) kann die Anzahl der Tage konfiguriert werden
 
 ### 6. Lokalisierung und eigene Feldbeschriftungen
-Die Datenbank `router_lang.db` dient als Übersetzungsmatrix. Sie wandelt technische Spaltennamen (z. B. `downstream_curr_rate`) für das Web-Dashboard und den HTML-Bericht in menschenlesbare Bezeichner (z. B. "Download-Rate") um. 
-Eigene Übersetzungen können direkt im Quellcode des beiliegenden Hilfsskripts `lang_editor.py` (innerhalb der Liste `translations`) angepasst und erweitert werden. Ein anschließendes Ausführen des Skripts generiert die Übersetzungsdatenbank neu.
+Die Datenbank `router_lang.db` dient als Übersetzungsmatrix. Sie wandelt technische Spaltennamen (z. B. `downstream_curr_rate`) für das Web-Dashboard und den HTML-Bericht in menschenlesbare Bezeichner (z. B. "Aktuelle Download-Rate") um.<br>
+Eigene Übersetzungen können direkt in der router_lang.db oder auch  im Quellcode des beiliegenden Hilfsskripts `lang_editor.py` (innerhalb der Liste `translations`) angepasst und erweitert werden. Ein anschließendes Ausführen des Skripts generiert die Übersetzungsdatenbank neu.
 
 ## Einrichtung und Konfiguration
+
+**Schnelle Installation:**
+```bash
+curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+```
+
 
 1.  **Voraussetzungen installieren:**
     Neben Python 3 und den Modulen aus `requirements.txt` werden plattformabhängige Systemwerkzeuge benötigt:
@@ -50,7 +92,7 @@ Eigene Übersetzungen können direkt im Quellcode des beiliegenden Hilfsskripts 
     <details>
         <summary>ai-cloud shortcut anlegen</summary>
         <br>
-        <img src="images/ai-shortcut-anlegen.jpg" alt="ai-cloud shortcut screenshot" width="800">
+        <img src="images/ai-shortcut-anlegen.jpg" alt="ai-cloud shortcut screenshot">
     </details>
 
 2.  **Konfigurationsdatei anlegen:**
@@ -109,20 +151,31 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 Für ein kontinuierliches Monitoring wird die periodische Ausführung über `cron` empfohlen. 
 
 Typisches Ausführungsszenario:
-*   **Datenerfassung:** Alle 15 Minuten werden aktuelle Statuswerte, verbundene Clients und DSL-Metriken abgefragt.
-*   **Log-Sicherung:** Einmal pro Stunde wird das vollständige Router-Logbuch archiviert, um Netzwerk-Events zu protokollieren.
-*   **Report-Versand:** Einmal täglich um 06:00 Uhr wird ein HTML-Report generiert und per E-Mail versendet.
+
+*   **Datensicherung:** Einmal pro Stunde Systemstatus, Clients, DSL-Werte, Log sichern.
+*   **Reportversand:** Einmal täglich wird ein Report generiert und per E-Mail versendet.
 
 Die Crontab mit `crontab -e` öffnen und folgende Vorgaben einfügen (Pfade müssen an die lokale Umgebung angepasst werden):
 
 ```cron
-# 1. Alle 15 Minuten: Systemstatus, Clients und DSL-Werte aktualisieren
-*/15 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update
+# Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
+0 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update --log
 
-# 2. Einmal stündlich: Zusätzlich das komplette Router-Logbuch (Web-Scraping) sichern
-50 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update --log
-
-# 3. Täglich um 06:10 Uhr: HTML-Statusbericht generieren und per E-Mail versenden
-10 6 * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --report-send
+# Täglich um 06:09 Uhr: Statusbericht generieren und per E-Mail versenden
+9 6 * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --report-send
 ```
-_Hinweis: Das Skript initiiert vor dem Statusbericht (06:10 Uhr) bei Bedarf automatisch einen Log-Download, falls der letzte länger als 15 Minuten zurückliegt._
+
+### DSL Problem Debugging
+Wird z.B. zum Debugging wegen Leitungsproblemen eine häufigere Datensicherung benötigt, kann statt der stündlichen Erfassung auch ein deutlich kürzeres Intervall gewählt werden.
+Hier ist es von Vorteil, wenn **Telnet und SNMP** aktiviert sind, da man dann die DSL Leitungsdaten ohne zeitaufwendiges Webscraping in Sekunden abfragen kann.
+
+Das Skript sollte in diesem Fall ohne die `--log` Option aufgerufen werden, da das Log nur per Webscaping zugänglich ist und damit die Skriptausführung verlangsamt.<br>
+
+```cron
+# Datenerfassung: Alle 5 Minuten werden aktuelle DSL-Werte abgefragt.
+*/5 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update
+```
+
+Hinweis: Der Router kann das Log auch ganz ohne Skript automatisch zur Verfügung stellen, Anleitung und Optionsanpassungen folgen in Kürze!
+
+*Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W*

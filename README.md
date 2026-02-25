@@ -11,7 +11,7 @@ Zusätzliche Funktionen des Router aktivieren und nutzen.
 * Aktivierung von **Telnet** und **SNMP** für den Netzwerkzugriff
 * Aktivierung des **iPerf3**-Servers zur Bandbreitenmessung
 
-[Zur Aktivierungsnleitung:](superadmin_telnet_snmp_iperf.md)
+[Zur Aktivierungsanleitung:](superadmin_telnet_snmp_iperf.md)
 
 ---
 
@@ -23,10 +23,10 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Automatisierte Generierung von HTML-Statusberichten
 * Lokales Web-Dashboard zur Visualisierung
 
-[Zur Installationsleitung: VX-Info Tracker](vx-info.md)
+[Zur Installationsanleitung: VX-Info Tracker](vx-info.md)
 
 ---
 
 **Hinweis:** Die Python-Monitoring-Tools setzen für einen effizienten Datenabruf die Freischaltung von Telnet und SNMP voraus. Es wird empfohlen, zunächst die Schritte zur Systemfreischaltung auszuführen.
 
-**Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W
+**Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W**
