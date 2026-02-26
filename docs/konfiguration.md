@@ -41,9 +41,9 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 <br>
 *   `--gui`: Erzwingt den Datenabruf (Systemstatus, DSL, Clients) ausschließlich über das Web-Scraping-Interface anstelle von Telnet/SNMP.
 <br>
-*   `--report-show`: Generiert den HTML-Statusbericht basierend auf den aktuellen Datenbankwerten und öffnet diesen direkt im Standard-Browser.
+*   `--report-show`: Generiert den HTML-Statusreport basierend auf den aktuellen Datenbankwerten und öffnet diesen direkt im Standard-Browser.
 <br>
-*   `--report-send`: Generiert den HTML-Statusbericht und versendet diesen über die in der `config.ini` hinterlegte E-Mail-Adresse.
+*   `--report-send`: Generiert den HTML-Statusreport und versendet diesen über die in der `config.ini` hinterlegte E-Mail-Adresse.
 <br>
 *   `--output [DATEI]`: Schreibt die ausgelesenen Basisdaten zusätzlich als Rohdaten in eine JSON-Datei.
 <br>
@@ -70,7 +70,7 @@ Die Crontab mit `crontab -e` öffnen und folgende Vorgaben einfügen (Pfade müs
 # Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
 0 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update --log
 
-# Täglich um 06:09 Uhr: Statusbericht generieren und per E-Mail versenden
+# Täglich um 06:09 Uhr: Statusreport generieren und per E-Mail versenden
 9 6 * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --report-send
 ```
 

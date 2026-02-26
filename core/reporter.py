@@ -599,7 +599,7 @@ class TPLinkVX231vReport:
         exclude = [t.strip() for t in self.config.get('Events', 'exclude_types', fallback='').split(',') if t.strip()]
         filtered_events = self._get_events(hours=48, exclude_types=exclude)
         events_as_text = ", ".join(str(event) for event in filtered_events)
-        prompt = """Du bist ein Senior-Diagnostiker für Breitbandtechnik. Deine Aufgabe ist eine Anomalie-Erkennung, kein Statusbericht.
+        prompt = """Du bist ein Senior-Diagnostiker für Breitbandtechnik. Deine Aufgabe ist eine Anomalie-Erkennung, kein Statusreport.
         Analyse-Vorgabe: Betrachte die übergebenen DSL-Daten als Gesamtsystem. Ignoriere Einzelaspekte (wie die 3-Uhr-Trennung),
         sofern sie nicht in Kombination mit anderen Werten auf eine instabile Leitung hindeuten.
         Ausgabe-Regeln:        

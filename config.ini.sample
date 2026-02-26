@@ -28,10 +28,12 @@ password = DEIN_ROUTER_PASSWORT
 # Postausgangsserver (SMTP) für den Report-Versand
 smtp_server = mail.dein-provider.de
 smtp_port = 587
+
 # Absenderadresse
 sender_email = absender@example.com
 # Passwort für das E-Mail-Postfach
 sender_password = DEIN_EMAIL_PASSWORT
+
 # Empfängeradresse des Berichts
 recipient_email = empfaenger@example.com
 
@@ -42,6 +44,16 @@ exclude_types = DHCPD, Mesh
 cleanup_excludes = 3
 
 [Charts]
-# Zeitfenster für Graphen im Stunden (z.B. 48 Stunden)
-hours_back = 48
-start_hour = 0
+# Chart-Konfigurationen für Statusreport (später GUI)
+table_1 = dsl
+field_1 = downstream_noise_margin # Hier können beliebige Werte aus der dsl Tabelle eingetragen werden
+label_1 = Downstream Störabstand (dB) # Angezeigte Überschrift
+
+# Zeitfenster
+hours_back = 48 # Darstellungszeitraum in Stunden
+start_hour = 0 # Chart beginnt um 00:00 Uhr
+
+[Statistics]
+# Diese Werte auf False setzen, um keine Auswertung zu erhalten
+reconnects = True # Zeigt die Anzahl der Routereinwahlen
+PADO_timeouts = True # Zeigt die Anzahl der PADO-Timeouts

@@ -73,7 +73,7 @@ eMail Konfiguration
 Vorschlag für Ihre crontab:
 Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
 0 * * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --update --log
-Täglich um 06:10 Uhr: Statusbericht generieren und per E-Mail versenden
+Täglich um 06:10 Uhr: Statusreport generieren und per E-Mail versenden
 10 6 * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --report-send
 
 Möchten Sie jetzt 'crontab -e' öffnen? (j/N) n

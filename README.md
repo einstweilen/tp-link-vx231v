@@ -20,7 +20,7 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 **Inhalte:**
 * Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
 * Speicherung der Daten in einer Datenbank
-* Automatisierte Generierung von HTML-Statusberichten
+* Automatisierte Generierung von HTML-Statusreports
   <details>
       <summary>Beispiel: Statusreport</summary>
       <br>
@@ -108,7 +108,7 @@ Vorschlag für Ihre crontab:
 
 Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
 0 * * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --update --log
-Täglich um 06:10 Uhr: Statusbericht generieren und per E-Mail versenden
+Täglich um 06:10 Uhr: Statusreport generieren und per E-Mail versenden
 10 6 * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --report-send
 
 Möchten Sie jetzt 'crontab -e' öffnen? (j/N) n

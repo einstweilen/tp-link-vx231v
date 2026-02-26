@@ -104,7 +104,7 @@ playwright install chromium
     echo "Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern"
     echo "0 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update --log"
     echo ""
-    echo "Täglich um 06:10 Uhr: Statusbericht generieren und per E-Mail versenden"
+    echo "Täglich um 06:10 Uhr: Statusreport generieren und per E-Mail versenden"
     echo "10 6 * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --report-send"
     echo ""
     read -p "Möchten Sie jetzt 'crontab -e' öffnen? (j/N) " CRON_ANSWER
