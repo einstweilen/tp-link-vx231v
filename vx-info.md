@@ -39,20 +39,20 @@ Dies ermöglicht die Generierung eines Anwesenheitscharts.
 Die aufgezeichneten Daten werden in einem Bericht zusammengefasst.<br>
 Der Bericht kann im Browser geöffnet oder zeitgesteuert als eMail versendet werden.
 
-<details>
-    <summary>Beispiel: Statusreport</summary>
-    <br>
-    <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
-</details>
+  <details>
+      <summary>Beispiel: Statusreport</summary>
+      <br>
+      <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
+  </details>
 
 ### 4. Lokales Web-Dashboard
 Für den schnellen Überblick der aufgezeichneten Daten können diese als interaktive Diagramme dargestellt werden. Der Zugriff erfolgt über ein lokales Web-Interface, in dem die anzuzeigen Daten und der Zeitraum ausgewählt werden können.
 
-<details>
-    <summary>Beispiel: Web-Dashboard</summary>
-    <br>
-    <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
-</details>
+  <details>
+      <summary>Beispiel: Web-Dashboard</summary>
+      <br>
+      <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
+  </details>
 
 ### 5. Lokale Datenspeicherung
 Sämtliche ausgelesenen Werte und Logs werden in eine SQLite-Datenbank geschrieben.<br>

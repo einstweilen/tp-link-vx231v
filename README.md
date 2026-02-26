@@ -21,17 +21,17 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
 * Speicherung der Daten in einer Datenbank
 * Automatisierte Generierung von HTML-Statusberichten
-<details>
-    <summary>Beispiel: Statusreport</summary>
-    <br>
-    <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
-</details>
+  <details>
+      <summary>Beispiel: Statusreport</summary>
+      <br>
+      <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
+  </details>
 * Lokales Web-Dashboard zur Visualisierung
-<details>
-    <summary>Beispiel: Web-Dashboard</summary>
-    <br>
-    <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
-</details>
+  <details>
+      <summary>Beispiel: Web-Dashboard</summary>
+      <br>
+      <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
+  </details>
 
 <br>
 
@@ -123,7 +123,5 @@ Fertig!
 [Zur Installationsanleitung: VX-Info Tracker](vx-info.md)
 
 ---
-
-**Hinweis:** Die Python-Monitoring-Tools setzen für einen effizienten Datenabruf die Freischaltung von Telnet und SNMP voraus. Es wird empfohlen, zunächst die Schritte zur Systemfreischaltung auszuführen.
 
 **Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W**
