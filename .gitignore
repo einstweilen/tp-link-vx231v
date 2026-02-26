@@ -27,3 +27,6 @@ reports/
 
 # Datenbanken
 router_data.db
+
+# MkDocs
+site/

@@ -28,7 +28,7 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
   </details>
 * Lokales Web-Dashboard zur Visualisierung
   <details>
-      <summary>Beispiel: Web-Dashboard</summary>
+      <summary>Beispiel: Dashboard</summary>
       <br>
       <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
   </details>
@@ -41,7 +41,7 @@ curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.
 ```
 <br>
 <details>
-<summary>Beispielinstallationsverlauf</summary>
+<summary>Beispiel: Installationsverlauf</summary>
 
 ```
 curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash

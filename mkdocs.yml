@@ -1,0 +1,50 @@
+site_name: TP-Link VX231v Tracker
+site_url: ""
+repo_url: https://github.com/deinname/tp-link-vx231v
+repo_name: deinname/tp-link-vx231v
+
+theme:
+  name: material
+  language: de
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: cyan
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: In den Dark Mode wechseln
+    - scheme: slate
+      primary: cyan
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: In den Light Mode wechseln
+
+nav:
+  - Startseite: index.md
+  - Einrichtung & Konfiguration:
+    - Setup & Installation: setup.md
+    - Konfiguration & Automatisierung: konfiguration.md
+  - Nutzung:
+    - Report: report.md
+    - Web-Dashboard: dashboard.md
+  - Erweitert:
+    - Lokalisierung: lokalisierung.md
+
+markdown_extensions:
+  - admonition
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
