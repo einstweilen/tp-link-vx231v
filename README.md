@@ -37,14 +37,14 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 
 **Schnelle Installation:**
 ```bash
-curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
 ```
 <br>
 <details>
 <summary>Beispiel: Installationsverlauf</summary>
 
 ```
-curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
 
 ==== tp-link-vx231v Installation ====
 

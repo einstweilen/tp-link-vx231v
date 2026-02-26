@@ -4,14 +4,14 @@
 
 **Schnelle Installation:**
 ```bash
-curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
 ```
 <br>
 <details markdown="1">
 <summary>Beispiel: Installationsverlauf</summary>
 
 ```
-curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
 
 ==== tp-link-vx231v Installation ====
 [1/11] Klone das Repository...

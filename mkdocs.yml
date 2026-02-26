@@ -1,7 +1,7 @@
 site_name: TP-Link VX231v Tracker
 site_url: ""
-repo_url: https://github.com/deinname/tp-link-vx231v
-repo_name: deinname/tp-link-vx231v
+repo_url: https://github.com/einstweilen/tp-link-vx231v
+repo_name: einstweilen/tp-link-vx231v
 
 theme:
   name: material

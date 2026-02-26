@@ -66,7 +66,7 @@ Eigene Übersetzungen können direkt in der router_lang.db oder auch  im Quellco
 
 **Schnelle Installation:**
 ```bash
-curl -sL https://raw.githubusercontent.com/deinname/tp-link-vx231v/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
 ```
 <br>
 

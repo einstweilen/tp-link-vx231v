@@ -15,4 +15,4 @@ In dieser Dokumentation finden Sie detaillierte Anleitungen zu den verschiedenen
 *   [**Lokalisierung**](lokalisierung.md) - Anpassung der angezeigten Bezeichner
 
 ---
-*Die vollständige Übersicht und Historie des Projekts finden Sie in der [vx-info.md im Hauptverzeichnis](https://github.com/deinname/tp-link-vx231v/blob/main/vx-info.md).*
+*Die vollständige Übersicht und Historie des Projekts finden Sie in der [vx-info.md im Hauptverzeichnis](https://github.com/einstweilen/tp-link-vx231v/blob/main/vx-info.md).*
