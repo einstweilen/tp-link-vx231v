@@ -6,9 +6,10 @@ from io import BytesIO, StringIO
 
 
 class TPLinkVX231vReport:
-    def __init__(self, config, db_path, debug=False):
+    def __init__(self, config, db_path, router=None, debug=False):
         self.config = config
         self.db_path = db_path
+        self.router = router
         self.debug = debug
 
     def _log(self, msg):
@@ -50,10 +51,14 @@ class TPLinkVX231vReport:
             with urllib.request.urlopen(req, timeout=10) as response:
                 content = response.read().decode('utf-8', errors='ignore')
             table_match = re.search(r'<table[^>]*class="download-resource-table"[^>]*>(.*?)</table>', content, re.S | re.I)
-            if not table_match: return None, None, None
+            if not table_match: return None, None, None, None
             table_content = table_match.group(1)
             title_match = re.search(r'<th[^>]*class="download-resource-name"[^>]*>.*?<p>(.*?)</p>', table_content, re.S | re.I)
             title = title_match.group(1).strip() if title_match else "Unbekannt"
+            
+            dl_link_match = re.search(r'href="([^"]+\.zip)"', table_content, re.I)
+            dl_link = dl_link_match.group(1).strip() if dl_link_match else None
+            
             date_match = re.search(r'Datum der Veröffentlichung:.*?</span>\s*<span>(.*?)</span>', table_content, re.S | re.I)
             date_ut = 0
             if date_match:
@@ -64,20 +69,71 @@ class TPLinkVX231vReport:
             if more_row:
                 td_match = re.search(r'<td[^>]*class="more"[^>]*>(.*?)</td>', more_row.group(1), re.S | re.I)
                 if td_match: notes_html = td_match.group(1).strip()
-            return title, date_ut, notes_html
+            return title, date_ut, notes_html, dl_link
         except Exception as e:
             self._log(f"Firmware-Scraping fehlgeschlagen: {e}")
-            return None, None, None
+            return None, None, None, None
 
     def _check_firmware_update(self):
-        _, rows = self._run_query("SELECT firmware, time_ut FROM system ORDER BY time_ut DESC LIMIT 2")
-        if not rows or len(rows) < 1: return False, None, None
+        rn_title, rn_date, rn_txt, dl_link = self._get_latest_firmware_info()
+        _, rows = self._run_query("SELECT firmware, time_ut FROM system ORDER BY id DESC LIMIT 2")
+        if not rows or len(rows) < 1: 
+            return False, None, None, None, None, None
+            
         act_fw, act_ts = rows[0][0], int(rows[0][1])
         old_fw = rows[1][0] if len(rows) > 1 else None
-        cutoff = (datetime.now() - timedelta(hours=48)).timestamp()
-        if act_ts < cutoff: return False, old_fw, act_fw
-        if old_fw and act_fw and act_fw != old_fw: return True, old_fw, act_fw
-        return False, old_fw, act_fw
+        old_ts = int(rows[1][1]) if len(rows) > 1 else 0
+        
+        def extract_version_tuple(fw_str, fallback_str=None):
+            if not fw_str: return (0,)
+            import re
+            
+            # Check online standard structure: e.g. VX231v(DE)v1_0.23.0_...
+            # The version is between the first and second underscore.
+            m = re.search(r'^[^_]+_([^_]+)_', fw_str)
+            if m:
+                ver_str = m.group(1)
+                parts = [int(p) for p in ver_str.split('.') if p.isdigit()]
+                while len(parts) > 2 and parts[-1] == 0:
+                    parts.pop()
+                if parts:
+                    return tuple(parts)
+            
+            # Check local standard structure: e.g. 231.0.23 / 231.0.19
+            if fw_str.startswith('231.') or fw_str.startswith('0.'):
+                m = re.search(r'^\d+\.((\d+\.)*\d+)', fw_str)
+                if m:
+                    parts = [int(p) for p in m.group(1).split('.') if p.isdigit()]
+                    while len(parts) > 2 and parts[-1] == 0:
+                        parts.pop()
+                    if parts:
+                        return tuple(parts)
+                        
+            # Use fallback (rn_title) if parsing the link failed but it's an online check
+            if fallback_str:
+                m = re.search(r'_V?[\d\.]+_((\d+\.)+\d+)', fallback_str)
+                if m:
+                    parts = [int(p) for p in m.group(1).split('.') if p.isdigit()]
+                    while len(parts) > 2 and parts[-1] == 0:
+                        parts.pop()
+                    if parts:
+                        return tuple(parts)
+                
+            return (0,)
+
+        act_v = extract_version_tuple(act_fw)
+        filename = dl_link.split('/')[-1] if dl_link else ""
+        web_v = extract_version_tuple(filename, fallback_str=rn_title)
+        
+        if act_v < web_v and web_v != (0,):
+            return True, old_fw, act_fw, rn_title, rn_date, rn_txt
+            
+        if act_v == web_v and web_v != (0,):
+            cutoff = (datetime.now() - timedelta(hours=48)).timestamp()
+            if old_ts > cutoff:
+                return True, old_fw, act_fw, rn_title, rn_date, rn_txt
+                
+        return False, old_fw, act_fw, rn_title, rn_date, rn_txt
 
     def _build_client_sessions(self, hours=24):
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
@@ -248,11 +304,11 @@ class TPLinkVX231vReport:
         # Verbunden seit: neuester erfolgreicher PPP-Connect
         sql_evt = "SELECT time_ut FROM events WHERE type = 'PPP' AND event_text LIKE '%PAP AuthAck%' ORDER BY time_ut DESC LIMIT 1"
         _, r_evt = self._run_query(sql_evt)
-        sql_dsl = "SELECT ip4_curr, downstream_curr_rate, upstream_curr_rate FROM dsl ORDER BY time_ut DESC LIMIT 1"
+        sql_dsl = "SELECT ip4_curr, ip6_curr, downstream_curr_rate, upstream_curr_rate FROM dsl ORDER BY time_ut DESC LIMIT 1"
         _, r_dsl = self._run_query(sql_dsl)
         conn_since = datetime.fromtimestamp(int(r_evt[0][0])) if r_evt else None
-        ip4, down, up = (r_dsl[0][0], r_dsl[0][1], r_dsl[0][2]) if r_dsl else (None, None, None)
-        return conn_since, ip4, down, up
+        ip4, ip6, down, up = (r_dsl[0][0], r_dsl[0][1], r_dsl[0][2], r_dsl[0][3]) if r_dsl else (None, None, None, None)
+        return conn_since, ip4, ip6, down, up
 
     def _get_ip_changes(self, limit=2):
         sql = """
@@ -481,14 +537,20 @@ class TPLinkVX231vReport:
         if not active_clients:
             return None
 
-        # Sortieren alphabetisch nach Name
-        def sort_key(m):
-            name = mac_to_name.get(m, m)
+        # Helper to get formatted name
+        def get_formatted_name(m):
+            name = mac_to_name.get(m, m).strip()
+            if name.endswith("-"):
+                name = name[:-1].strip()
             if len(name) > 13:
                 name = name[:8] + "…" + name[-4:]
-            return name.lower()
+            return name
 
-        sorted_macs = sorted(active_clients.keys(), key=sort_key)
+        # Sortieren alphabetisch nach Name, rückwärts, damit Matplotlib A-Z von oben nach unten zeichnet
+        def sort_key(m):
+            return get_formatted_name(m).lower()
+
+        sorted_macs = sorted(active_clients.keys(), key=sort_key, reverse=True)
 
         # Plotting
         fig_height = max(4, len(sorted_macs) * 0.4)
@@ -503,9 +565,7 @@ class TPLinkVX231vReport:
         for i, mac in enumerate(sorted_macs):
             sessions = active_clients[mac]
 
-            client_label = mac_to_name.get(mac, mac)
-            if len(client_label) > 13:
-                client_label = client_label[:8] + "…" + client_label[-4:]
+            client_label = get_formatted_name(mac)
 
             y_ticks.append(i)
             y_labels.append(client_label)
@@ -526,6 +586,10 @@ class TPLinkVX231vReport:
 
         ax.set_yticks(y_ticks)
         ax.set_yticklabels(y_labels, fontsize=9)
+        # Die kleinen Striche an der Y-Achse sind Matplotlib-Ticks. Wir blenden sie aus.
+        ax.tick_params(axis='y', which='both', length=0)
+        # Die "Striche" hinter dem Namen sind Matplotlib Ticks, die schalten wir auf der y-Achse einfach aus
+        ax.tick_params(axis='y', which='both', length=0)
 
         end_dt = datetime.fromtimestamp(current_time)
         start_dt = end_dt - timedelta(hours=hours)
@@ -534,7 +598,13 @@ class TPLinkVX231vReport:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
         ax.grid(True, axis='x', linestyle='--', alpha=0.5)
 
-        ax.set_title(f"Türkis=Heim, Orange=Gast", fontsize=10, pad=10)
+        # 00:00 Uhr Linie durchgehend, aber im exakt gleichen Stil (Dicke/Farbe/Transparenz) wie das Grid
+        for tick_date in mdates.HourLocator(interval=1).tick_values(start_dt, end_dt):
+            dt = mdates.num2date(tick_date)
+            if dt.hour == 0 and dt.minute == 0:
+                ax.axvline(x=dt, color='#b0b0b0', linestyle='-', linewidth=0.8, alpha=0.5, zorder=1)
+
+        ax.set_title(f"Türkis=Heimnetz, Orange=Gastnetz", fontsize=10, pad=10)
 
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -638,6 +708,13 @@ class TPLinkVX231vReport:
                     current_reconnect = None
         return reconnects
 
+    def _get_router_uptime(self):
+        if self.router:
+            is_telnet, is_snmp = self.router.check_services()
+            if is_snmp:
+                return self.router.get_snmp_uptime()
+        return None
+
     def generate_report(self, send_email=True, show_browser=False):
         import smtplib
         from email.mime.image import MIMEImage
@@ -655,9 +732,10 @@ class TPLinkVX231vReport:
         hours_back = self.config.getint('Charts', 'hours_back', fallback=24)
         evt_hours = self.config.getint('Events', 'hours_back', fallback=24)
         exclude = [t.strip() for t in self.config.get('Events', 'exclude_types', fallback='').split(',') if t.strip()]
-        conn_since, ip4, down, up = self._get_connection_status()
+        conn_since, ip4, ip6, down, up = self._get_connection_status()
+        uptime_data = self._get_router_uptime()
         latest_ips = self._get_ip_changes(3)
-        fw_upd, fw_old, fw_act = self._check_firmware_update()
+        fw_upd, fw_old, fw_act, rn_t, rn_d, rn_txt = self._check_firmware_update()
         ai_text = self._run_ai_analysis(evt_hours)
         timeline = self._generate_timeline(evt_hours)
         gantt = self._generate_client_gantt(evt_hours)
@@ -679,17 +757,37 @@ class TPLinkVX231vReport:
                     Täglicher {model_name} Statusreport<br><span style="font-size: 12pt;">vom {date_str}</span>
                 </td></tr>"""
 
-        if conn_since or ip4:
+        if conn_since or ip4 or ip6:
             s_since = conn_since.strftime('%d.%m.%Y %H:%M') if conn_since else "unbekannt"
+            
+            time_diff_str = ""
+            if conn_since:
+                diff = datetime.now() - conn_since
+                total_seconds = int(diff.total_seconds())
+                hours_since = total_seconds // 3600
+                minutes_since = (total_seconds % 3600) // 60
+                time_diff_str = f" ({hours_since} Stunden {minutes_since} Minuten)"
+                
             s_down = f"{float(down)/1000:.1f}".replace('.', ',') + " Mbit/s" if down else "n/a"
             s_up = f"{float(up)/1000:.1f}".replace('.', ',') + " Mbit/s" if up else "n/a"
-            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>Verbunden seit {s_since} (IP {ip4 or 'unbekannt'}). Datenrate Down {s_down} / Up {s_up}.</td></tr>"
+            
+            ipv4_str = f"IPv4 {ip4}" if ip4 else "IPv4 unbekannt"
+            ipv6_str = f"IPv6 {ip6}" if ip6 else "IPv6 unbekannt"
+            
+            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>Verbunden seit {s_since}{time_diff_str}<br>Aktuelle {ipv4_str}<br>Aktuelle{ipv6_str}<br>Datenrate Down {s_down} Up {s_up}."
+            
+            if uptime_data:
+                u_days, u_hours = uptime_data
+                html += f"<br><br>Letzter Routerneustart vor {u_days} Tagen {u_hours} Stunden"
+                
+            html += "</td></tr>"
+            
         if fw_upd:
-            rn_t, rn_d, rn_txt = self._get_latest_firmware_info()
             rn_ds = datetime.fromtimestamp(rn_d).strftime('%d.%m.%Y') if rn_d else "Unbekannt"
             html += f"""<tr><td style="padding: 20px;"><div style="border: 2px solid #ff9800; background-color: #fff3e0; padding: 15px; border-radius: 5px;">
-                <h3 style="margin-top: 0; color: #e65100;">Neue Firmware</h3><div style="font-size: 14px; color: #333;">
+                <h3 style="margin-top: 0; color: #e65100;">Firmware Hinweis</h3><div style="font-size: 14px; color: #333;">
                 Aktuell installiert <span style="color: #2e7d32; font-weight: bold;">{fw_act}</span><br>
+                Online verfügbar: <strong>{rn_t}</strong><br>
                 <div style="border-top: 1px solid #ffcc80; margin-top: 10px; padding-top: 10px;"><strong>Release Notes ({rn_ds}):</strong><br>{rn_txt}</div></div></div></td></tr>"""
         if ai_text:
             html += f"<tr><td style='padding: 20px;'><div style='border: 2px solid #4acbd6; background-color: #f9ffff; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #008ba3;'>Auf einen Blick</h3><div style='font-size: 14px; color: #333;'>{ai_text}</div></div></td></tr>"

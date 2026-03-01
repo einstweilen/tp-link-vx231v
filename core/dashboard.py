@@ -64,7 +64,7 @@ class DataCharter:
             return {}
 
     def get_tables_and_columns(self):
-        """Liest alle Tabellen und deren Spalten aus der Datenbank"""
+        """Liest alle Tabellen und deren (Zahlen-)Spalten aus der Datenbank"""
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
 
@@ -72,9 +72,20 @@ class DataCharter:
         tables = {}
 
         for (table_name,) in cur.fetchall():
+            if table_name == 'translations':
+                continue
             cur.execute(f"PRAGMA table_info({table_name})")
-            columns = [row[1] for row in cur.fetchall()]
-            tables[table_name] = columns
+            # row[1] = name, row[2] = type
+            # Nur numerische Datentypen für das Charting zulassen
+            columns = []
+            for row in cur.fetchall():
+                col_name = row[1]
+                col_type = str(row[2]).upper()
+                if 'INT' in col_type or 'REAL' in col_type or 'NUMERIC' in col_type or 'DECIMAL' in col_type or 'FLOAT' in col_type:
+                    columns.append(col_name)
+                    
+            if columns:  # Tabelle nur aufnehmen, wenn es anzeigbare numerische Spalten gibt
+                tables[table_name] = columns
 
         conn.close()
         return tables

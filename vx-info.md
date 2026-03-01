@@ -94,6 +94,10 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 <br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
 
+### Release Notes / letzte Updates
+
+* [Release Notes](release-notes.md)
+
 ## Vertiefende Dokumentation
 
 Für detaillierte Informationen zu Einrichtung, Konfiguration und Nutzung lesen Sie bitte die weiterführenden Dokumentationen:
@@ -110,5 +114,6 @@ Für detaillierte Informationen zu Einrichtung, Konfiguration und Nutzung lesen 
     Anleitung zur Übersetzung und Anpassung der Feldbeschriftungen über die `router_lang.db`.
 
 <br>
+
 
 *Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W*

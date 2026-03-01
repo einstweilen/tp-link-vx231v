@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>{{ model_name }} Daten</title>
@@ -10,7 +11,7 @@
             box-sizing: border-box;
         }
 
-        body { 
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #4acbd6;
             min-height: 100vh;
@@ -22,7 +23,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
 
@@ -92,7 +93,9 @@
             letter-spacing: 0.5px;
         }
 
-        select, input[type="number"], input[type="datetime-local"] {
+        select,
+        input[type="number"],
+        input[type="datetime-local"] {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #dee2e6;
@@ -103,7 +106,8 @@
             margin-bottom: 12px;
         }
 
-        select:focus, input:focus {
+        select:focus,
+        input:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -188,12 +192,12 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .chart-container img:hover {
             transform: scale(1.02);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         @media (max-width: 768px) {
@@ -204,21 +208,19 @@
         }
     </style>
     <script>
-        const tablesWithTranslations = {{ tables_json|safe }};
+        const tablesWithTranslations = {{ tables_json| safe }};
 
         function updateFields(fieldNumber) {
-            const tableId = fieldNumber === 1 ? 'table' : 'table2';
             const fieldId = fieldNumber === 1 ? 'field' : 'field2';
-
-            const table = document.getElementById(tableId).value;
             const fieldSelect = document.getElementById(fieldId);
             const currentValue = fieldSelect.value;
+            const table = 'dsl'; // Hartcodiert auf die dsl Tabelle
 
-            fieldSelect.innerHTML = fieldNumber === 1 
+            fieldSelect.innerHTML = fieldNumber === 1
                 ? '<option value="">-- Feld wählen --</option>'
                 : '<option value="">-- optional --</option>';
 
-            if (table && tablesWithTranslations[table]) {
+            if (tablesWithTranslations[table]) {
                 const fields = tablesWithTranslations[table];
                 for (const [fieldName, translation] of Object.entries(fields)) {
                     const opt = document.createElement('option');
@@ -240,19 +242,19 @@
 
         function toggleMode() {
             const mode = document.querySelector('input[name="mode"]:checked').value;
-            document.getElementById('relative-box').style.display = 
+            document.getElementById('relative-box').style.display =
                 mode === 'relative' ? 'block' : 'none';
-            document.getElementById('absolute-box').style.display = 
+            document.getElementById('absolute-box').style.display =
                 mode === 'absolute' ? 'block' : 'none';
         }
 
         function downloadChart(imgElement) {
             const now = new Date();
-            const timestamp = now.getFullYear() + 
-                             String(now.getMonth() + 1).padStart(2, '0') + 
-                             String(now.getDate()).padStart(2, '0') + '-' +
-                             String(now.getHours()).padStart(2, '0') + 
-                             String(now.getMinutes()).padStart(2, '0');
+            const timestamp = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + '-' +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0');
 
             const field1 = document.getElementById('field').selectedOptions[0]?.text || 'chart';
             const field2Select = document.getElementById('field2');
@@ -283,6 +285,7 @@
         }
     </script>
 </head>
+
 <body>
     <div class="container">
         <h1>
@@ -292,33 +295,22 @@
         <div class="form-container">
             <form method="POST">
                 <div class="section">
-                    <div class="section-title">Messwerte auswählen</div>
+                    <div class="section-title">Darzustellenden DSL Parameter auswählen</div>
+
+                    <!-- Versteckte Tabellen-Felder, damit das Backend (dashboard.py) weiterhin "table" / "table2" = "dsl" erhält -->
+                    <input type="hidden" name="table" value="dsl">
+                    <input type="hidden" name="table2" value="dsl">
+
                     <div class="fields-grid">
                         <div class="field-group">
-                            <label class="field-label">Tabelle 1</label>
-                            <select name="table" id="table" onchange="updateFields(1)" required>
-                                <option value="">-- auswählen --</option>
-                                {% for t in tables %}
-                                <option value="{{ t }}" {% if t == selected_table %}selected{% endif %}>{{ t }}</option>
-                                {% endfor %}
-                            </select>
-
-                            <label class="field-label">Feld 1</label>
+                            <label class="field-label">Wert</label>
                             <select name="field" id="field" required>
-                                <option value="">-- erst Tabelle wählen --</option>
+                                <option value="">-- Wählen --</option>
                             </select>
                         </div>
 
                         <div class="field-group">
-                            <label class="field-label">Tabelle 2 (optional)</label>
-                            <select name="table2" id="table2" onchange="updateFields(2)">
-                                <option value="">-- optional --</option>
-                                {% for t in tables %}
-                                <option value="{{ t }}" {% if t == selected_table2 %}selected{% endif %}>{{ t }}</option>
-                                {% endfor %}
-                            </select>
-
-                            <label class="field-label">Feld 2 (optional)</label>
+                            <label class="field-label">2. Wert (optional)</label>
                             <select name="field2" id="field2">
                                 <option value="">-- optional --</option>
                             </select>
@@ -331,23 +323,25 @@
 
                     <div class="radio-group">
                         <label class="radio-label">
-                            <input type="radio" name="mode" value="relative" onchange="toggleMode()" 
-                                {% if mode == 'relative' %}checked{% endif %}>
+                            <input type="radio" name="mode" value="relative" onchange="toggleMode()" {% if
+                                mode=='relative' %}checked{% endif %}>
                             Relativ
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="mode" value="absolute" onchange="toggleMode()"
-                                {% if mode == 'absolute' %}checked{% endif %}>
+                            <input type="radio" name="mode" value="absolute" onchange="toggleMode()" {% if
+                                mode=='absolute' %}checked{% endif %}>
                             Absolut
                         </label>
                     </div>
 
-                    <div id="relative-box" class="time-input-group" {% if mode != 'relative' %}style="display:none"{% endif %}>
+                    <div id="relative-box" class="time-input-group" {% if mode !='relative' %}style="display:none" {%
+                        endif %}>
                         <label class="field-label">Letzte Tage</label>
                         <input type="number" name="days" value="{{ days }}" min="1" max="365">
                     </div>
 
-                    <div id="absolute-box" class="time-input-group" {% if mode != 'absolute' %}style="display:none"{% endif %}>
+                    <div id="absolute-box" class="time-input-group" {% if mode !='absolute' %}style="display:none" {%
+                        endif %}>
                         <label class="field-label">Von</label>
                         <input type="datetime-local" name="from_dt" value="{{ from_dt }}">
 
@@ -377,14 +371,11 @@
         {% if selected_field %}
         document.getElementById('field').value = '{{ selected_field }}';
         {% endif %}
-        {% if selected_table2 %}
-        document.getElementById('table2').value = '{{ selected_table2 }}';
-        updateFields(2);
-        {% endif %}
         {% if selected_field2 %}
         document.getElementById('field2').value = '{{ selected_field2 }}';
         {% endif %}
         toggleMode();
     </script>
 </body>
+
 </html>

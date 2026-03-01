@@ -36,6 +36,24 @@ class TPLinkVX231vTelnet:
 
         return telnet_enabled, snmp_enabled
 
+    def get_snmp_uptime(self):
+        import subprocess
+        try:
+            cmd = ["snmpget", "-v2c", "-c", self.community, "-Ovq", self.ip, "1.3.6.1.2.1.1.3.0"]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                output = res.stdout.strip()
+                parts = output.split(":")
+                
+                if len(parts) >= 3:
+                    if len(parts) == 4:
+                        return int(parts[0]), int(parts[1])
+                    else:
+                        return 0, int(parts[0])
+        except Exception as e:
+            self._log(f"SNMP-Fehler für Uptime: {e}")
+        return None
+
     def _log(self, msg):
         if self.debug:
             print(f"[{datetime.now().strftime('%H:%M:%S')}] [Telnet-Debug] {msg}")

@@ -81,8 +81,6 @@ def main():
                             if log_txt:
                                 added = db.insert_events_from_log(log_txt)
                                 print(f"Log: {added} neue Einträge.")
-                                with open('last_import.txt', 'w') as f:
-                                    f.write(str(int(time.time())))
 
                         if args.update:
                             gui_data = router_gui.get_clients()
@@ -97,6 +95,12 @@ def main():
                             if args.output:
                                 with open(args.output, 'w', encoding='utf-8') as f:
                                     json.dump({'system': gui_data.get('system', {}), 'dsl': dsl_data}, f, indent=2)
+                                    
+                            # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
+                            try:
+                                db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
+                            except Exception as e:
+                                print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
                 finally:
                     router_gui.close()
             else:
@@ -114,8 +118,6 @@ def main():
                             if log_txt:
                                 added = db.insert_events_from_log(log_txt)
                                 print(f"Log: {added} neue Einträge.")
-                                with open('last_import.txt', 'w') as f:
-                                    f.write(str(int(time.time())))
                     finally:
                         router_gui.close()
 
@@ -130,6 +132,12 @@ def main():
                     if args.output:
                         with open(args.output, 'w', encoding='utf-8') as f:
                             json.dump({'system': client_data.get('system'), 'dsl': dsl_data}, f, indent=2)
+
+                    # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an (Telnet/SNMP Update)
+                    try:
+                        db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
+                    except Exception as e:
+                        print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach Telnet-Update: {e}")
 
                     router.close()
 
@@ -146,16 +154,17 @@ def main():
                 db.print_summary()
 
         if args.report_send or args.report_show:
-            last_import_age = float('inf')
+            needs_gui_update = False
             try:
-                if Path('last_import.txt').exists():
-                    with open('last_import.txt', 'r') as f:
-                        last_import_age = time.time() - int(f.read().strip())
-            except:
-                pass
+                sql = "SELECT COUNT(*) FROM clients WHERE hostname = 'Unknown'"
+                _, res = db._run_query(sql)
+                if res and res[0][0] > 0:
+                    needs_gui_update = True
+            except Exception as e:
+                print(f"Fehler bei Prüfung auf 'Unknown'-Clients: {e}")
 
-            if last_import_age > 900:
-                print("Letzter Log-Import älter als 15 Minuten. Versuche aktuelles Router-Log herunterzuladen...")
+            if needs_gui_update:
+                print("Es wurden 'Unknown'-Clients gefunden -> Aktualisiere Log und Client-Daten via WebGUI...")
                 try:
                     router_gui = TPLinkVX231vPlaywright(
                         config['Router']['routerip'],
@@ -168,15 +177,45 @@ def main():
                         if log_txt:
                             added = db.insert_events_from_log(log_txt)
                             print(f"Log: {added} neue Einträge.")
-                            with open('last_import.txt', 'w') as f:
-                                f.write(str(int(time.time())))
+                        
+                        gui_data = router_gui.get_clients()
+                        if 'error' not in gui_data:
+                            db.insert_system(gui_data.get('system', {}), time.time())
+                            db.insert_clients(gui_data)
+                            
+                        # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
+                        try:
+                            # Wir nutzen substr() von SQLite um die letzten 5 Zeichen der Form "XX:YY" zu greifen
+                            db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
+                        except Exception as e:
+                            print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
+                            
+                    router_gui.close()
+                except ImportError:
+                    print("Warnung: Modul 'playwright' ist nicht installiert. Automatisches WebGUI-Update fehlgeschlagen.")
+                except Exception as e:
+                    print(f"Fehler beim WebGUI-Kombinationsupdate: {e}")
+            else:
+                print("Keine 'Unknown'-Clients gefunden -> Lade nur neues Router-Log herunter...")
+                try:
+                    router_gui = TPLinkVX231vPlaywright(
+                        config['Router']['routerip'],
+                        config['GUI']['username'],
+                        config['GUI']['password'],
+                        debug=args.debug
+                    )
+                    if router_gui.login():
+                        log_txt = router_gui.downloadrouterlog_to_memory()
+                        if log_txt:
+                            added = db.insert_events_from_log(log_txt)
+                            print(f"Log: {added} neue Einträge.")
                     router_gui.close()
                 except ImportError:
                     print("Warnung: Modul 'playwright' ist nicht installiert. Automatischer Log-Download übersprungen.")
                 except Exception as e:
                     print(f"Fehler beim automatischen Log-Download: {e}")
 
-            reporter = TPLinkVX231vReport(config, db_path, debug=args.debug)
+            reporter = TPLinkVX231vReport(config, db_path, router=router, debug=args.debug)
             reporter.generate_report(send_email=args.report_send, show_browser=args.report_show)
 
         if args.dashboard:
