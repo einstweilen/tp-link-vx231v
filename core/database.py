@@ -269,6 +269,12 @@ class DatabaseManager:
             'ip4_curr': data.get('ip4_curr', ''),
             'ip6_curr': data.get('ip6_curr', '')
         }
+        
+        # Verhindern, dass fehlerhafte Werte in die DB geschrieben werden , weil GUI Scraping fehlerhaft war
+        if dsl_dict['downstream_noise_margin'] == 0.0:
+            print("DSL-Werte waren unvollständig, Eintrag in DB übersprungen")
+            return
+            
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
