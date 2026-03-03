@@ -353,8 +353,6 @@ class TPLinkVX231vReport:
         """
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
 
-        # Relevante Events filtern (ähnlich wie deine SQL Logik, aber spezifischer)
-        # Wir holen hier ALLES ab start_ts und filtern in Python, um komplexe Logik abzubilden
         sql = "SELECT time_ut, type, event_text FROM events WHERE time_ut >= ? ORDER BY time_ut ASC"
         _, rows = self._run_query(sql, params=[start_ts])
 
@@ -399,8 +397,8 @@ class TPLinkVX231vReport:
                     label = "Up"
 
                 # System Reboots (Kritisch)
-                elif evt_type == "System" and "Log" not in text:  # Einfacher Filter, müsste man verfeinern je nach Log
-                    pass  # Hier könnte man Reboots erkennen, wenn man spezifische Texte kennt
+                elif evt_type == "System" and "Log" not in text:
+                    pass
 
                 if category:
                     timeline_events.append({
@@ -540,8 +538,6 @@ class TPLinkVX231vReport:
         # Helper to get formatted name
         def get_formatted_name(m):
             name = mac_to_name.get(m, m).strip()
-            if name.endswith("-"):
-                name = name[:-1].strip()
             if len(name) > 13:
                 name = name[:8] + "…" + name[-4:]
             return name
@@ -586,9 +582,6 @@ class TPLinkVX231vReport:
 
         ax.set_yticks(y_ticks)
         ax.set_yticklabels(y_labels, fontsize=9)
-        # Die kleinen Striche an der Y-Achse sind Matplotlib-Ticks. Wir blenden sie aus.
-        ax.tick_params(axis='y', which='both', length=0)
-        # Die "Striche" hinter dem Namen sind Matplotlib Ticks, die schalten wir auf der y-Achse einfach aus
         ax.tick_params(axis='y', which='both', length=0)
 
         end_dt = datetime.fromtimestamp(current_time)
@@ -774,11 +767,11 @@ class TPLinkVX231vReport:
             ipv4_str = f"IPv4 {ip4}" if ip4 else "IPv4 unbekannt"
             ipv6_str = f"IPv6 {ip6}" if ip6 else "IPv6 unbekannt"
             
-            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>Verbunden seit {s_since}{time_diff_str}<br>Aktuelle {ipv4_str}<br>Aktuelle{ipv6_str}<br>Datenrate Down {s_down} Up {s_up}."
+            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>Verbunden seit {s_since}{time_diff_str}<br>Aktuelle {ipv4_str}<br>Aktuelle {ipv6_str}<br>Datenrate Down {s_down} Up {s_up}."
             
             if uptime_data:
                 u_days, u_hours = uptime_data
-                html += f"<br><br>Letzter Routerneustart vor {u_days} Tagen {u_hours} Stunden"
+                html += f"<br><br>Firmware: {fw_act} Letzter Routerneustart vor {u_days} Tagen {u_hours} Stunden"
                 
             html += "</td></tr>"
             
