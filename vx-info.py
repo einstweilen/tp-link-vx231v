@@ -18,7 +18,7 @@ from core.reporter import TPLinkVX231vReport
 from core.dashboard import DataCharter
 
 def main():
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     config.read('config.ini')
 
     parser = argparse.ArgumentParser(description='TP-Link VX231v Monitor & Reporter')
@@ -172,25 +172,26 @@ def main():
                         config['GUI']['password'],
                         debug=args.debug
                     )
-                    if router_gui.login():
-                        log_txt = router_gui.downloadrouterlog_to_memory()
-                        if log_txt:
-                            added = db.insert_events_from_log(log_txt)
-                            print(f"Log: {added} neue Einträge.")
-                        
-                        gui_data = router_gui.get_clients()
-                        if 'error' not in gui_data:
-                            db.insert_system(gui_data.get('system', {}), time.time())
-                            db.insert_clients(gui_data)
+                    try:
+                        if router_gui.login():
+                            log_txt = router_gui.downloadrouterlog_to_memory()
+                            if log_txt:
+                                added = db.insert_events_from_log(log_txt)
+                                print(f"Log: {added} neue Einträge.")
                             
-                        # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
-                        try:
-                            # Wir nutzen substr() von SQLite um die letzten 5 Zeichen der Form "XX:YY" zu greifen
-                            db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
-                        except Exception as e:
-                            print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
-                            
-                    router_gui.close()
+                            gui_data = router_gui.get_clients()
+                            if 'error' not in gui_data:
+                                db.insert_system(gui_data.get('system', {}), time.time())
+                                db.insert_clients(gui_data)
+                                
+                            # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
+                            try:
+                                # Wir nutzen substr() von SQLite um die letzten 5 Zeichen der Form "XX:YY" zu greifen
+                                db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
+                            except Exception as e:
+                                print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
+                    finally:
+                        router_gui.close()
                 except ImportError:
                     print("Warnung: Modul 'playwright' ist nicht installiert. Automatisches WebGUI-Update fehlgeschlagen.")
                 except Exception as e:
@@ -204,12 +205,14 @@ def main():
                         config['GUI']['password'],
                         debug=args.debug
                     )
-                    if router_gui.login():
-                        log_txt = router_gui.downloadrouterlog_to_memory()
-                        if log_txt:
-                            added = db.insert_events_from_log(log_txt)
-                            print(f"Log: {added} neue Einträge.")
-                    router_gui.close()
+                    try:
+                        if router_gui.login():
+                            log_txt = router_gui.downloadrouterlog_to_memory()
+                            if log_txt:
+                                added = db.insert_events_from_log(log_txt)
+                                print(f"Log: {added} neue Einträge.")
+                    finally:
+                        router_gui.close()
                 except ImportError:
                     print("Warnung: Modul 'playwright' ist nicht installiert. Automatischer Log-Download übersprungen.")
                 except Exception as e:

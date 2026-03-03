@@ -40,7 +40,7 @@ class TPLinkVX231vPlaywright:
         ])
         context = self.browser.new_context(ignore_https_errors=True, viewport={'width': 1280, 'height': 800})
         self.page = context.new_page()
-        self.page.set_default_timeout(15000)
+        self.page.set_default_timeout(30000)
 
     def _write_error_file(self, message, playwright_log=""):
         Path('logs').mkdir(exist_ok=True)
@@ -353,5 +353,23 @@ class TPLinkVX231vPlaywright:
             return {}
 
     def close(self):
+        """Abmelden über die WebGUI und Browser schließen."""
+        try:
+            if self.page:
+                self._log("Führe Logout aus...")
+                try:
+                    if self.debug: self._log("DEBUG: Warte bis zu 10s auf Logout-Button (#topLogout)...")
+                    self.page.locator('#topLogout').click(timeout=10000)
+                    
+                    if self.debug: self._log("DEBUG: Warte bis zu 5s auf Bestätigungs-Button (.btn-msg-ok)...")
+                    self.page.locator('.btn-msg-ok').click(timeout=5000)
+                    
+                    self._log("Erfolgreich abgemeldet.")
+                except Exception as inner_e:
+                    if self.debug: self._log(f"DEBUG: Logout UI-Elemente nicht gefunden (Timeout): {inner_e}")
+                    else: self._log("Fehler: Logout UI-Elemente nicht gefunden.")
+        except Exception as e:
+            self._log(f"Fehler beim Logout: {e}")
+            
         if self.browser: self.browser.close()
         if self.playwright: self.playwright.stop()
