@@ -30,3 +30,6 @@ router_data.db
 
 # MkDocs
 site/
+
+# Dateien ignorieren, deren Name mit 'nogit' beginnt
+nogit*

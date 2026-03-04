@@ -1,6 +1,5 @@
 import sys
 import shutil
-import socket
 import subprocess
 
 def print_result(label, success):

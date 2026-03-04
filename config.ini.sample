@@ -48,10 +48,12 @@ cleanup_excludes = 3
 table_1 = dsl
 field_1 = downstream_noise_margin # Hier können beliebige Werte aus der dsl Tabelle eingetragen werden
 label_1 = Downstream Störabstand (dB) # Angezeigte Überschrift
-
 # Zeitfenster
 hours_back = 48 # Darstellungszeitraum in Stunden
 start_hour = 0 # Chart beginnt um 00:00 Uhr
+
+[Reports]
+cleanup_reports = 7 # Reports älter als x Tage löschen
 
 [Statistics]
 # Diese Werte auf False setzen, um keine Auswertung zu erhalten

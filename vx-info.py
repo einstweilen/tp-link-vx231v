@@ -67,59 +67,57 @@ def main():
             elif not args.update and args.log:
                  use_gui = True # Für reines --log brauchen wir GUI
 
-            if use_gui:
-                router_gui = TPLinkVX231vPlaywright(
+            def export_json(output_path, sys_data, dsl_data):
+                if output_path:
+                    try:
+                        with open(output_path, 'w', encoding='utf-8') as f:
+                            json.dump({'system': sys_data, 'dsl': dsl_data}, f, indent=2)
+                    except Exception as e:
+                        print(f"Fehler beim JSON Export: {e}")
+
+            def fetch_gui_data(do_update, do_log):
+                gui_client = TPLinkVX231vPlaywright(
                     config['Router']['routerip'],
                     config['GUI']['username'],
                     config['GUI']['password'],
                     debug=args.debug
                 )
                 try:
-                    if router_gui.login():
-                        if args.log:
-                            log_txt = router_gui.downloadrouterlog_to_memory()
+                    if gui_client.login():
+                        if do_log:
+                            log_txt = gui_client.downloadrouterlog_to_memory()
                             if log_txt:
                                 added = db.insert_events_from_log(log_txt)
                                 print(f"Log: {added} neue Einträge.")
 
-                        if args.update:
-                            gui_data = router_gui.get_clients()
+                        if do_update:
+                            gui_data = gui_client.get_clients()
                             if 'error' not in gui_data:
-                                db.insert_system(gui_data.get('system', {}), time.time())
+                                sys_info = gui_data.get('system', {})
+                                db.insert_system(sys_info, time.time())
                                 db.insert_clients(gui_data)
 
-                            dsl_data = router_gui.get_dsl_data()
+                            dsl_data = gui_client.get_dsl_data()
                             if dsl_data:
                                 db.insert_dsl(dsl_data, time.time())
 
-                            if args.output:
-                                with open(args.output, 'w', encoding='utf-8') as f:
-                                    json.dump({'system': gui_data.get('system', {}), 'dsl': dsl_data}, f, indent=2)
-                                    
-                            # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
-                            try:
-                                db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
-                            except Exception as e:
-                                print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
+                            export_json(args.output, gui_data.get('system', {}), dsl_data)
+                            db.update_unknown_hostnames()
+                except ImportError:
+                    print("Warnung: Modul 'playwright' ist nicht installiert. WebGUI-Abruf fehlgeschlagen.")
+                except Exception as e:
+                    print(f"Fehler im GUI-Ablauf: {e}")
                 finally:
-                    router_gui.close()
+                    if 'gui_client' in locals():
+                        gui_client.close()
+
+
+            if use_gui:
+                fetch_gui_data(args.update, args.log)
             else:
                 # GUI nur für Log-Download nutzen, weil update via Telnet/SNMP lief
                 if args.log:
-                    router_gui = TPLinkVX231vPlaywright(
-                        config['Router']['routerip'],
-                        config['GUI']['username'],
-                        config['GUI']['password'],
-                        debug=args.debug
-                    )
-                    try:
-                        if router_gui.login():
-                            log_txt = router_gui.downloadrouterlog_to_memory()
-                            if log_txt:
-                                added = db.insert_events_from_log(log_txt)
-                                print(f"Log: {added} neue Einträge.")
-                    finally:
-                        router_gui.close()
+                    fetch_gui_data(False, True)
 
                 if args.update and router.login():
                     client_data = router.get_clients(db_manager=db)
@@ -129,16 +127,8 @@ def main():
                     dsl_data = router.get_dsl_data()
                     db.insert_dsl(dsl_data, time.time())
 
-                    if args.output:
-                        with open(args.output, 'w', encoding='utf-8') as f:
-                            json.dump({'system': client_data.get('system'), 'dsl': dsl_data}, f, indent=2)
-
-                    # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an (Telnet/SNMP Update)
-                    try:
-                        db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
-                    except Exception as e:
-                        print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach Telnet-Update: {e}")
-
+                    export_json(args.output, client_data.get('system'), dsl_data)
+                    db.update_unknown_hostnames()
                     router.close()
 
             # Fixes and printout mainly relevant if data was updated, but cleanup is fine either way
@@ -154,69 +144,14 @@ def main():
                 db.print_summary()
 
         if args.report_send or args.report_show:
-            needs_gui_update = False
-            try:
-                sql = "SELECT COUNT(*) FROM clients WHERE hostname = 'Unknown'"
-                _, res = db._run_query(sql)
-                if res and res[0][0] > 0:
-                    needs_gui_update = True
-            except Exception as e:
-                print(f"Fehler bei Prüfung auf 'Unknown'-Clients: {e}")
+            needs_gui_update = db.has_unknown_clients()
 
             if needs_gui_update:
                 print("Es wurden 'Unknown'-Clients gefunden -> Aktualisiere Log und Client-Daten via WebGUI...")
-                try:
-                    router_gui = TPLinkVX231vPlaywright(
-                        config['Router']['routerip'],
-                        config['GUI']['username'],
-                        config['GUI']['password'],
-                        debug=args.debug
-                    )
-                    try:
-                        if router_gui.login():
-                            log_txt = router_gui.downloadrouterlog_to_memory()
-                            if log_txt:
-                                added = db.insert_events_from_log(log_txt)
-                                print(f"Log: {added} neue Einträge.")
-                            
-                            gui_data = router_gui.get_clients()
-                            if 'error' not in gui_data:
-                                db.insert_system(gui_data.get('system', {}), time.time())
-                                db.insert_clients(gui_data)
-                                
-                            # Hänge die letzten 6 Zeichen der MAC-Adresse an verbleibende Unknown-Clients an
-                            try:
-                                # Wir nutzen substr() von SQLite um die letzten 5 Zeichen der Form "XX:YY" zu greifen
-                                db._run_query("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
-                            except Exception as e:
-                                print(f"Fehler beim Anhängen der MAC an Unknown-Clients nach WebGUI-Update: {e}")
-                    finally:
-                        router_gui.close()
-                except ImportError:
-                    print("Warnung: Modul 'playwright' ist nicht installiert. Automatisches WebGUI-Update fehlgeschlagen.")
-                except Exception as e:
-                    print(f"Fehler beim WebGUI-Kombinationsupdate: {e}")
+                fetch_gui_data(True, True)
             else:
                 print("Keine 'Unknown'-Clients gefunden -> Lade nur neues Router-Log herunter...")
-                try:
-                    router_gui = TPLinkVX231vPlaywright(
-                        config['Router']['routerip'],
-                        config['GUI']['username'],
-                        config['GUI']['password'],
-                        debug=args.debug
-                    )
-                    try:
-                        if router_gui.login():
-                            log_txt = router_gui.downloadrouterlog_to_memory()
-                            if log_txt:
-                                added = db.insert_events_from_log(log_txt)
-                                print(f"Log: {added} neue Einträge.")
-                    finally:
-                        router_gui.close()
-                except ImportError:
-                    print("Warnung: Modul 'playwright' ist nicht installiert. Automatischer Log-Download übersprungen.")
-                except Exception as e:
-                    print(f"Fehler beim automatischen Log-Download: {e}")
+                fetch_gui_data(False, True)
 
             reporter = TPLinkVX231vReport(config, db_path, router=router, debug=args.debug)
             reporter.generate_report(send_email=args.report_send, show_browser=args.report_show)

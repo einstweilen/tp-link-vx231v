@@ -205,6 +205,31 @@ class DatabaseManager:
             row = cursor.fetchone()
             return row[0] if row and row[0] else None
 
+    def update_unknown_hostnames(self):
+        """Hängt die letzten 6 Zeichen der MAC an 'Unknown'-Hostnames an."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE clients SET hostname = 'Unknown:' || substr(mac, -5, 5) WHERE hostname = 'Unknown'")
+                conn.commit()
+                return cursor.rowcount
+        except Exception as e:
+            print(f"Fehler beim Anhängen der MAC an Unknown-Clients: {e}")
+            return 0
+
+    def has_unknown_clients(self):
+        """Prüft, ob Clients mit dem Hostnamen 'Unknown' existieren."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM clients WHERE hostname = 'Unknown'")
+                row = cursor.fetchone()
+                return row[0] > 0 if row else False
+        except Exception as e:
+            print(f"Fehler bei Prüfung auf 'Unknown'-Clients: {e}")
+            return False
+
+
     def insert_system(self, system_data, timestamp):
         current_firmware = system_data.get('firmware', '')
         if not current_firmware or current_firmware == 'N/A':

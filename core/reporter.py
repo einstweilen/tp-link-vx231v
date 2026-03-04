@@ -856,6 +856,9 @@ class TPLinkVX231vReport:
                 f.write(html)
             print(f"Der Bericht wurde generiert und liegt unter {rel_path}")
             
+            self._cleanup_old_reports()
+
+            
             if show_browser:
                 try:
                     abs_path = os.path.abspath(rel_path)
@@ -889,3 +892,25 @@ class TPLinkVX231vReport:
                 print("E-Mail erfolgreich versendet.")
             except Exception as e:
                 print(f"Versandfehler: {e}")
+
+    def _cleanup_old_reports(self):
+        import time
+        from pathlib import Path
+        cleanup_days = self.config.getint('Reports', 'cleanup_reports', fallback=0)
+        if cleanup_days > 0:
+            reports_dir = Path('reports')
+            if reports_dir.exists() and reports_dir.is_dir():
+                now = time.time()
+                deleted_count = 0
+                for f in reports_dir.glob('vx-report*.html'):
+                    if f.is_file():
+                        file_age_days = (now - f.stat().st_mtime) / (24 * 3600)
+                        if file_age_days > cleanup_days:
+                            try:
+                                f.unlink()
+                                deleted_count += 1
+                                self._log(f"Gelöschter alter Report: {f.name}")
+                            except Exception as e:
+                                self._log(f"Fehler beim Löschen des Reports {f.name}: {e}")
+                if deleted_count > 0:
+                    print(f"Es wurden {deleted_count} alte Report(s) gelöscht (älter als {cleanup_days} Tage).")
