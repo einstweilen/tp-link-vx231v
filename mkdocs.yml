@@ -10,6 +10,7 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.footer
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -32,9 +33,10 @@ nav:
   - Einrichtung & Konfiguration:
     - Setup & Installation: setup.md
     - Konfiguration & Automatisierung: konfiguration.md
-  - Nutzung:
-    - Report: report.md
-    - Web-Dashboard: dashboard.md
+    - Die config.ini im Detail: config-details.md
+  - Auswertungen:
+    - Statusreport: report.md
+    - Browser-Dashboard: dashboard.md
   - Erweitert:
     - Lokalisierung: lokalisierung.md
 

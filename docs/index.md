@@ -1,18 +1,26 @@
 # TP-Link VX231v Tracker - Dokumentation
 
-Willkommen zur Dokumentation des TP-Link VX231v Trackers. 
+Eine Sammlung von Python-Skripten zur Erfassung, Speicherung und Visualisierung der Router-Daten.
 
-Ein Set aus Python-Skripten zum automatisierten Auslesen, Speichern und Darstellen von Router-Daten des TP-Link VX231v via Telnet, SNMP und Web-Scraping.
+Ausgangspunkt war der Bedarf, DSL-Leitungswerte und verbundene Netzwerk-Clients kontinuierlich aufzuzeichnen, um Verbindungsabbrüche und Fehlerraten im zeitlichen Verlauf nachvollziehen zu können.<br>
+Da der TP-Link VX231v keine offizielle API für diese Zwecke bereitstellt, automatisiert dieses Skript-Set den Datenabruf über die am Router verfügbaren Schnittstellen.<br>
+Ist auf dem Router der superadmin-Zugang aktiviert ([Zur Anleitung](https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md)) können die Leitungswerte per Telnet und SNMP in Sekunden erfasst werden.<br>
+Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang nicht aktiviert ist, erfolgt ein automatisiertes Auslesen der Daten aus der Weboberfläche des Router, was allerdings deutlich länger dauert.
 
-## Schnelleinstieg
+## Funktionsumfang
 
-In dieser Dokumentation finden Sie detaillierte Anleitungen zu den verschiedenen Aspekten des Projekts. Nutzen Sie die Menüleiste oben oder links zur Navigation.
+*   **Datenerfassung:** Automatisierter Abruf von Systemzuständen, DSL-Werten und Client-Listen primär per Telnet und SNMP. Für Daten, die darüber nicht zugänglich sind, erfolgt ein Auslesen der Weboberfläche des Routers.
+*   **Datenspeicherung:** Alle erfassten Messwerte, verbundenen Geräte und System-Logs werden fortlaufend in einer SQLite-Datenbank gespeichert.
+*   **Reporting:** Die gesammelten Daten der letzten 24 Stunden können als HTML-Statusbericht aufbereitet werden. Der Bericht enthält unter anderem aktuelle Verbindungsparameter, Auszüge aus dem Event-Log und ein Anwesenheitsdiagramm der Clients. Der Versand kann automatisiert per E-Mail erfolgen.
+*   **Lokales Web-Dashboard:** Ein integrierter lokaler Webserver ermöglicht die interaktive grafische Visualisierung der historisierten DSL-Parameter über frei wählbare Zeiträume.
 
-*   [**Setup & Installation**](setup.md) - Systemvoraussetzungen und Installation
-*   [**Konfiguration**](konfiguration.md) - Anpassung der `config.ini` und Cronjobs
-*   [**Report**](report.md) - Übersicht über den generierten HTML-Bericht
-*   [**Dashboard**](dashboard.md) - Nutzung des lokalen Web-Dashboards
-*   [**Lokalisierung**](lokalisierung.md) - Anpassung der angezeigten Bezeichner
+## Dokumentationsübersicht
+
+*   [**Setup & Installation**](setup.md) - Systemvoraussetzungen (inkl. Aktivierung des Superadmin-Zugangs) und Installation.
+*   [**Konfiguration**](konfiguration.md) - Syntax der `config.ini`, Startparameter und Einrichtung der automatisierten Ausführung.
+*   [**Auswertungen - Statusreport**](report.md) - Erläuterung der Inhalte und Parameter des generierten HTML-Berichts.
+*   [**Auswertungen - Browser-Dashboard**](dashboard.md) - Nutzung der lokalen, interaktiven Ansicht für historische Daten.
+*   [**Lokalisierung**](lokalisierung.md) - Anleitung zur Anpassung der Tabellenansicht auf andere Sprachen.
 
 ---
-*Die vollständige Übersicht und Historie des Projekts finden Sie in der [vx-info.md im Hauptverzeichnis](https://github.com/einstweilen/tp-link-vx231v/blob/main/vx-info.md).*
+*Weitere Informationen unter [vx-info.md](https://github.com/einstweilen/tp-link-vx231v/blob/main/vx-info.md).*

@@ -3,6 +3,8 @@
 Die Vorlage `config.ini.sample` zu `config.ini` kopieren.
 Anschließend die Zugangsdaten für die Router Weboberfläche, SNMP, telnet sowie die E-Mail-Konfiguration an das eigene Netzwerk anpassen.
 
+Für eine detaillierte Erklärung der einzelnen Parameter, siehe [config-details.md](config-details.md).
+
 ## Testlauf durchführen (`--test`)
 
 Überprüfen, ob die Kommunikation mit dem Router funktioniert und alle Abhängigkeiten korrekt installiert sind. Dies sollte als erster Schritt ausgeführt werden (Achtung: venv muss aktiv sein!):
