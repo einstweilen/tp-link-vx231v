@@ -289,16 +289,23 @@ class TPLinkVX231vReport:
         _, rows = self._run_query(sql)
         return rows
 
-    def _get_events(self, hours=24, exclude_types=None):
+    def _get_events(self, hours=24, exclude_types=None, show_level=4):
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
         params = [start_ts]
         exclude_clause = ""
         if exclude_types:
-            exclude_clause = f"AND type NOT IN ({','.join('?' for _ in exclude_types)})"
+            # Zeige Events, die NICHT in exclude_types stehen ODER die ein Fehler/Warnung (<= 4) sind.
+            # UND zeige generell nur Events, die <= show_level sind.
+            exclude_clause = f"AND (type NOT IN ({','.join('?' for _ in exclude_types)}) OR level_id <= 4) AND level_id <= ?"
             params.extend(exclude_types)
-        sql = f"SELECT time_ut, type, event_text FROM events WHERE time_ut >= ? {exclude_clause} ORDER BY time_ut DESC"
+            params.append(show_level)
+        else:
+            exclude_clause = "AND level_id <= ?"
+            params.append(show_level)
+            
+        sql = f"SELECT time_ut, type, event_text, level_id FROM events WHERE time_ut >= ? {exclude_clause} ORDER BY time_ut DESC"
         _, rows = self._run_query(sql, params)
-        return [[datetime.fromtimestamp(int(r[0])).strftime('%d.%m.%y %H:%M:%S'), r[1], r[2]] for r in rows]
+        return [[datetime.fromtimestamp(int(r[0])).strftime('%d.%m.%y %H:%M:%S'), f"{r[1]} {r[3]}", r[2]] for r in rows]
 
     def _get_connection_status(self):
         # Verbunden seit: neuester erfolgreicher PPP-Connect
@@ -735,7 +742,8 @@ class TPLinkVX231vReport:
         clients = self._get_connected_clients()
         traffic = self._get_data_volume_clients()
         charts = self._generate_charts(hours_back)
-        events = self._get_events(evt_hours, exclude)
+        show_level = self.config.getint('Events', 'show_level', fallback=4)
+        events = self._get_events(24, exclude, show_level)
         
         msg_root = MIMEMultipart('mixed')
         msg_root['Subject'] = f"Ihre tägliche {model_name} Verbindungsübersicht vom {date_str}"
@@ -841,9 +849,15 @@ class TPLinkVX231vReport:
 
         if events:
             html += "<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>Ereignislog (letzte 24h)</td></tr><tr><td><table width='100%' style='font-size: 11px; color: #555;'>"
-            for i, e in enumerate(events[:15]):
+            for i, e in enumerate(events):
                 bg = "#ffffff" if i % 2 == 0 else "#f9f9f9"
                 html += f"<tr style='background-color: {bg};'><td width='140'>{e[0]}</td><td width='80'>{e[1]}</td><td>{e[2]}</td></tr>"
+            
+            # Legend for log levels
+            html += "<tr><td colspan='3' style='padding-top: 5px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee;'>"
+            html += "0 Notfall &bull; 1 Alarm &bull; 2 Kritisch &bull; 3 Fehler &bull; 4 Vorsicht &bull; 5 Hinweis &bull; 6 Info &bull; 7 Debug"
+            html += "</td></tr>"
+            
             html += "</table></td></tr></table></td></tr>"
         html += "</table><p style='padding: 20px; text-align: center; font-size: 10pt; color: #999;'>Automatisch generiert und ohne Unterschrift gültig</p></body></html>"
         
