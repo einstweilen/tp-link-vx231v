@@ -54,6 +54,50 @@ def main():
         debug=args.debug
     )
 
+    def export_json(output_path, sys_data, dsl_data):
+        if output_path:
+            try:
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump({'system': sys_data, 'dsl': dsl_data}, f, indent=2)
+            except Exception as e:
+                print(f"Fehler beim JSON Export: {e}")
+
+    def fetch_gui_data(do_update, do_log):
+        gui_client = TPLinkVX231vPlaywright(
+            config['Router']['routerip'],
+            config['GUI']['username'],
+            config['GUI']['password'],
+            debug=args.debug
+        )
+        try:
+            if gui_client.login():
+                if do_log:
+                    log_txt = gui_client.downloadrouterlog_to_memory()
+                    if log_txt:
+                        added = db.insert_events_from_log(log_txt)
+                        print(f"Log: {added} neue Einträge.")
+
+                if do_update:
+                    gui_data = gui_client.get_clients()
+                    if 'error' not in gui_data:
+                        sys_info = gui_data.get('system', {})
+                        db.insert_system(sys_info, time.time())
+                        db.insert_clients(gui_data)
+
+                    dsl_data = gui_client.get_dsl_data()
+                    if dsl_data:
+                        db.insert_dsl(dsl_data, time.time())
+
+                    export_json(args.output, gui_data.get('system', {}), dsl_data)
+                    db.update_unknown_hostnames()
+        except ImportError:
+            print("Warnung: Modul 'playwright' ist nicht installiert. WebGUI-Abruf fehlgeschlagen.")
+        except Exception as e:
+            print(f"Fehler im GUI-Ablauf: {e}")
+        finally:
+            if 'gui_client' in locals():
+                gui_client.close()
+
     try:
         if args.update or args.log:
             use_gui = args.gui
@@ -66,50 +110,6 @@ def main():
                     print(f"Hinweis: Telnet={is_telnet}, SNMP={is_snmp} -> wechsle automatisch auf --gui.")
             elif not args.update and args.log:
                  use_gui = True # Für reines --log brauchen wir GUI
-
-            def export_json(output_path, sys_data, dsl_data):
-                if output_path:
-                    try:
-                        with open(output_path, 'w', encoding='utf-8') as f:
-                            json.dump({'system': sys_data, 'dsl': dsl_data}, f, indent=2)
-                    except Exception as e:
-                        print(f"Fehler beim JSON Export: {e}")
-
-            def fetch_gui_data(do_update, do_log):
-                gui_client = TPLinkVX231vPlaywright(
-                    config['Router']['routerip'],
-                    config['GUI']['username'],
-                    config['GUI']['password'],
-                    debug=args.debug
-                )
-                try:
-                    if gui_client.login():
-                        if do_log:
-                            log_txt = gui_client.downloadrouterlog_to_memory()
-                            if log_txt:
-                                added = db.insert_events_from_log(log_txt)
-                                print(f"Log: {added} neue Einträge.")
-
-                        if do_update:
-                            gui_data = gui_client.get_clients()
-                            if 'error' not in gui_data:
-                                sys_info = gui_data.get('system', {})
-                                db.insert_system(sys_info, time.time())
-                                db.insert_clients(gui_data)
-
-                            dsl_data = gui_client.get_dsl_data()
-                            if dsl_data:
-                                db.insert_dsl(dsl_data, time.time())
-
-                            export_json(args.output, gui_data.get('system', {}), dsl_data)
-                            db.update_unknown_hostnames()
-                except ImportError:
-                    print("Warnung: Modul 'playwright' ist nicht installiert. WebGUI-Abruf fehlgeschlagen.")
-                except Exception as e:
-                    print(f"Fehler im GUI-Ablauf: {e}")
-                finally:
-                    if 'gui_client' in locals():
-                        gui_client.close()
 
 
             if use_gui:

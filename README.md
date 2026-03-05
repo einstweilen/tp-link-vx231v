@@ -14,11 +14,14 @@ Zusätzliche Funktionen des Router aktivieren und nutzen.
 <br>
 <details>
 <summary>Schnellanleitung: Aktivierung des superadmin</summary>
-Hinweis: Durch den Werksreset gehen alle Router-Einstellungen verloren!
+
+**WICHTIG:** Durch den Werksreset gehen alle Router-Einstellungen verloren!
+
 * Reset-Knopf auf der Router-Rückseite ca. 10 Sekunden gedrückt halten
 * Sobald die blaue LED blinkt, per LAN verbinden und http://192.168.1.1/superadmin aufrufen
 * Passwort für "superadmin" vergeben
 * ISP-Zugangsdaten eingeben
+
 </details>
 
 [Zur vollständigen Aktivierungsanleitung:](superadmin_telnet_snmp_iperf.md)
