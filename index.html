@@ -406,6 +406,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#was-bietet-ihnen-der-tracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Was bietet Ihnen der Tracker?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#schnelleinstieg" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -768,6 +779,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#was-bietet-ihnen-der-tracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Was bietet Ihnen der Tracker?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#schnelleinstieg" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -799,19 +821,30 @@
 
 
 <h1 id="tp-link-vx231v-tracker-dokumentation">TP-Link VX231v Tracker - Dokumentation</h1>
-<p>Willkommen zur Dokumentation des TP-Link VX231v Trackers. </p>
-<p>Ein Set aus Python-Skripten zum automatisierten Auslesen, Speichern und Darstellen von Router-Daten des TP-Link VX231v via Telnet, SNMP und Web-Scraping.</p>
-<h2 id="schnelleinstieg">Schnelleinstieg</h2>
-<p>In dieser Dokumentation finden Sie detaillierte Anleitungen zu den verschiedenen Aspekten des Projekts. Nutzen Sie die Menüleiste oben oder links zur Navigation.</p>
+<p>Willkommen zur Dokumentation des TP-Link VX231v Trackers!</p>
+<p>Haben Sie sich auch schon einmal gefragt:
+*   <strong>Wie stabil ist eigentlich meine DSL Leitung wirklich?</strong>
+*   <strong>Verliere ich nachts immer wieder die Verbindung, ohne es zu merken?</strong>
+*   <strong>Welche Geräte tummeln sich in meinem WLAN, und wie lange sind sie online?</strong></p>
+<p>Aus genau dieser Neugierde – und dem Fehlen einer zugänglichen API beim Router – ist dieses Projekt entstanden. Der TP-Link VX231v Tracker liefert Ihnen die Antworten, indem er automatisiert die Systemzustände, DSL-Werte und verbundenen Clients Ihres Routers erfasst.</p>
+<h2 id="was-bietet-ihnen-der-tracker">Was bietet Ihnen der Tracker?</h2>
 <ul>
-<li><a href="setup/"><strong>Setup &amp; Installation</strong></a> - Systemvoraussetzungen und Installation</li>
-<li><a href="konfiguration/"><strong>Konfiguration</strong></a> - Anpassung der <code>config.ini</code> und Cronjobs</li>
-<li><a href="report/"><strong>Report</strong></a> - Übersicht über den generierten HTML-Bericht</li>
-<li><a href="dashboard/"><strong>Dashboard</strong></a> - Nutzung des lokalen Web-Dashboards</li>
-<li><a href="lokalisierung/"><strong>Lokalisierung</strong></a> - Anpassung der angezeigten Bezeichner</li>
+<li><strong>Vollkommene Transparenz:</strong> Ein täglicher, visuell aufbereiteter <a href="report/">Statusreport</a> per E-Mail fasst die letzten 24 Stunden zusammen – inklusive einem anschaulichen Anwesenheitschart aller Geräte.</li>
+<li><strong>Historische Daten:</strong> Über ein interaktives <a href="dashboard/">Browser-Dashboard</a> behalten Sie stets den Überblick über die Leistungsentwicklung Ihrer Leitung.</li>
+<li><strong>Sicherer Frühwarnmechanismus:</strong> Erkennen Sie Verbindungsabbrüche und hohe Fehlerraten frühzeitig, bevor sie zum echten Problem werden.</li>
+<li><strong>Flexibles Datensammeln:</strong> Das System holt sich die Daten über schnelle, robuste Protokolle (Telnet, SNMP) oder liest sie notfalls clever über die Weboberfläche aus (Web-Scraping). Alle Werte werden sauber in einer lokalen SQLite-Datenbank historisiert.</li>
+</ul>
+<h2 id="schnelleinstieg">Schnelleinstieg</h2>
+<p>In dieser Dokumentation finden Sie detaillierte Anleitungen, wie Sie den Tracker auf Ihrem System (z. B. auf einem Raspberry Pi) installieren und optimal nutzen. Nutzen Sie die Menüleiste oben oder links zur Navigation:</p>
+<ul>
+<li><a href="setup/"><strong>Setup &amp; Installation:</strong></a> Von Null zum lautlos schnurrenden Datensammler.</li>
+<li><a href="konfiguration/"><strong>Konfiguration:</strong></a> So passen Sie die <code>config.ini</code> an und automatisieren den Tracker.</li>
+<li><a href="report/"><strong>Auswertungen - Statusreport:</strong></a> Erfahren Sie alles über den generierten HTML-Bericht.</li>
+<li><a href="dashboard/"><strong>Auswertungen - Das Browser-Dashboard:</strong></a> So nutzen Sie das interaktive Web-Interface.</li>
+<li><a href="lokalisierung/"><strong>Erweitert - Lokalisierung:</strong></a> Passen Sie die angezeigten Begriffe und Texte nach eigenen Wünschen an.</li>
 </ul>
 <hr />
-<p><em>Die vollständige Übersicht und Historie des Projekts finden Sie in der <a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/vx-info.md">vx-info.md im Hauptverzeichnis</a>.</em></p>
+<p><em>Möchten Sie mehr zur technischen Entwicklung erfahren? Die vollständige Historie des Projekts finden Sie in der <a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/vx-info.md">vx-info.md im Hauptverzeichnis</a>.</em></p>
 
 
 
