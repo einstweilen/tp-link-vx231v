@@ -1,5 +1,22 @@
 ### Changelog / Updates
 
+## 05.03.2026
+
+* **Statusbericht** 
+  * Eventlogausgabe nach Loglevel oder Typ filterbar
+  * Einführung virtueller Loglevel '8' (alle Events außer exclude_types)
+  * Alte Statusreports automatisch löschbar (cleanup_reports = 7)
+
+* **Sonstiges**
+  * `main()` aufgeräumt, Funktionen in Klassen verschoben
+
+## 03.03.2026
+
+* **Diverses** 
+  * Browsersession sauber beenden und Timeout für langsame Geräte erhöht
+  * Falsche DSL Werte vor dem Schreiben in DB abgefangen
+  * Formatierung des Statusreport Headers
+
 ## 01.03.2026
 
 * **Statusbericht** 
