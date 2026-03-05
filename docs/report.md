@@ -90,4 +90,36 @@ Abschaltbar im [Statistics] Bereich der config.ini durch setzen der Werte auf Fa
 
 ![Ereignislog](images/report-eventlog.jpg)
 
-Um das Log kompakt zu halten, werden Ereignisse der Typen "DHCPD" und "Mesh" nicht angezeigt. Diese können in der config.ini im Bereich [Events] unter "exclude_types" konfiguriert werden.
+### Konfiguration der Ereignisloganzeige
+Was in dem Statusreport angezeigt wird, läßt sich über zwei Parameter steuern, den Loglevel und den Typ des Events.
+
+#### Der Loglevel
+Der Router unterteilt aufgetretene Events in Loglevel von "0 Notfall" bis "7 Debug". Über den Parameter "show_level" in der config.ini wird festgelegt, bis zu welchem Loglevel Events im Statusreport angezeigt werden.<br>
+
+Die vom Router verwendeten Loglevel lauten:<br>
+```
+0 Notfall   1 Alarm    2 Kritisch  3 Fehler 
+4 Vorsicht  5 Hinweis  6 Info      7 Debug
+```
+
+Ist in der config.ini "show_level = 4" gesetzt, werden alle Events bis einschließlich Level "4 Vorsicht" angezeigt, also 0 Notfall, 1 Alarm, 2 Kritisch, 3 Fehler, 4 Vorsicht.
+
+Beispielausgabe für einen Event:
+```
+Datum             Level Typ Event
+05.03.26 03:50:25	3   PPP ppp0 LCP down
+```
+
+Wird "show_level = 7" in der config.ini gesetzt, werden alle Events der letzten 24 Stunden im Statusreport angezeigt, was sehr umfangreich werden kann.
+
+
+#### Die Eventtypen
+Jeder Event ist einem Eventtyp zugeordnet. Die vom Router verwendeten Eventtypen lauten: "DHCPD", "HTTPD", "MESH", "PPP", "VOIP".
+
+Besonders die Events der Typen "DHCPD" und "MESH" treten sehr häufig auf, da sie durch das "ständige" An- und Abmelden der Clients entstehen, wie oben bereits bei "show_level = 7" geschrieben.
+<br>
+Um hier eine bessere Übersicht zu schaffen, wurden die bestehenden Eventlevel des Routers um einen weiteren virtuellen Level "8" ergänzt. Level "8" dient dazu, sich zwar alle Logeinträge anzeigen zu lassen, aber gleichzeitig bestimmte Eventtypen, die einen aktuell nicht interessieren, ausblenden zu lassen.
+
+Zur Verwednung dieses Levels trägt man bei **show_level = 8** und bei **exclude_types** die zu ignorierenden Eventtypen ein. 
+
+Die Eventtypen "DHCPD" und "MESH" sind in der Standardkonfiguration bereits eingetragen und werden somit bei gewähltem Level 8 nicht im Statusreport angezeigt.<br>Weitere oder andere Eventtypen können in der config.ini im Bereich [Events] unter "exclude_types" konfiguriert werden. Speziell "VOIP" könnte dort ergänzt werden, da dazu viele reine Info-Meldungen geschrieben werden.

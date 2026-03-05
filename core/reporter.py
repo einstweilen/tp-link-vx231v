@@ -293,19 +293,25 @@ class TPLinkVX231vReport:
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
         params = [start_ts]
         exclude_clause = ""
-        if exclude_types:
-            # Zeige Events, die NICHT in exclude_types stehen ODER die ein Fehler/Warnung (<= 4) sind.
-            # UND zeige generell nur Events, die <= show_level sind.
-            exclude_clause = f"AND (type NOT IN ({','.join('?' for _ in exclude_types)}) OR level_id <= 4) AND level_id <= ?"
-            params.extend(exclude_types)
-            params.append(show_level)
+        
+        if show_level == 8:
+            if exclude_types:
+                exclude_clause = f"AND type NOT IN ({','.join('?' for _ in exclude_types)})"
+                params.extend(exclude_types)
         else:
-            exclude_clause = "AND level_id <= ?"
-            params.append(show_level)
+            if exclude_types:
+                # Zeige Events, die NICHT in exclude_types stehen ODER die ein Fehler/Warnung (<= 4) sind.
+                # UND zeige generell nur Events, die <= show_level sind.
+                exclude_clause = f"AND (type NOT IN ({','.join('?' for _ in exclude_types)}) OR level_id <= 4) AND level_id <= ?"
+                params.extend(exclude_types)
+                params.append(show_level)
+            else:
+                exclude_clause = "AND level_id <= ?"
+                params.append(show_level)
             
         sql = f"SELECT time_ut, type, event_text, level_id FROM events WHERE time_ut >= ? {exclude_clause} ORDER BY time_ut DESC"
         _, rows = self._run_query(sql, params)
-        return [[datetime.fromtimestamp(int(r[0])).strftime('%d.%m.%y %H:%M:%S'), f"{r[1]} {r[3]}", r[2]] for r in rows]
+        return [[datetime.fromtimestamp(int(r[0])).strftime('%d.%m.%y %H:%M:%S'), f"{r[3]} {r[1]}", r[2]] for r in rows]
 
     def _get_connection_status(self):
         # Verbunden seit: neuester erfolgreicher PPP-Connect

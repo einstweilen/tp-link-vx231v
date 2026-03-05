@@ -38,16 +38,22 @@ sender_password = DEIN_EMAIL_PASSWORT
 recipient_email = empfaenger@example.com
 
 [Events]
-# Filter: Welche Ereignistypen sollen NICHT beim Cleanup gelöscht werden
+# Filter: Welche Ereignistypen sollen beim Cleanup gelöscht werden
 exclude_types = DHCPD, Mesh
 # Anzahl der Tage, nach denen unwichtige Events gelöscht werden (0 = deaktiviert)
 cleanup_excludes = 3
+
+# Log Level Filter: 0 Notfall   1 Alarm    2 Kritisch  3 Fehler 
+#                   4 Vorsicht  5 Hinweis  6 Info      7 Debug (zeigt alles)
+#                   8 wie 7 Debug aber filtert 'exclude_types' aus
+show_level = 4
 
 [Charts]
 # Chart-Konfigurationen für Statusreport (später GUI)
 table_1 = dsl
 field_1 = downstream_noise_margin # Hier können beliebige Werte aus der dsl Tabelle eingetragen werden
 label_1 = Downstream Störabstand (dB) # Angezeigte Überschrift
+
 # Zeitfenster
 hours_back = 48 # Darstellungszeitraum in Stunden
 start_hour = 0 # Chart beginnt um 00:00 Uhr
