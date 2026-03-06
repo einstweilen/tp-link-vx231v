@@ -1,0 +1,7 @@
+:root, [data-md-color-scheme="slate"] {
+  --md-footer-bg-color: var(--md-primary-fg-color);
+  --md-footer-bg-color--dark: var(--md-primary-fg-color--dark);
+  --md-footer-fg-color: var(--md-primary-bg-color);
+  --md-footer-fg-color--light: var(--md-primary-bg-color);
+  --md-footer-fg-color--lighter: var(--md-primary-bg-color);
+}

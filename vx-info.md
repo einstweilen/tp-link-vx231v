@@ -45,13 +45,13 @@ Der Bericht kann im Browser geöffnet oder zeitgesteuert als eMail versendet wer
       <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
   </details>
 
-### 4. Lokales Web-Dashboard
+### 4. Lokales Browser-Dashboard
 Für den schnellen Überblick der aufgezeichneten Daten können diese als interaktive Diagramme dargestellt werden. Der Zugriff erfolgt über ein lokales Web-Interface, in dem die anzuzeigen Daten und der Zeitraum ausgewählt werden können.
 
   <details>
-      <summary>Beispiel: Web-Dashboard</summary>
+      <summary>Beispiel: Browser-Dashboard</summary>
       <br>
-      <img src="images/beispiel-dashboard.jpg" alt="Beispiel Web-Dashboard">
+      <img src="images/beispiel-dashboard.jpg" alt="Beispiel Browser-Dashboard">
   </details>
 
 ### 5. Lokale Datenspeicherung
@@ -59,7 +59,7 @@ Sämtliche ausgelesenen Werte und Logs werden in eine SQLite-Datenbank geschrieb
 Standardmäßig werden DHCP und MESH Einträge nach drei Tagen aus der DB gelöscht; in der `config.ini` (unter `[Events]`) kann die Anzahl der Tage konfiguriert werden
 
 ### 6. Lokalisierung und eigene Feldbeschriftungen
-Die Datenbank `router_lang.db` dient als Übersetzungsmatrix. Sie wandelt technische Spaltennamen (z. B. `downstream_curr_rate`) für das Web-Dashboard und den HTML-Bericht in menschenlesbare Bezeichner (z. B. "Aktuelle Download-Rate") um.<br>
+Die Datenbank `router_lang.db` dient als Übersetzungsmatrix. Sie wandelt technische Spaltennamen (z. B. `downstream_curr_rate`) für das Browser-Dashboard und den HTML-Bericht in menschenlesbare Bezeichner (z. B. "Aktuelle Download-Rate") um.<br>
 Eigene Übersetzungen können direkt in der router_lang.db oder auch  im Quellcode des beiliegenden Hilfsskripts `lang_editor.py` (innerhalb der Liste `translations`) angepasst und erweitert werden. Ein anschließendes Ausführen des Skripts generiert die Übersetzungsdatenbank neu.
 
 ## Einrichtung und Konfiguration
@@ -108,7 +108,7 @@ Für detaillierte Informationen zu Einrichtung, Konfiguration und Nutzung lesen 
     Anpassung der `config.ini`, Testläufe, Ausführungsoptionen (CLI) und Einrichtung von Cronjobs.
 *   [**Report**](docs/report.md)
     Details zur Berichtgenerierung und dem Versand per E-Mail.
-*   [**Web-Dashboard**](docs/dashboard.md)
+*   [**Browser-Dashboard**](docs/dashboard.md)
     Hinweise zur Nutzung des lokalen Dashboards und der Diagramme.
 *   [**Lokalisierung**](docs/lokalisierung.md)
     Anleitung zur Übersetzung und Anpassung der Feldbeschriftungen über die `router_lang.db`.

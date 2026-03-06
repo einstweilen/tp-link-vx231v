@@ -38,7 +38,7 @@ Optionale Zugangsparameter für SNMP (Simple Network Management Protocol).
 
 Login-Daten für das reguläre TP-Link Web-Interface.
 
-*   `username` / `password`: Die ganz normalen Zugangsdaten, mit denen Sie sich auch im Vorbeigehen im Router einloggen.
+*   `username` / `password`: Die ganz normalen Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.
     *   **Nutzung:** Das Skript nutzt via `Playwright` einen headless Browser, um damit das vollständige Eventlog des Routers (`--log`) herunterzuladen und Client-Hostnames auszulesen.<br>Ohne Telnet/SNMP fallen auch die standardmäßigen DSL-Abfragen (`--update`) automatisch auf diesen (langsameren) Vorgang zurück.
 
 ## [Email]

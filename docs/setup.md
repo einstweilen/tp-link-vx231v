@@ -35,11 +35,11 @@ Downloading Chromium 123.0.6312.4 (playwright build v1105)...
 Playwright build of Chromium is installed.
 
 [6/11] OPTIONAL: SNMP / TELNET verwenden
-      Falls Sie mit dem superadmin Account Ihres Routers
-      SNMP und Telnet aktiviert haben, können Sie
+      Falls mit dem superadmin Account des Routers
+      SNMP und Telnet aktiviert wurden, können
       Routerdaten auch per SNMP abrufen.
-      Dafür benötigen Sie 'snmpget' und 'snmpwalk'.
-      Möchten Sie SNMP-Tools jetzt installieren? (j/N) j
+      Dafür werden 'snmpget' und 'snmpwalk' benötigt.
+      Sollen SNMP-Tools jetzt installiert werden? (j/N) j
       Installiere net-snmp via Homebrew (macOS)...
       🍺  net-snmp wurde erfolgreich installiert!
 
@@ -47,14 +47,14 @@ Playwright build of Chromium is installed.
       Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt.
       Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden,
       wie in der Dokumentation beschrieben.
-      Haben Sie den Kurzbefehl 'ai-cloud' bereits angelegt oder möchten Sie dies später tun? [Enter]
+      Wurde der Kurzbefehl 'ai-cloud' bereits angelegt oder soll dies später erfolgen? [Enter]
 
 [8/11] Überprüfe Konfigurationsdatei...
       -> config.ini wurde aus der Vorlage (config.ini.sample) erstellt.
 
 [9/11] Konfigurationsdatei anpassen
-      Bitte passen Sie nun die Zugangsdaten in der config.ini an.
-      Drücken Sie [Enter], um die Datei im Editor zu öffnen...
+      Bitte nun die Zugangsdaten in der config.ini anpassen.
+      [Enter] drücken, um die Datei im Editor zu öffnen...
 
 [10/11] Teste das Skript...
 
@@ -70,14 +70,14 @@ eMail Konfiguration
 ==== Installation abgeschlossen! ====
 
 [11/11] Skript in Cronjob eintragen
-Vorschlag für Ihre crontab:
+Vorschlag für die crontab:
 Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern
 0 * * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --update --log
 Täglich um 06:10 Uhr: Statusreport generieren und per E-Mail versenden
 10 6 * * * cd /Users/user/tp-link-vx231v && /Users/user/tp-link-vx231v/.venv/bin/python3 vx-info.py --report-send
 
-Möchten Sie jetzt 'crontab -e' öffnen? (j/N) n
-Übersprungen. Sie können die Crontab später jederzeit mit 'crontab -e' bearbeiten.
+Soll jetzt 'crontab -e' geöffnet werden? (j/N) n
+Übersprungen. Die Crontab kann später jederzeit mit 'crontab -e' bearbeitet werden.
 
 Fertig!
 ```

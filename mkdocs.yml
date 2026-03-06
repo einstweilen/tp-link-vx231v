@@ -50,3 +50,6 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - tables
+
+extra_css:
+  - stylesheets/extra.css

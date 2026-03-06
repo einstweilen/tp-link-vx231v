@@ -752,7 +752,7 @@ class TPLinkVX231vReport:
         events = self._get_events(24, exclude, show_level)
         
         msg_root = MIMEMultipart('mixed')
-        msg_root['Subject'] = f"Ihre tägliche {model_name} Verbindungsübersicht vom {date_str}"
+        msg_root['Subject'] = f"Tägliche {model_name} Verbindungsübersicht vom {date_str}"
         msg_root['From'] = self.config.get('Email', 'sender_email')
         msg_root['To'] = self.config.get('Email', 'recipient_email')
         msg_rel = MIMEMultipart('related')

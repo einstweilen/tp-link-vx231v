@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--gui', action='store_true', help='Alle Daten per WebGUI-Scraping holen')
     parser.add_argument('--report-send', action='store_true', help='Statusreport generieren und versenden')
     parser.add_argument('--report-show', action='store_true', help='Statusreport generieren und im Browser anzeigen')
-    parser.add_argument('--dashboard', action='store_true', help='Starte Web-Dashboard')
+    parser.add_argument('--dashboard', action='store_true', help='Starte Browser-Dashboard')
     parser.add_argument('--json-only', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--test', action='store_true', help='Technologien und Konfiguration testen')
@@ -158,7 +158,7 @@ def main():
 
         if args.dashboard:
             charter = DataCharter(config, db_path)
-            print("Starte DataCharter Web-Dashboard...")
+            print("Starte DataCharter Browser-Dashboard...")
             charter.run(host='0.0.0.0', port=31311, debug=args.debug)
 
     finally:

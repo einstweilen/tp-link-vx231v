@@ -40,11 +40,11 @@ playwright install chromium
 
     echo ""
     echo "[6/11] OPTIONAL: SNMP / TELNET verwenden"
-    echo "      Falls Sie mit dem superadmin Account Ihres Routers"
-    echo "      SNMP und Telnet aktiviert haben, können Sie"
+    echo "      Falls mit dem superadmin Account des Routers"
+    echo "      SNMP und Telnet aktiviert wurden, können"
     echo "      Routerdaten auch per SNMP abrufen."
-    echo "      Dafür benötigen Sie 'snmpget' und 'snmpwalk'."
-    read -p "      Möchten Sie SNMP-Tools jetzt installieren? (j/N) " SNMP_ANSWER
+    echo "      Dafür werden 'snmpget' und 'snmpwalk' benötigt."
+    read -p "      Sollen SNMP-Tools jetzt installiert werden? (j/N) " SNMP_ANSWER
     if [[ "$SNMP_ANSWER" =~ ^[jJ] ]]; then
         if [[ "$(uname)" == "Darwin" ]]; then
             echo "      Installiere net-snmp via Homebrew (macOS)..."
@@ -58,7 +58,7 @@ playwright install chromium
             sudo apt update && sudo apt install -y snmp
         else
             echo "      Betriebssystem nicht automatisch erkannt."
-            echo "      Bitte installieren Sie SNMP-Tools manuell (z.B. sudo apt install snmp / brew install net-snmp)."
+            echo "      Bitte SNMP-Tools manuell installieren (z.B. sudo apt install snmp / brew install net-snmp)."
         fi
     else
         echo "      SNMP-Installation übersprungen."
@@ -70,7 +70,7 @@ playwright install chromium
         echo "      Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt."
         echo "      Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden,"
         echo "      wie in der Dokumentation beschrieben."
-        read -p "      Haben Sie den Kurzbefehl 'ai-cloud' bereits angelegt oder möchten Sie dies später tun? [Enter]"
+        read -p "      Wurde der Kurzbefehl 'ai-cloud' bereits angelegt oder soll dies später erfolgen? [Enter]"
     else
         echo "      Übersprungen: Die AI-Analyse wird derzeit unter Linux/Debian nicht unterstützt."
     fi
@@ -86,8 +86,8 @@ playwright install chromium
 
     echo ""
     echo "[9/11] Konfigurationsdatei anpassen"
-    echo "      Bitte passen Sie nun die Zugangsdaten in der config.ini an."
-    read -p "      Drücken Sie [Enter], um die Datei im Editor zu öffnen..."
+    echo "      Bitte nun die Zugangsdaten in der config.ini anpassen."
+    read -p "      [Enter] drücken, um die Datei im Editor zu öffnen..."
     ${EDITOR:-nano} config.ini
 
     echo ""
@@ -99,7 +99,7 @@ playwright install chromium
     echo ""
 
     echo "[11/11] Skript in Cronjob eintragen"
-    echo "Vorschlag für Ihre crontab:"
+    echo "Vorschlag für die crontab:"
     echo ""
     echo "Einmal stündlich: Systemstatus, Clients, DSL-Werte, Log sichern"
     echo "0 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update --log"
@@ -107,11 +107,11 @@ playwright install chromium
     echo "Täglich um 06:10 Uhr: Statusreport generieren und per E-Mail versenden"
     echo "10 6 * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --report-send"
     echo ""
-    read -p "Möchten Sie jetzt 'crontab -e' öffnen? (j/N) " CRON_ANSWER
+    read -p "Soll jetzt 'crontab -e' geöffnet werden? (j/N) " CRON_ANSWER
     if [[ "$CRON_ANSWER" =~ ^[jJ] ]]; then
         crontab -e
     else
-        echo "Übersprungen. Sie können die Crontab später jederzeit mit 'crontab -e' bearbeiten."
+        echo "Übersprungen. Die Crontab kann später jederzeit mit 'crontab -e' bearbeitet werden."
     fi
 
     echo "Fertig!"
