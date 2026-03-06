@@ -857,15 +857,19 @@ Da der TP-Link VX231v keine offizielle API für diese Zwecke bereitstellt, autom
 Ist auf dem Router der superadmin-Zugang aktiviert (<a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md">Zur Anleitung</a>) können die Leitungswerte per Telnet und SNMP in Sekunden erfasst werden.<br>
 Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang nicht aktiviert ist, erfolgt ein automatisiertes Auslesen der Daten aus der Weboberfläche des Router, was allerdings deutlich länger dauert.</p>
 <details class="info">
-<summary>Beispiel: Statusreport</summary>
+<summary>Beispiel für einen Statusreport</summary>
 <p><img alt="Beispiel Statusreport" src="images/beispiel-statusreport.jpg" /></p>
+</details>
+<details class="info">
+<summary>Beispiel für das Browser-Dashboard</summary>
+<p><img alt="Beispiel Browser-Dashboard" src="images/beispiel-dashboard.jpg" /></p>
 </details>
 <h2 id="funktionsumfang">Funktionsumfang</h2>
 <ul>
 <li><strong>Datenerfassung:</strong> Automatisierter Abruf von Systemzuständen, DSL-Werten und Client-Listen primär per Telnet und SNMP. Für Daten, die darüber nicht zugänglich sind, erfolgt ein Auslesen der Weboberfläche des Routers.</li>
 <li><strong>Datenspeicherung:</strong> Alle erfassten Messwerte, verbundenen Geräte und System-Logs werden fortlaufend in einer SQLite-Datenbank gespeichert.</li>
 <li><strong>Reporting:</strong> Die gesammelten Daten der letzten 24 Stunden können als HTML-Statusbericht aufbereitet werden. Der Bericht enthält unter anderem aktuelle Verbindungsparameter, Auszüge aus dem Event-Log und ein Anwesenheitsdiagramm der Clients. Der Versand kann automatisiert per E-Mail erfolgen.</li>
-<li><strong>Lokales Web-Dashboard:</strong> Ein integrierter lokaler Webserver ermöglicht die interaktive grafische Visualisierung der historisierten DSL-Parameter über frei wählbare Zeiträume.</li>
+<li><strong>Lokales Browser-Dashboard:</strong> Ein integrierter lokaler Webserver ermöglicht die interaktive grafische Visualisierung der historisierten DSL-Parameter über frei wählbare Zeiträume.</li>
 </ul>
 <h2 id="dokumentationsubersicht">Dokumentationsübersicht</h2>
 <ul>
