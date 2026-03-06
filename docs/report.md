@@ -58,10 +58,9 @@ Clientnamen
 Wenn im Router unter "WLAN-Teilnehmer" oder "Kabelgebundene Teilnehmer" ein Clientname hinterlegt ist, wird dieser im Statusreport angezeigt.
 Der hinterlegte Name entspricht dem Namen, den der Client bei der Verbindung dem Router mitgeteilt hat. Hat man diesen in Webinterface überschrieben, wird der manuell überschriebene Name angezeigt.
 
-Nutzt man für die Erfassung der Routerdaten Telnet/SNMP werden darüber die Clientnamen nicht übermittelt, so dass diese auch nicht in der lokalen Clientdaten eingetragen werden können.
-Es empfiehlt sich bei neuhinzugekommen Clients **einmal** die Routerdatenermittlung durch zusätzliche Angabe von --gui über das Routerwebinterface zu erzwingen vx-info.py --update --gui 
-Dabei wird der Clientname aus dem Webinterface gelesen und zusammen mit der MAC Adresse in der Datenbank gespeichert. Bei zukünftigen Auswertungen wird dem Client dann anhand seiner MAC-Adresse der gespeicherte Clientname zugeordnet. 
-Schlägt diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown".
+Damit auch bei der schnellen Datenerfassung via Telnet/SNMP die Namen neuer Clients ermittelt werden können, prüft das Skript vor der Reporterstellung automatisch, ob noch unbekannte ("Unknown") Geräte in der Datenbank vorhanden sind. Ist dies der Fall, wird kurzzeitig auf das Web-Scraping-Interface zurückgegriffen, um die Namen auszulesen und in der Datenbank dauerhaft zu verknüpfen. Schlägt auch diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown" gefolgt von seiner MAC-Adresse.
+
+
 
 ## Heimnetzübersicht aktuell aktiver Clients
 
