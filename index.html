@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tp-link-vx231v-tracker-dokumentation" class="md-skip">
+        <a href="#tp-link-vx231v-tracker" class="md-skip">
           Zum Inhalt
         </a>
       
@@ -288,7 +288,7 @@
           
   
   
-  Erweitert
+  Sonstiges
 
         </a>
       </li>
@@ -573,6 +573,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -725,7 +753,7 @@
   <span class="md-ellipsis">
     
   
-    Erweitert
+    Sonstiges
   
 
     
@@ -741,7 +769,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Erweitert
+    Sonstiges
   
 
           </label>
@@ -850,12 +878,12 @@
   
 
 
-<h1 id="tp-link-vx231v-tracker-dokumentation">TP-Link VX231v Tracker - Dokumentation</h1>
+<h1 id="tp-link-vx231v-tracker">TP-Link VX231v Tracker</h1>
 <p>Eine Sammlung von Python-Skripten zur Erfassung, Speicherung und Visualisierung der Router-Daten.</p>
-<p>Ausgangspunkt war der Bedarf, DSL-Leitungswerte und verbundene Netzwerk-Clients kontinuierlich aufzuzeichnen, um Verbindungsabbrüche und Fehlerraten im zeitlichen Verlauf nachvollziehen zu können.<br>
-Da der TP-Link VX231v keine offizielle API für diese Zwecke bereitstellt, automatisiert dieses Skript-Set den Datenabruf über die am Router verfügbaren Schnittstellen.<br>
+<p>Ausgangspunkt war der Wunsch, DSL-Leitungswerte und Netzwerk-Clients kontinuierlich aufzuzeichnen, um Verbindungsabbrüche und Fehlerraten im zeitlichen Verlauf nachvollziehen zu können.<br>
+Da der TP-Link VX231v keine offizielle API für diese Zwecke bereitstellt, automatisiert dieses Skript-Set den Datenabruf über die am Router verfügbaren Schnittstellen.<br><br>
 Ist auf dem Router der superadmin-Zugang aktiviert (<a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md">Zur Anleitung</a>) können die Leitungswerte per Telnet und SNMP in Sekunden erfasst werden.<br>
-Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang nicht aktiviert ist, erfolgt ein automatisiertes Auslesen der Daten aus der Weboberfläche des Router, was allerdings deutlich länger dauert.</p>
+Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang nicht aktiviert ist, erfolgt ein automatisiertes Auslesen der Daten aus der Weboberfläche des Router, was allerdings länger dauert.</p>
 <details class="info">
 <summary>Beispiel für einen Statusreport</summary>
 <p><img alt="Beispiel Statusreport" src="images/beispiel-statusreport.jpg" /></p>
@@ -871,6 +899,7 @@ Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang
 <li><strong>Reporting:</strong> Die gesammelten Daten der letzten 24 Stunden können als HTML-Statusbericht aufbereitet werden. Der Bericht enthält unter anderem aktuelle Verbindungsparameter, Auszüge aus dem Event-Log und ein Anwesenheitsdiagramm der Clients. Der Versand kann automatisiert per E-Mail erfolgen.</li>
 <li><strong>Lokales Browser-Dashboard:</strong> Ein integrierter lokaler Webserver ermöglicht die interaktive grafische Visualisierung der historisierten DSL-Parameter über frei wählbare Zeiträume.</li>
 </ul>
+<p>(<a href="release-notes/">Release Notes anzeigen</a>)</p>
 <h2 id="dokumentationsubersicht">Dokumentationsübersicht</h2>
 <ul>
 <li><a href="setup/"><strong>Setup &amp; Installation</strong></a> - Systemvoraussetzungen (inkl. Aktivierung des Superadmin-Zugangs) und Installation.</li>
