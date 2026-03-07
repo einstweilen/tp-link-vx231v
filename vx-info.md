@@ -98,7 +98,7 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 
 ### Release Notes / letzte Updates
 
-* [Release Notes](release-notes.md)
+* [Release Notes](docs/release-notes.md)
 
 ## Vertiefende Dokumentation
 

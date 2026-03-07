@@ -1,5 +1,14 @@
 ### Changelog / Updates
 
+## 07.03.2026
+
+* **Installation & Setup**
+  * Installationsskript `install.sh` interaktiver gestaltet.
+
+* **Neue Option**
+  * Router Reconnect: Mit --reconnect lässt sich die Internetverbindung trennen und neu aufbauen.
+
+
 ## 05.03.2026
 
 * **Statusbericht** 

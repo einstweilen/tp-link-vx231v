@@ -34,10 +34,11 @@ nav:
     - Setup & Installation: setup.md
     - Konfiguration & Automatisierung: konfiguration.md
     - Die config.ini im Detail: config-details.md
+    - Release Notes: release-notes.md
   - Auswertungen:
     - Statusreport: report.md
     - Browser-Dashboard: dashboard.md
-  - Erweitert:
+  - Sonstiges:
     - Lokalisierung: lokalisierung.md
 
 markdown_extensions:
