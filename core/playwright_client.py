@@ -353,7 +353,7 @@ class TPLinkVX231vPlaywright:
             return {}
 
     def reconnect_wan(self):
-        """V(Erweiterte Einstellungen -> Netzwerk -> DSL-WAN) den Trennen/Verbinden klicken"""
+        """(Erweiterte Einstellungen -> Netzwerk -> DSL-WAN) den Trennen/Verbinden klicken"""
         if not self.page and not self.login():
             return False
             
