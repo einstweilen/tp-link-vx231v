@@ -29,18 +29,19 @@ def main():
     parser.add_argument('--report-send', action='store_true', help='Statusreport generieren und versenden')
     parser.add_argument('--report-show', action='store_true', help='Statusreport generieren und im Browser anzeigen')
     parser.add_argument('--dashboard', action='store_true', help='Starte Browser-Dashboard')
+    parser.add_argument('--reconnect', action='store_true', help='Führt einen PPPoE-Reconnect durch')
     parser.add_argument('--json-only', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--test', action='store_true', help='Technologien und Konfiguration testen')
     args = parser.parse_args()
 
-    if not (args.update or args.log or args.report_send or args.report_show or args.dashboard or args.test):
-        sys.exit("Parameter --update, --log, --report-send, --report-show, --dashboard oder --test erforderlich.")
+    if not (args.update or args.log or args.report_send or args.report_show or args.dashboard or args.test or args.reconnect):
+        sys.exit("Parameter --update, --log, --report-send, --report-show, --dashboard, --reconnect oder --test erforderlich.")
 
     if args.test:
         from core.tester import run_tests
         run_tests(config, debug=args.debug)
-        if not (args.update or args.log or args.report_send or args.report_show or args.dashboard):
+        if not (args.update or args.log or args.report_send or args.report_show or args.dashboard or args.reconnect):
             return
 
     db_path = config['Database']['db_name']
@@ -142,6 +143,26 @@ def main():
 
             if not args.json_only:
                 db.print_summary()
+
+        if args.reconnect:
+            gui_client = TPLinkVX231vPlaywright(
+                config['Router']['routerip'],
+                config['GUI']['username'],
+                config['GUI']['password'],
+                debug=args.debug
+            )
+            try:
+                success = gui_client.reconnect_wan()
+                if success:
+                    print("PPPoE Reconnect erfolgreich ausgeführt.")
+                else:
+                    print("Fehler beim PPPoE Reconnect.")
+            except ImportError:
+                print("Warnung: Modul 'playwright' ist nicht installiert. WebGUI-Abruf fehlgeschlagen.")
+            except Exception as e:
+                print(f"Fehler beim Reconnect: {e}")
+            finally:
+                gui_client.close()
 
         if args.report_send or args.report_show:
             needs_gui_update = db.has_unknown_clients()

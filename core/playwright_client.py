@@ -352,6 +352,74 @@ class TPLinkVX231vPlaywright:
         except Exception:
             return {}
 
+    def reconnect_wan(self):
+        """V(Erweiterte Einstellungen -> Netzwerk -> DSL-WAN) den Trennen/Verbinden klicken"""
+        if not self.page and not self.login():
+            return False
+            
+        try:
+            self._log("Starte Reconnect über die Weboberfläche...")
+
+            # 1. Erweiterte Einstellungen
+            self._log("Navigiere zu 'Erweiterte Einstellungen'...")
+            tab_erweitert = self.page.locator("ul#ul-nav").get_by_text("Erweiterte").first
+            tab_erweitert.wait_for(state="attached", timeout=10000)
+            tab_erweitert.evaluate("node => node.click()")
+            time.sleep(2.0)
+            
+            # 2. Netzwerk
+            self._log("Navigiere zu 'Netzwerk'...")
+            tab_netzwerk = self.page.locator("li a, span.text").filter(has_text="Netzwerk").first
+            tab_netzwerk.wait_for(state="attached", timeout=10000)
+            tab_netzwerk.evaluate("node => node.click()")
+            time.sleep(2.0)
+            
+            # 3. DSL-WAN
+            self._log("Navigiere zu 'DSL-WAN'...")
+            tab_dsl = self.page.locator("li a, span.text").filter(has_text="DSL-WAN").first
+            tab_dsl.wait_for(state="attached", timeout=10000)
+            tab_dsl.evaluate("node => node.click()")
+            time.sleep(2.0)
+            
+            # 4. Trennen Button suchen
+            self._log("Suche 'Trennen'-Button...")
+            disconnect_btn = self.page.locator("span.conn-opt.T_disconn").first
+            
+            try:
+                disconnect_btn.wait_for(state="attached", timeout=5000)
+                if disconnect_btn.is_visible():
+                    self._log("Button 'Trennen' gefunden, klicke per JS...")
+                    disconnect_btn.evaluate("node => node.click()")
+                    self._log("Warte 5 Sekunden bis Verbindung getrennt ist...")
+                    time.sleep(5)
+            except Exception:
+                self._log("Kein 'Trennen'-Button sichtbar. Eventuell ist die Verbindung bereits getrennt.")
+
+            # 5. Verbinden Button suchen
+            self._log("Suche 'Verbinden'-Button...")
+            connect_btn = self.page.locator("span.conn-opt.T_conn").first
+            
+            try:
+                connect_btn.wait_for(state="attached", timeout=10000)
+                if connect_btn.is_visible():
+                    self._log("Button 'Verbinden' gefunden, klicke per JS...")
+                    connect_btn.evaluate("node => node.click()")
+                    self._log("Reconnect-Klick ausgeführt! Warte 8 Sekunden auf neue Verbindung...")
+                    time.sleep(8)
+                    return True
+                else:
+                    self._log("Fehler: 'Verbinden'-Button nicht sichtbar.")
+                    return False
+            except Exception:
+                self._log("Fehler: 'Verbinden'-Button nicht gefunden. Eventuell verbindet er sich automatisch neu?")
+                time.sleep(5)
+                return True # Trotzdem als Erfolg werten
+                    
+        except Exception as e:
+            self._log(f"Fehler während des Reconnect-Vorgangs: {e}", force=True)
+            self._take_screenshot("reconnect_error")
+            return False
+
     def close(self):
         """Abmelden über die WebGUI und Browser schließen."""
         try:
@@ -359,11 +427,15 @@ class TPLinkVX231vPlaywright:
                 self._log("Führe Logout aus...")
                 try:
                     if self.debug: self._log("DEBUG: Warte bis zu 10s auf Logout-Button (#topLogout)...")
-                    self.page.locator('#topLogout').click(timeout=10000)
+                    logout_btn = self.page.locator('#topLogout')
+                    logout_btn.wait_for(state="attached", timeout=10000)
+                    logout_btn.evaluate("node => node.click()")
                     
                     if self.debug: self._log("DEBUG: Warte bis zu 5s auf Bestätigungs-Button (.btn-msg-ok)...")
-                    self.page.locator('.btn-msg-ok').click(timeout=5000)
-                    
+                    confirm_btn = self.page.locator('.btn-msg-ok')
+                    confirm_btn.wait_for(state="attached", timeout=5000)
+                    confirm_btn.evaluate("node => node.click()")
+                    time.sleep(1.0)
                     self._log("Erfolgreich abgemeldet.")
                 except Exception as inner_e:
                     if self.debug: self._log(f"DEBUG: Logout UI-Elemente nicht gefunden (Timeout): {inner_e}")

@@ -54,6 +54,8 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 *   `--test`: Testet alle installierten Technologien (Telnet, SNMP, Playwright) und verifiziert die in der `config.ini` hinterlegten Zugangsdaten sowie die E-Mail-Konfiguration. Idealerweise nach der Ersteinrichtung aufzurufen.
 <br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
+<br>
+*   `--reconnect`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus.
 
 *   `--dashboard`: Startet einen lokalen Webserver (Standard: Port 31311) zur interaktiven Anzeige historischer Metriken.
 

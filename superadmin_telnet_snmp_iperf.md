@@ -78,6 +78,163 @@ config mode commands:
         dev             ---     device control
 ```
 
+### available config commands
+
+<details>
+  <summary>wlctl            ---     wlctl config</summary>
+
+```text
+TP-Link#wlctl
+
+wlctl set <2g|5g|6g|all> [ --ssid <ssid> [base64] ]
+                         [ --bandWidth <Auto|20M|40M|80M|160M> ]
+                         [ --switch <on|off> ]
+                         [ --qss    <on|off> ]
+                         [ --wepkey <key> [base64] [keyindex] ]
+                         [ --pskkey <key> [base64] ]
+                         [ --sec [none]
+                                 [<wep> <auto|open|shared> <key> [base64] [keyindex]]
+                                 [<psk> <auto|wpa|wpa2> <auto|tkip|aes> <key>] [base64] ]
+                         [ --wds [ssid] [base64] ]
+                         [ --disconnect-wds ]
+
+wlctl show <2g|5g|6g>
+```
+</details>
+
+<details>
+  <summary>adsl            ---     config adsl</summary>
+
+```text
+TP-Link#adsl
+
+          adsl show info
+
+          adsl show status
+```
+</details>
+
+<details>
+  <summary>igmp            ---     igmp config</summary>
+
+```text
+valid sub cmd:
+          showProxy
+          showSnoop
+```
+</details>
+
+<details>
+  <summary>wan             ---     wan config</summary>
+
+```text
+TP-Link#wan
+
+          wan add service <atm|ptm|eth> <vpi/vci|vid>
+          [--linktype <eoa|ipoa|pppoa>]
+          [--encap <llc|vcmux>]
+          --protocol <bridge|pppoe|staticip|dynamicip|ipoa|pppoa>
+
+          wan set defaultgw <servicename>
+
+          wan set service <servicename> --protocol <pppoe|staticip|dynamicip|ipoa|pppoa>
+
+          wan delete service <servicename>
+
+          wan show defaultgw
+
+          wan show service [<atm|ptm|eth>] [<vpi/vci|vid>]
+
+          wan show connection info [<servicename>]
+cmd:SUCC
+```
+</details>
+
+<details>
+  <summary>voip            ---     voip config</summary>
+
+```text
+TP-Link#voip
+
+          voip set [--umail <n> <x>]
+          [--username <username>]
+          [--password <password>]
+          [--safeusername <base64username>]
+          [--safepassword <base64password>]
+          [--authname <authname>]
+          [--safeauthname <base64authname>]
+          [--regsvr <url | ip> <port>]
+          [--proxy <url | ip> <port>]
+          [--outbound <url | ip> <port>]
+          [--profilename <name>]
+          [--safeprofilename <base64name>]
+          [--phonenumber <number>]
+          [--safephonenumber <base64number>]
+          [--locale <locale-Alpha2>]
+          [--registerviaob <value, 0--not, 2--use>]
+          [--startusbvm <notifyfiledir>]
+
+
+          voip get
+          [issup]
+          [maxline]
+          [supportedlocale]
+          [usb <issup|online|freesize|notifyfiledir>]
+          [numofusbdevice]
+          [numoffxo]
+
+cmd:SUCC
+```
+</details>
+
+
+<details>
+  <summary>lan             ---     lan config</summary>
+
+```text
+TP-Link#lan
+
+          lan show status
+
+          lan show info
+cmd:SUCC
+```
+</details>
+
+<details>
+  <summary>group           ---     group config</summary>
+
+```text
+TP-Link#group
+
+          group show info
+
+          group add service
+                                [--groupname] <name>
+                                [--isolation] <enable/disable>
+                                [--portList] <LAN1,LAN2,LAN3,WIFI1,WIFI2>
+
+          group del service
+                                [--groupname] <name>
+cmd:SUCC
+```
+</details>
+
+<details>
+  <summary>dev             ---     device control</summary>
+
+```text
+TP-Link#dev
+valid sub cmd:
+          reset
+          reboot
+          version
+          serial
+          show
+          testmode
+```
+</details>
+
 ## iperf3
 iperf3 -c 192.168.1.1<br>
 _iperf3: error - unable to connect to server_

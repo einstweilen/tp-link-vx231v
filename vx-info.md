@@ -90,6 +90,8 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 <br><br>
 *   `--dashboard`: Startet einen lokalen Webserver (Standard: Port 31311) zur interaktiven Anzeige historischer Metriken.
 <br><br>
+*   `--reconnect`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus.
+<br><br>
 *   `--test`: Testet alle installierten Technologien (Telnet, SNMP, Playwright) und verifiziert die in der `config.ini` hinterlegten Zugangsdaten sowie die E-Mail-Konfiguration. Idealerweise nach der Ersteinrichtung aufzurufen.
 <br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
