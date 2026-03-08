@@ -1085,10 +1085,9 @@
 
 <h1 id="die-configini-im-detail">Die config.ini im Detail</h1>
 <p>Die zentrale Steuerung des TP-Link VX231v Trackers erfolgt über die Datei <code>config.ini</code>. Sie wird vor dem ersten Start aus der beigelegten <code>config.ini.sample</code> erstellt.</p>
-<p>Im Folgenden werden alle Parameter Block für Block erklärt und ihre Funktion im Skript erläutert.</p>
+<p>Die Parameter und ihre Funktion:</p>
 <hr />
 <h2 id="router">[Router]</h2>
-<p>Dieser Block teilt dem Skript mit, wo der Router im Netzwerk zu finden ist.</p>
 <ul>
 <li><code>routerip</code>: Die IP-Adresse (z. B. <code>192.168.0.1</code>) oder der Hostname des Routers.<ul>
 <li><strong>Nutzung:</strong> Wird beim Login in die Web-Oberfläche sowie bei den Telnet- und SNMP-Verbindungen als Zieladresse verwendet.</li>
@@ -1113,44 +1112,43 @@
 <p>Zentrale Steuerung für den KI/Leitungs-Analyseblock im Statusreport.</p>
 <ul>
 <li><code>report_disconnects_level</code>: Bestimmt, ab welchem Schweregrad ein Verbindungsabbruch in der Leitungsanalyse aufgelistet wird. (Standard: <code>1</code>)<ul>
-<li><code>0</code>: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots, saubere Neuverbindungen (<code>MANUAL</code>, <code>ROUTER_SCHED</code>) oder die nächtliche Zwangstrennung des Providers (<code>PROVIDER_DROP</code>).</li>
-<li><code>1</code>: Zeigt ausschließlich ungeplante Abbrüche und echte technische Fehler, die unaufgefordert auftraten.</li>
+<li><code>0</code>: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots, saubere Neuverbindungen oder die regelmäßige Zwangstrennung des Providers.</li>
+<li><code>1</code>: Zeigt ausschließlich ungeplante Abbrüche und echte technische Fehler.</li>
 <li><code>2</code>: Zeigt ausschließlich Abbrüche, bei denen es messbare Probleme gab (z.B. Reconnect dauerte &gt;45s, DNS-Fehler, massiver Bandbreitenverlust).</li>
-<li><code>3</code>: Meldet nur harte, sicherheitskritische Störungen (SNR-Absturz &lt; 6dB, starker CRC-Fehler-Burst, PPPoE-Timeouts).</li>
+<li><code>3</code>: Meldet nur schwere, sicherheitskritische Störungen (SNR-Absturz &lt; 6dB, starker CRC-Fehler-Burst, PPPoE-Timeouts).</li>
 </ul>
 </li>
 </ul>
 <h2 id="snmp">[SNMP]</h2>
 <p>Optionale Zugangsparameter für SNMP (Simple Network Management Protocol).</p>
 <ul>
-<li><code>community</code>: Das SNMP-Passwort bzw. der "Community String" (oft <code>public</code>).<ul>
-<li><strong>Nutzung:</strong> Dient dem Skript zur Ermittlung der "Router Uptime" (Betriebszeit seit dem letzten Neustart), da dieser Wert nur über SNMP exakt ermittelt werden kann. Wird im HTML-Report angezeigt.</li>
-</ul>
-</li>
+<li><code>community</code>: Das SNMP-Passwort bzw. der "Community String" (oft <code>public</code>).</li>
 </ul>
 <h2 id="gui">[GUI]</h2>
 <p>Login-Daten für das reguläre TP-Link Web-Interface.</p>
 <ul>
-<li><code>username</code> / <code>password</code>: Die ganz normalen Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.<ul>
-<li><strong>Nutzung:</strong> Das Skript nutzt via <code>Playwright</code> einen headless Browser, um damit das vollständige Eventlog des Routers (<code>--log</code>) herunterzuladen und Client-Hostnames auszulesen.<br>Ohne Telnet/SNMP fallen auch die standardmäßigen DSL-Abfragen (<code>--update</code>) automatisch auf diesen (langsameren) Vorgang zurück.</li>
+<li><code>username</code> / <code>password</code>: Die Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.<ul>
+<li><strong>Nutzung:</strong> Das Skript nutzt einen headless Browser, um das vollständige Eventlog des Routers (<code>--log</code>) herunterzuladen und Client-Hostnames auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (<code>--update</code>) automatisch auf diesem Weg ermittelt.</li>
 </ul>
 </li>
 </ul>
 <h2 id="email">[Email]</h2>
 <p>Einstellungen für den automatisierten E-Mail-Versand des HTML-Statusreports (<code>vx-info.py --report-send</code>).</p>
 <ul>
-<li><code>smtp_server</code> / <code>smtp_port</code>: Ihr Postausgangsserver (z. B. <code>smtp.gmail.com</code> oder <code>mail.gmx.net</code>) und der zugehörige Port (oft <code>587</code> mit TLS).</li>
+<li><code>smtp_server</code> / <code>smtp_port</code>: Postausgangsserver (z. B. <code>smtp.gmail.com</code> oder <code>mail.gmx.net</code>) und der zugehörige Port (oft <code>587</code> mit TLS).</li>
 <li><code>sender_email</code> / <code>sender_password</code>: Die E-Mail-Adresse und das Passwort, von der aus der Bericht gesendet wird. (Bei GMail oder Apple ist hier evtl. ein gerätespezifisches App-Passwort nötig!).</li>
-<li><code>recipient_email</code>: Die Ziel-Adresse, die den täglichen Report empfangen soll.</li>
+<li><code>recipient_email</code>: Die Ziel-Adresse, die den täglichen Report empfangen soll.
+Wer Sicherheitsbedenken hat, kann einen gesonderten E-Mail Account dafür anlegen und diesen ausschließlich für den Reportversand und -empfang nutzen, dann gibt keine Gefahr, dass darüber andere Daten leaken.</li>
 </ul>
 <h2 id="events">[Events]</h2>
 <p>Regelt, wie die vielen Event-Logs ("Logbuch") des Routers in der Datenbank und im Statusreport behandelt werden.</p>
 <ul>
 <li><code>exclude_types</code>: (z. B. <code>DHCPD, Mesh</code>). Bestimmt, welche Art von Systemereignissen als zu detailliert/unwichtig betrachtet werden.</li>
-<li><code>cleanup_excludes</code>: (z. B. <code>3</code>). Löscht alle in <code>exclude_types</code> genannten Events automatisch nach dieser Anzahl an Tagen (hier: nach 3 Tagen) unwiderruflich aus der lokalen Datenbank <code>.db</code>, um Speicherplatz zu sparen.</li>
+<li><code>cleanup_excludes</code>: (z. B. <code>3</code>). Löscht alle in <code>exclude_types</code> genannten Events automatisch nach dieser Anzahl an Tagen (hier: nach 3 Tagen) unwiderruflich aus der lokalen Datenbank <code>.db</code>, um Speicherplatz zu sparen.
+<br></li>
 <li><code>show_level</code>: Steuert direkt, welche Ereignisse im generierten HTML-Report des Tages auftauchen:<ul>
-<li><code>0</code> bis <code>7</code>: Nimmt die Standard-Warnstufen des Routers (von Notfall bis Debug). Ein Wert von <code>4</code> (Vorsicht) zeigt also alles zwischen Notfall (0) und Vorsicht (4) an, blendet aber reine Info-Logs (6) aus.</li>
-<li><code>8</code>: Ein vom Skript künstlich erzeugter Level. Es zeigt alles der letzten 24 Stunden (also Debug 7), verbirgt aber explizit die bei <code>exclude_types</code> (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.</li>
+<li><code>0</code> bis <code>7</code>: Nimmt die Standard-Warnstufen des Routers (von Notfall bis Debug). Ein Wert von <code>4</code> (Vorsicht) zeigt also alle Ereignisse zwischen Notfall (0) und Vorsicht (4) an.</li>
+<li><code>8</code>: Ein vom Skript zusätzlicher scriptspezifischer Level.<br>Es zeigt alle Ereignisse der letzten 24 Stunden (entspricht dem Level Debug 7), verbirgt aber explizit die bei <code>exclude_types</code> (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.</li>
 </ul>
 </li>
 </ul>
@@ -1169,9 +1167,9 @@
 Entspricht dieser Wert z. B. <code>7</code>, so werden alle Berichte, die älter als 7 Tage sind, bei der Skriptausführung automatisch gelöscht, um das Verzeichnis nicht unendlich wachsen zu lassen. <code>0</code> deaktiviert die Löschfunktion.</li>
 </ul>
 <h2 id="statistics">[Statistics]</h2>
-<p>Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen.</p>
+<p>Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen können, um beim Debugging zu unterstützen</p>
 <ul>
-<li><code>reconnects</code>: Wenn <code>True</code>, berechnet das Skript aus den Logs der letzten Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") wirklich verloren hat.</li>
+<li><code>reconnects</code>: Wenn <code>True</code>, berechnet das Skript aus den Logs der letzten 24 Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") verloren hat.</li>
 <li><code>PADO_timeouts</code>: Wenn <code>True</code>, wird gezielt nach Einwahl-Fehlern gesucht (Provider-Störungen beim Zuteilen der IP) und deren Anzahl ausgeworfen.</li>
 </ul>
 
