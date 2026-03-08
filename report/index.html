@@ -1195,30 +1195,30 @@ Oberhalb der Disconnect-Symbole auf dem Zeitstrahl wird die genaue Dauer des Ver
 <p>Zusätzlich werden in einem eigenen Informationsblock unterhalb der optionalen AI Analyse auffällige Ereignisse gesondert ausgewiesen. Das Skript wertet dazu die abstrakten PPPoE-Trennungsereignisse aus dem Log (<code>events</code>) aus und korreliert diese mit den physikalischen Leitungsparametern aus der historischen <code>dsl</code>-Tabelle.</p>
 <p>Das Flussdiagramm veranschaulicht diesen Analyseprozess:</p>
 <pre class="mermaid"><code>flowchart TD
-    Start[Neues LCP/User request Event\nTimestamp analysieren] --&gt; TriggerCheck{Welcher\nAuslöser?}
+    Start[Neues LCP/User request Event&lt;br&gt;Timestamp analysieren] --&gt; TriggerCheck{Welcher&lt;br&gt;Auslöser?}
 
-    TriggerCheck --&gt;|LCP down| ISP[Trennungsanforderung\nPROVIDER]
+    TriggerCheck --&gt;|LCP down| ISP[Trennungsanforderung&lt;br&gt;PROVIDER]
     TriggerCheck --&gt;|User request| IsSched{Zeitplan?}
-    IsSched --&gt;|Zur identischen Zeit\nan &gt;= 2 Tagen| Router[Geplanter Neustart\nROUTER]
-    IsSched --&gt;|Einmaliges Event| Manual[Manuell / System\nMANUAL]
+    IsSched --&gt;|Zur identischen Zeit&lt;br&gt;an &gt;= 2 Tagen| Router[Geplanter Neustart&lt;br&gt;ROUTER]
+    IsSched --&gt;|Einmaliges Event| Manual[Manuell / System&lt;br&gt;MANUAL]
 
-    ISP --&gt; DSL_Get[Hole letzte DSL-Werte\nvor dem Trennungs-Event]
+    ISP --&gt; DSL_Get[Hole letzte DSL-Werte&lt;br&gt;vor dem Trennungs-Event]
     Router --&gt; DSL_Get
     Manual --&gt; DSL_Get
 
-    DSL_Get --&gt; SNR_Check{SNR &lt; 6.0 dB\nvor Abbruch?}
+    DSL_Get --&gt; SNR_Check{SNR &lt; 6.0 dB&lt;br&gt;vor Abbruch?}
     SNR_Check --&gt;|Ja| WarnSNR[Ausgabe: 'Signalstörung vor Abbruch']
-    SNR_Check --&gt;|Nein| CRC_Check{Anstieg um &gt; 1000\nCRC Fehler?}
+    SNR_Check --&gt;|Nein| CRC_Check{Anstieg um &gt; 1000&lt;br&gt;CRC Fehler?}
 
     WarnSNR --&gt; CRC_Check
     CRC_Check --&gt;|Ja| WarnCRC[Ausgabe: 'Massiver CRC-Fehler-Burst']
-    CRC_Check --&gt;|Nein| Up_Wait[Warte auf PAP AuthAck\nUP-Event]
+    CRC_Check --&gt;|Nein| Up_Wait[Warte auf PAP AuthAck&lt;br&gt;UP-Event]
 
     WarnCRC --&gt; Up_Wait
-    Up_Wait --&gt; Rate_Check{Download Rate\nnach Reconnect\n&gt; 10% geringer?}
+    Up_Wait --&gt; Rate_Check{Download Rate&lt;br&gt;nach Reconnect&lt;br&gt;&gt; 10% geringer?}
 
-    Rate_Check --&gt;|Ja| WarnRate[Ausgabe: Profil-Ruckfall\nMbit/s Differenz anzeigen]
-    Rate_Check --&gt;|Nein| Final[Leitungsanalyse\nAbschliessen]
+    Rate_Check --&gt;|Ja| WarnRate[Ausgabe: Profil-Ruckfall&lt;br&gt;Mbit/s Differenz anzeigen]
+    Rate_Check --&gt;|Nein| Final[Leitungsanalyse&lt;br&gt;Abschliessen]
     WarnRate --&gt; Final</code></pre>
 <ol>
 <li><strong>SNR (Signalstörung)</strong>: Sinkt der <em>Downstream Noise Margin</em> (SNR) aus der <code>dsl</code>-Tabelle in der unmittelbaren Aufzeichnung vor dem Abbruch auf <code>&lt; 6.0 dB</code>, deutet dies auf eine physikalische Störung hin.</li>
