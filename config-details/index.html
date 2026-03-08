@@ -1113,8 +1113,8 @@
 <p>Zentrale Steuerung für den KI/Leitungs-Analyseblock im Statusreport.</p>
 <ul>
 <li><code>report_disconnects_level</code>: Bestimmt, ab welchem Schweregrad ein Verbindungsabbruch in der Leitungsanalyse aufgelistet wird. (Standard: <code>1</code>)<ul>
-<li><code>0</code>: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots oder saubere Neuverbindungen (<code>MANUAL</code>, <code>ROUTER_SCHED</code>).</li>
-<li><code>1</code>: Zeigt alle regulären Provider-Trennungsanforderungen (<code>PROVIDER_DROP</code>) und echte technische Fehler.</li>
+<li><code>0</code>: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots, saubere Neuverbindungen (<code>MANUAL</code>, <code>ROUTER_SCHED</code>) oder die nächtliche Zwangstrennung des Providers (<code>PROVIDER_DROP</code>).</li>
+<li><code>1</code>: Zeigt ausschließlich ungeplante Abbrüche und echte technische Fehler, die unaufgefordert auftraten.</li>
 <li><code>2</code>: Zeigt ausschließlich Abbrüche, bei denen es messbare Probleme gab (z.B. Reconnect dauerte &gt;45s, DNS-Fehler, massiver Bandbreitenverlust).</li>
 <li><code>3</code>: Meldet nur harte, sicherheitskritische Störungen (SNR-Absturz &lt; 6dB, starker CRC-Fehler-Burst, PPPoE-Timeouts).</li>
 </ul>
