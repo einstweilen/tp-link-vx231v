@@ -452,10 +452,7 @@ class TPLinkVX231vReport:
             trigger = evt['category']
             duration = evt['duration']
             ts = evt['disconnect_ts']
-            
             severity = 0
-            if trigger == 'PROVIDER_DROP':
-                severity = 1
             
             trigger_labels = {
                 'ROUTER_SCHED': 'Geplanter Neustart (Zeitplan)',

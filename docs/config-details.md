@@ -32,8 +32,8 @@ Zugangsdaten für die schnelle Router-Abfrage, sofern der superadmin-Account akt
 Zentrale Steuerung für den KI/Leitungs-Analyseblock im Statusreport.
 
 *   `report_disconnects_level`: Bestimmt, ab welchem Schweregrad ein Verbindungsabbruch in der Leitungsanalyse aufgelistet wird. (Standard: `1`)
-    *   `0`: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots oder saubere Neuverbindungen (`MANUAL`, `ROUTER_SCHED`).
-    *   `1`: Zeigt alle regulären Provider-Trennungsanforderungen (`PROVIDER_DROP`) und echte technische Fehler.
+    *   `0`: Zeigt alle Trennungen, auch vom Nutzer geplante Reboots, saubere Neuverbindungen (`MANUAL`, `ROUTER_SCHED`) oder die nächtliche Zwangstrennung des Providers (`PROVIDER_DROP`).
+    *   `1`: Zeigt ausschließlich ungeplante Abbrüche und echte technische Fehler, die unaufgefordert auftraten.
     *   `2`: Zeigt ausschließlich Abbrüche, bei denen es messbare Probleme gab (z.B. Reconnect dauerte >45s, DNS-Fehler, massiver Bandbreitenverlust).
     *   `3`: Meldet nur harte, sicherheitskritische Störungen (SNR-Absturz < 6dB, starker CRC-Fehler-Burst, PPPoE-Timeouts).
 

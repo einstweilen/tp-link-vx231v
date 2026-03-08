@@ -39,8 +39,8 @@ recipient_email = empfaenger@example.com
 
 [Analyse]
 # Steuert welche Verbindungsabbrüche im Statusreport angezeigt werden.
-# 0 = Alles (inklusive unproblematische manuelle Neustarts / Zeitpläne)
-# 1 = Abbrüche durch den Provider (Zwangstrennung) und echte Fehler
+# 0 = Alles (inkl. manuelle Resets, Router-Zeitplan und reguläre ISP-Zwangstrennungen)
+# 1 = Nur echte Fehler und ungeplante Trennungen
 # 2 = Nur Verbindungsabbrüche, die zu Problemen oder Leistungseinbußen geführt haben
 # 3 = Nur schwerwiegende Störungen (physikalische Leitungsprobleme, Timeouts)
 report_disconnects_level = 1
