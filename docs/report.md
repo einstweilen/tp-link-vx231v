@@ -37,11 +37,50 @@ Wenn auf dem Mac der AI Shortcut installiert ist, werden die Routerdaten der let
 Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen Apple/GPT Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt.
 Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.
 
-## Eventübersicht
+## Eventübersicht & Leitungsanalyse
 
 ![Eventübersicht](images/report-events.jpg)
 
 Die Eventübersicht zeigt Leitungstrennungen und Neuverbindungen der letzten 48 Stunden.
+Oberhalb der Disconnect-Symbole auf dem Zeitstrahl wird die genaue Dauer des Verbindungsverlusts in Sekunden angegeben.
+
+### Erweiterte Leitungsanalyse
+Zusätzlich werden in einem eigenen Informationsblock unterhalb der optionalen AI Analyse auffällige Ereignisse gesondert ausgewiesen. Das Skript wertet dazu die abstrakten PPPoE-Trennungsereignisse aus dem Log (`events`) aus und korreliert diese mit den physikalischen Leitungsparametern aus der historischen `dsl`-Tabelle.
+
+Das Flussdiagramm veranschaulicht diesen Analyseprozess:
+
+```mermaid
+flowchart TD
+    Start[Neues LCP/User request Event\nTimestamp analysieren] --> TriggerCheck{Welcher\nAuslöser?}
+    
+    TriggerCheck -->|LCP down| ISP[Trennungsanforderung\nPROVIDER]
+    TriggerCheck -->|User request| IsSched{Zeitplan?}
+    IsSched -->|Zur identischen Zeit\nan >= 2 Tagen| Router[Geplanter Neustart\nROUTER]
+    IsSched -->|Einmaliges Event| Manual[Manuell / System\nMANUAL]
+    
+    ISP --> DSL_Get[Hole letzte DSL-Werte\nvor dem Trennungs-Event]
+    Router --> DSL_Get
+    Manual --> DSL_Get
+
+    DSL_Get --> SNR_Check{SNR < 6.0 dB\nvor Abbruch?}
+    SNR_Check -->|Ja| WarnSNR[Ausgabe: 'Signalstörung vor Abbruch']
+    SNR_Check -->|Nein| CRC_Check{Anstieg um > 1000\nCRC Fehler?}
+    
+    WarnSNR --> CRC_Check
+    CRC_Check -->|Ja| WarnCRC[Ausgabe: 'Massiver CRC-Fehler-Burst']
+    CRC_Check -->|Nein| Up_Wait[Warte auf PAP AuthAck\nUP-Event]
+    
+    WarnCRC --> Up_Wait
+    Up_Wait --> Rate_Check{Download Rate\nnach Reconnect\n> 10% geringer?}
+    
+    Rate_Check -->|Ja| WarnRate[Ausgabe: Profil-Ruckfall\nMbit/s Differenz anzeigen]
+    Rate_Check -->|Nein| Final[Leitungsanalyse\nAbschliessen]
+    WarnRate --> Final
+```
+
+1. **SNR (Signalstörung)**: Sinkt der _Downstream Noise Margin_ (SNR) aus der `dsl`-Tabelle in der unmittelbaren Aufzeichnung vor dem Abbruch auf `< 6.0 dB`, deutet dies auf eine physikalische Störung hin.
+2. **CRC-Fehler-Burst**: Steigen die _Download CRC Fehler_ exponentiell an (> 1000 Fehler zusätzlich gegenüber der vorletzten Aufzeichnung), signalisiert die Leitungsanalyse ein massives Aufkommen korrupter Pakete (z. B. fehlende Schirmung, Wackelkontakt oder Störeinfluss von außen).
+3. **Profil-Rückfall**: Synchronisiert sich der Router im Nachgang mit wesentlich weniger Bandbreite (z. B. < 90 % der Ursprungs-Rate) neu, wird im Report der Bandbreitenverlust beziffert aufgezeigt.
 
 ## Anwesenheit
 

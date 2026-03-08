@@ -354,6 +354,175 @@ class TPLinkVX231vReport:
             for r in rows
         ]
 
+    def _analyze_ppp_events(self, hours=24):
+        main_query = """
+        WITH RawData AS (
+            SELECT time_ut, datetime(time_ut, 'unixepoch', 'localtime') AS ts, 
+                   strftime('%H:%M', datetime(time_ut, 'unixepoch', 'localtime')) AS clock, 
+                   date(time_ut, 'unixepoch', 'localtime') AS d_date, event_text,
+            CASE 
+                WHEN event_text LIKE '%User request%' THEN 1 
+                WHEN event_text LIKE '%LCP down%' THEN 2 
+                WHEN event_text LIKE '%AuthAck%' THEN 3 
+                ELSE 4 
+            END as p
+            FROM events 
+            WHERE type = 'PPP' AND (event_text LIKE '%User request%' OR event_text LIKE '%LCP down%' OR event_text LIKE '%AuthAck%')
+        ),
+        Deduplicated AS (
+            SELECT * FROM (SELECT *, ROW_NUMBER() OVER(PARTITION BY time_ut ORDER BY p) as rn FROM RawData) WHERE rn = 1
+        ),
+        Schedules AS (
+            SELECT clock, COUNT(DISTINCT d_date) as freq FROM Deduplicated 
+            WHERE event_text LIKE '%User request%' GROUP BY clock HAVING freq >= 2
+        )
+        SELECT d.ts, d.time_ut, d.event_text,
+            CASE 
+                WHEN d.event_text LIKE '%AuthAck%' THEN 'UP'
+                WHEN d.event_text LIKE '%User request%' AND s.clock IS NOT NULL THEN 'ROUTER_SCHED'
+                WHEN d.event_text LIKE '%User request%' THEN 'MANUAL'
+                WHEN d.event_text LIKE '%LCP down%' THEN 'PROVIDER_DROP'
+            END AS category
+        FROM Deduplicated d LEFT JOIN Schedules s ON d.clock = s.clock
+        WHERE category IS NOT NULL ORDER BY d.time_ut ASC;
+        """
+        try:
+            _, rows = self._run_query(main_query)
+        except Exception as e:
+            self._log(f"Fehler in _analyze_ppp_events: {e}")
+            return []
+
+        start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
+        
+        processed_events = []
+        last_disconnect = None
+        for r in rows:
+            ts, time_ut, text, cat = r
+            if cat in ['ROUTER_SCHED', 'MANUAL', 'PROVIDER_DROP']:
+                last_disconnect = {'ts': ts, 'time_ut': time_ut, 'category': cat}
+            elif cat == 'UP' and last_disconnect:
+                duration = time_ut - last_disconnect['time_ut']
+                processed_events.append({
+                    'disconnect_ut': last_disconnect['time_ut'],
+                    'disconnect_ts': last_disconnect['ts'],
+                    'category': last_disconnect['category'],
+                    'duration': duration,
+                    'up_ut': time_ut,
+                    'up_ts': ts
+                })
+                last_disconnect = None
+                
+        return [e for e in processed_events if e['up_ut'] >= start_ts or e['disconnect_ut'] >= start_ts]
+
+    def _get_connection_analysis(self, hours=24):
+        threshold_slow_reconnect = 45
+        events = self._analyze_ppp_events(hours)
+        
+        start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
+        start_ts_dsl = int((datetime.now() - timedelta(hours=hours + 2)).timestamp())
+
+        try:
+            _, pado_rows = self._run_query("SELECT COUNT(*) FROM events WHERE event_text LIKE '%PADO Timeout%' AND time_ut >= ?", [start_ts])
+            pado_count = pado_rows[0][0] if pado_rows else 0
+
+            _, dns_rows = self._run_query("SELECT datetime(time_ut, 'unixepoch', 'localtime') as ts FROM events WHERE type = 'Httpd' AND event_text LIKE '%failed%' AND time_ut >= ?", [start_ts])
+            dns_errors = [r[0] for r in dns_rows]
+            
+            _, dsl_rows = self._run_query(
+                "SELECT time_ut, downstream_noise_margin, downstream_curr_rate, dcrc FROM dsl WHERE time_ut >= ? ORDER BY time_ut ASC", 
+                [start_ts_dsl]
+            )
+        except Exception:
+            pado_count = 0
+            dns_errors = []
+            dsl_rows = []
+        
+        html_output = ""
+        has_issues = False
+        recs_list = []
+        
+        if pado_count > 10:
+            recs_list.append(f"<li><span style='color: #d32f2f; font-weight: bold;'>Warnung:</span> {pado_count} PADO-Timeouts (Schwere Discovery-Störung). IPv6/RFC 4638 prüfen oder Provider-Störung melden.</li>")
+            has_issues = True
+            
+        event_html = ""
+        for evt in events:
+            trigger = evt['category']
+            duration = evt['duration']
+            ts = evt['disconnect_ts']
+            
+            trigger_labels = {
+                'ROUTER_SCHED': 'Geplanter Neustart (Zeitplan)',
+                'MANUAL': 'Benutzer / System Reset',
+                'PROVIDER_DROP': 'Trennungsanforderung (ISP)'
+            }
+            trigger_lbl = trigger_labels.get(trigger, trigger)
+            
+            recommendations = []
+            if duration > threshold_slow_reconnect:
+                recommendations.append("Verzögerter Reconnect (Ggfs. Sync-Verlust)")
+            if trigger == 'PROVIDER_DROP':
+                recommendations.append("Ungeplante Provider-Trennung")
+            
+            if any(ts[:16] == d[:16] or evt['up_ts'][:16] == d[:16] for d in dns_errors):
+                recommendations.append("DNS-Auflösungsfehler im Zeitfenster")
+                
+            # DSL Korrelation
+            closest_before = None
+            closest_after = None
+            for row in dsl_rows:
+                dsl_ut = row[0]
+                if dsl_ut <= evt['disconnect_ut']:
+                    closest_before = row
+                if dsl_ut >= evt['up_ut'] and closest_after is None:
+                    closest_after = row
+                    
+            if closest_before:
+                dsl_snr_before = closest_before[1]
+                dsl_rate_before = closest_before[2]
+                dsl_crc_before = closest_before[3]
+                
+                # SNR Check
+                if isinstance(dsl_snr_before, (int, float)) and dsl_snr_before > 0 and dsl_snr_before < 6.0:
+                    recommendations.append(f"Signalstörung vor Abbruch (SNR fiel auf {dsl_snr_before} dB)")
+                    
+                # CRC Burst Check
+                idx = dsl_rows.index(closest_before)
+                if idx > 0:
+                    prev_row = dsl_rows[idx - 1]
+                    prev_crc = prev_row[3]
+                    if isinstance(dsl_crc_before, (int, float)) and isinstance(prev_crc, (int, float)):
+                        crc_diff = dsl_crc_before - prev_crc
+                        if crc_diff > 1000:
+                            recommendations.append(f"Massiver CRC-Fehler-Burst vor Trennung (+{int(crc_diff)} Fehler)")
+                            
+                # Rate Check (Bandbreitenverlust nach Reconnect)
+                if closest_after:
+                    dsl_rate_after = closest_after[2]
+                    if isinstance(dsl_rate_before, (int, float)) and isinstance(dsl_rate_after, (int, float)):
+                        if dsl_rate_before > 0 and dsl_rate_after > 0:
+                            if dsl_rate_after < (dsl_rate_before * 0.9):
+                                diff_mbps = (dsl_rate_before - dsl_rate_after) / 1000.0
+                                recommendations.append(f"Profil-Rückfall! Mit {diff_mbps:.1f} Mbit/s weniger Download neu verbunden")
+            
+            rec_str = " | <span style='color: #ed6c02; font-weight: bold;'>HINWEIS:</span> " + ", ".join(recommendations) if recommendations else ""
+            
+            if recommendations:
+                has_issues = True
+                event_html += f"<div style='margin-bottom: 5px;'>[{ts}] {trigger_lbl} | Dauer: {duration}s{rec_str}</div>"
+            else:
+                event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | Dauer: {duration}s</div>"
+
+        if not has_issues and not event_html:
+            html_output = "<div style='color: #388e3c;'>Die Leitungswerte sind im Analysezeitraum unauffällig. Keine signifikanten Störungen erkannt.</div>"
+        else:
+            if recs_list:
+                html_output += "<ul style='margin-top: 0; margin-bottom: 10px; padding-left: 20px;'>" + "".join(recs_list) + "</ul>"
+            if event_html:
+                html_output += f"<div style='font-family: monospace; font-size: 13px; background-color: #f5f5f5; padding: 10px; border-radius: 3px; border: 1px solid #e0e0e0;'>{event_html}</div>"
+
+        return html_output
+
     def _generate_timeline(self, hours=24):
         import matplotlib
         matplotlib.use('Agg')
@@ -372,6 +541,9 @@ class TPLinkVX231vReport:
         if not rows:
             return None
 
+        ppp_events = self._analyze_ppp_events(hours)
+        ppp_evt_map = {e['disconnect_ut']: e for e in ppp_events}
+
         timeline_events = []
 
         # Keywords für Kategorisierung
@@ -387,38 +559,57 @@ class TPLinkVX231vReport:
                 color = None
                 marker = None
                 label = None
+                duration_text = None
 
-                # 1. DISCONNECTS / FEHLER (ROT)
-                if "LCP down" in text or "DSL Link Status is DOWN" in text or "User request" in text:
+                if ts in ppp_evt_map:
+                    evt = ppp_evt_map[ts]
+                    cat = evt['category']
+                    if cat == 'ROUTER_SCHED':
+                        color = '#8e24aa'
+                        marker = 's'
+                        label = 'Zeitplan'
+                    elif cat == 'MANUAL':
+                        color = '#ff9800'
+                        marker = 'D'
+                        label = 'Manuell'
+                    elif cat == 'PROVIDER_DROP':
+                        color = '#d32f2f'
+                        marker = 'x'
+                        label = 'Provider'
+                    
                     category = "Down"
-                    color = "#d32f2f"  # Rot
-                    marker = "x"
-                    label = "Down"
+                    duration_text = f"{evt['duration']}s"
 
-                # 2. SYNC / WARNUNG (GELB)
-                elif "Initializing" in text or "EstablishingLink" in text or "dns disconnected" in text:
-                    category = "Sync"
-                    color = "#fbc02d"  # Gelb/Orange
-                    marker = "o"
-                    label = "Sync"
-
-                # 3. CONNECT / OK (GRÜN - Optional, gut für Feedback "Wieder da")
-                elif "DSL Link Status is UP" in text or ("ConfAck" in text and "addr" in text):
-                    category = "Up"
-                    color = "#388e3c"  # Grün
-                    marker = "|"
-                    label = "Up"
-
-                # System Reboots (Kritisch)
-                elif evt_type == "System" and "Log" not in text:
-                    pass
+                if not category:
+                    # 1. DISCONNECTS / FEHLER (ROT)
+                    if "LCP down" in text or "DSL Link Status is DOWN" in text or "User request" in text:
+                        category = "Down"
+                        color = "#d32f2f"  # Rot
+                        marker = "x"
+                        label = "Down"
+                    # 2. SYNC / WARNUNG (GELB)
+                    elif "Initializing" in text or "EstablishingLink" in text or "dns disconnected" in text:
+                        category = "Sync"
+                        color = "#fbc02d"  # Gelb/Orange
+                        marker = "o"
+                        label = "Sync"
+                    # 3. CONNECT / OK (GRÜN - Optional, gut für Feedback "Wieder da")
+                    elif "DSL Link Status is UP" in text or ("ConfAck" in text and "addr" in text):
+                        category = "Up"
+                        color = "#388e3c"  # Grün
+                        marker = "|"
+                        label = "Up"
+                    # System Reboots (Kritisch)
+                    elif evt_type == "System" and "Log" not in text:
+                        pass
 
                 if category:
                     timeline_events.append({
                         'dt': dt,
                         'color': color,
                         'marker': marker,
-                        'label': label
+                        'label': label,
+                        'duration_text': duration_text
                     })
 
             except:
@@ -442,6 +633,8 @@ class TPLinkVX231vReport:
         # x (Zeit) und c (Farbe) für Scatter Plot
         for evt in timeline_events:
             ax.scatter(evt['dt'], 0, color=evt['color'], marker=evt['marker'], s=100, zorder=2, label=evt['label'])
+            if evt.get('duration_text'):
+                ax.annotate(evt['duration_text'], (evt['dt'], 0), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8, color=evt['color'], rotation=0)
 
         # Formatierung
         ax.set_ylim(-0.5, 0.5)  # Vertikal fixiert
@@ -743,6 +936,7 @@ class TPLinkVX231vReport:
         latest_ips = self._get_ip_changes(3)
         fw_upd, fw_old, fw_act, rn_t, rn_d, rn_txt = self._check_firmware_update()
         ai_text = self._run_ai_analysis(evt_hours)
+        conn_analysis_html = self._get_connection_analysis(evt_hours)
         timeline = self._generate_timeline(evt_hours)
         gantt = self._generate_client_gantt(evt_hours)
         clients = self._get_connected_clients()
@@ -798,6 +992,9 @@ class TPLinkVX231vReport:
                 <div style="border-top: 1px solid #ffcc80; margin-top: 10px; padding-top: 10px;"><strong>Release Notes ({rn_ds}):</strong><br>{rn_txt}</div></div></div></td></tr>"""
         if ai_text:
             html += f"<tr><td style='padding: 20px;'><div style='border: 2px solid #4acbd6; background-color: #f9ffff; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #008ba3;'>Auf einen Blick</h3><div style='font-size: 14px; color: #333;'>{ai_text}</div></div></td></tr>"
+        if conn_analysis_html:
+            padding_top = "0px" if ai_text else "20px"
+            html += f"<tr><td style='padding: 20px; padding-top: {padding_top};'><div style='border: 1px solid #b0bec5; background-color: #fcfcfc; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #455a64;'>Leitungsanalyse</h3><div style='font-size: 14px; color: #333;'>{conn_analysis_html}</div></div></td></tr>"
         if timeline:
             img_src = "cid:timeline_img" if send_email else f"data:image/png;base64,{timeline}"
             html += f"<tr><td style='padding: 0 20px 20px 20px;'><div style='border: 1px solid #ddd; background-color: #fff; padding: 10px; border-radius: 5px;'><div style='font-size: 12px; font-weight: bold; color: #666;'>Eventübersicht</div><img src='{img_src}' style='width: 100%; max-width: 700px;'></div></td></tr>"
