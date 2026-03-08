@@ -698,13 +698,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#eventubersicht" class="md-nav__link">
+  <a href="#eventubersicht-leitungsanalyse" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Eventübersicht
+        Eventübersicht &amp; Leitungsanalyse
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Eventübersicht &amp; Leitungsanalyse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erweiterte-leitungsanalyse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erweiterte Leitungsanalyse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -999,13 +1016,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#eventubersicht" class="md-nav__link">
+  <a href="#eventubersicht-leitungsanalyse" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Eventübersicht
+        Eventübersicht &amp; Leitungsanalyse
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Eventübersicht &amp; Leitungsanalyse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erweiterte-leitungsanalyse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erweiterte Leitungsanalyse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1153,9 +1187,45 @@ Die Releasenotes werden von der TP-Link Seite geladen und 1:1 ausgegeben.</p>
 <p>Wenn auf dem Mac der AI Shortcut installiert ist, werden die Routerdaten der letzten 24/48 Stunden analysiert und ein kurzer Bericht erstellt.
 Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen Apple/GPT Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt.
 Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.</p>
-<h2 id="eventubersicht">Eventübersicht</h2>
+<h2 id="eventubersicht-leitungsanalyse">Eventübersicht &amp; Leitungsanalyse</h2>
 <p><img alt="Eventübersicht" src="../images/report-events.jpg" /></p>
-<p>Die Eventübersicht zeigt Leitungstrennungen und Neuverbindungen der letzten 48 Stunden.</p>
+<p>Die Eventübersicht zeigt Leitungstrennungen und Neuverbindungen der letzten 48 Stunden.
+Oberhalb der Disconnect-Symbole auf dem Zeitstrahl wird die genaue Dauer des Verbindungsverlusts in Sekunden angegeben.</p>
+<h3 id="erweiterte-leitungsanalyse">Erweiterte Leitungsanalyse</h3>
+<p>Zusätzlich werden in einem eigenen Informationsblock unterhalb der optionalen AI Analyse auffällige Ereignisse gesondert ausgewiesen. Das Skript wertet dazu die abstrakten PPPoE-Trennungsereignisse aus dem Log (<code>events</code>) aus und korreliert diese mit den physikalischen Leitungsparametern aus der historischen <code>dsl</code>-Tabelle.</p>
+<p>Das Flussdiagramm veranschaulicht diesen Analyseprozess:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start[Neues LCP/User request Event\nTimestamp analysieren] --&gt; TriggerCheck{Welcher\nAuslöser?}
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    TriggerCheck --&gt;|LCP down| ISP[Trennungsanforderung\nPROVIDER]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    TriggerCheck --&gt;|User request| IsSched{Zeitplan?}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    IsSched --&gt;|Zur identischen Zeit\nan &gt;= 2 Tagen| Router[Geplanter Neustart\nROUTER]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    IsSched --&gt;|Einmaliges Event| Manual[Manuell / System\nMANUAL]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ISP --&gt; DSL_Get[Hole letzte DSL-Werte\nvor dem Trennungs-Event]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Router --&gt; DSL_Get
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Manual --&gt; DSL_Get
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    DSL_Get --&gt; SNR_Check{SNR &lt; 6.0 dB\nvor Abbruch?}
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    SNR_Check --&gt;|Ja| WarnSNR[Ausgabe: &#39;Signalstörung vor Abbruch&#39;]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    SNR_Check --&gt;|Nein| CRC_Check{Anstieg um &gt; 1000\nCRC Fehler?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    WarnSNR --&gt; CRC_Check
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CRC_Check --&gt;|Ja| WarnCRC[Ausgabe: &#39;Massiver CRC-Fehler-Burst&#39;]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    CRC_Check --&gt;|Nein| Up_Wait[Warte auf PAP AuthAck\nUP-Event]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    WarnCRC --&gt; Up_Wait
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Up_Wait --&gt; Rate_Check{Download Rate\nnach Reconnect\n&gt; 10% geringer?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Rate_Check --&gt;|Ja| WarnRate[Ausgabe: Profil-Ruckfall\nMbit/s Differenz anzeigen]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Rate_Check --&gt;|Nein| Final[Leitungsanalyse\nAbschliessen]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    WarnRate --&gt; Final
+</code></pre></div>
+<ol>
+<li><strong>SNR (Signalstörung)</strong>: Sinkt der <em>Downstream Noise Margin</em> (SNR) aus der <code>dsl</code>-Tabelle in der unmittelbaren Aufzeichnung vor dem Abbruch auf <code>&lt; 6.0 dB</code>, deutet dies auf eine physikalische Störung hin.</li>
+<li><strong>CRC-Fehler-Burst</strong>: Steigen die <em>Download CRC Fehler</em> exponentiell an (&gt; 1000 Fehler zusätzlich gegenüber der vorletzten Aufzeichnung), signalisiert die Leitungsanalyse ein massives Aufkommen korrupter Pakete (z. B. fehlende Schirmung, Wackelkontakt oder Störeinfluss von außen).</li>
+<li><strong>Profil-Rückfall</strong>: Synchronisiert sich der Router im Nachgang mit wesentlich weniger Bandbreite (z. B. &lt; 90 % der Ursprungs-Rate) neu, wird im Report der Bandbreitenverlust beziffert aufgezeigt.</li>
+</ol>
 <h2 id="anwesenheit">Anwesenheit</h2>
 <p><img alt="Anwesenheit" src="../images/report-clients.jpg" /></p>
 <p>Die Anwesenheitsübersicht zeigt die LAN und WLANVerbindungen der Clients der letzten 48 Stunden.
@@ -1188,13 +1258,13 @@ Abschaltbar im [Statistics] Bereich der config.ini durch setzen der Werte auf Fa
 <h4 id="der-loglevel">Der Loglevel</h4>
 <p>Der Router unterteilt aufgetretene Events in Loglevel von "0 Notfall" bis "7 Debug". Über den Parameter "show_level" in der config.ini wird festgelegt, bis zu welchem Loglevel Events im Statusreport angezeigt werden.<br></p>
 <p>Die vom Router verwendeten Loglevel lauten:<br>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>0 Notfall   1 Alarm    2 Kritisch  3 Fehler 
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>4 Vorsicht  5 Hinweis  6 Info      7 Debug
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>0 Notfall   1 Alarm    2 Kritisch  3 Fehler 
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>4 Vorsicht  5 Hinweis  6 Info      7 Debug
 </code></pre></div></p>
 <p>Ist in der config.ini "show_level = 4" gesetzt, werden alle Events bis einschließlich Level "4 Vorsicht" angezeigt, also 0 Notfall, 1 Alarm, 2 Kritisch, 3 Fehler, 4 Vorsicht.</p>
 <p>Beispielausgabe für einen Event:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Datum             Level Typ Event
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>05.03.26 03:50:25   3   PPP ppp0 LCP down
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Datum             Level Typ Event
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>05.03.26 03:50:25   3   PPP ppp0 LCP down
 </code></pre></div></p>
 <p>Wird "show_level = 7" in der config.ini gesetzt, werden alle Events der letzten 24 Stunden im Statusreport angezeigt, was sehr umfangreich werden kann.</p>
 <h4 id="die-eventtypen">Die Eventtypen</h4>
