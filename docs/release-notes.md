@@ -38,13 +38,13 @@
   * Router Uptime in Tagen & Stunden (nur wenn SNMP aktiviert ist)
 
 * **Firmware-Prüfung:**
-  * Online Erkennung neuer Firmware robuster (anhand der Dateinamen des Download-Links)
+  * Online Erkennung neuer Firmware robuster
   * Firmware-Hinweis nur noch bis 48 Stunden nach einer erfolgreichen Aktualisierung
 
 * **Geräte-Erkennung & Anwesenheitsgrafik (Gantt-Chart):**
   * Das Erkennungs-Skript führt ein Web-Update durch, wenn es in der Datenbank noch unaufgelöste "Unknown"-Geräte gibt
   * Verbleibende unbekannte Geräte erhalten im Namen nun ein Suffix aus ihrer MAC-Adresse (z. B. `Unknown:C4:30`)
-  * Anwesenheitsgrafik zeigt die Clients alphabetisch sortiert (vorher nach MAC-Adresse)
+  * Anwesenheitsgrafik zeigt die Clients alphabetisch sortiert
   * Tageswechsel besser in der Anwesenheitsgrafik erkennbar
 
 * **Performance-Dashboard:**

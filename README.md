@@ -136,8 +136,8 @@ eMail Konfiguration
   ✓  eMail erfolgreich versendet
 
 ==== Installation abgeschlossen! ====
-Tipp: Da der Alias angelegt wurde, kann das Dashboard ab sofort gestartet werden mit:
-vx-info --dashboard
+Tipp: Da der Alias angelegt wurde, kann das Script ab sofort gestartet werden mit:
+vx-info --OPTION
 ```
 </details>
 <br>
