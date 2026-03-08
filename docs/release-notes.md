@@ -1,5 +1,10 @@
 ### Changelog / Updates
 
+## 08.03.2026
+
+* **Statusreport**
+  * Zusätzliche Analyse der Verbíndungsdaten auf Leitungsprobleme
+
 ## 07.03.2026
 
 * **Installation & Setup**
