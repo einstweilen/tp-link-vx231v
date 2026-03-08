@@ -51,30 +51,30 @@ Das Flussdiagramm veranschaulicht diesen Analyseprozess:
 
 ```mermaid
 flowchart TD
-    Start[Neues LCP/User request Event\nTimestamp analysieren] --> TriggerCheck{Welcher\nAuslöser?}
+    Start[Neues LCP/User request Event<br>Timestamp analysieren] --> TriggerCheck{Welcher<br>Auslöser?}
     
-    TriggerCheck -->|LCP down| ISP[Trennungsanforderung\nPROVIDER]
+    TriggerCheck -->|LCP down| ISP[Trennungsanforderung<br>PROVIDER]
     TriggerCheck -->|User request| IsSched{Zeitplan?}
-    IsSched -->|Zur identischen Zeit\nan >= 2 Tagen| Router[Geplanter Neustart\nROUTER]
-    IsSched -->|Einmaliges Event| Manual[Manuell / System\nMANUAL]
+    IsSched -->|Zur identischen Zeit<br>an >= 2 Tagen| Router[Geplanter Neustart<br>ROUTER]
+    IsSched -->|Einmaliges Event| Manual[Manuell / System<br>MANUAL]
     
-    ISP --> DSL_Get[Hole letzte DSL-Werte\nvor dem Trennungs-Event]
+    ISP --> DSL_Get[Hole letzte DSL-Werte<br>vor dem Trennungs-Event]
     Router --> DSL_Get
     Manual --> DSL_Get
 
-    DSL_Get --> SNR_Check{SNR < 6.0 dB\nvor Abbruch?}
+    DSL_Get --> SNR_Check{SNR < 6.0 dB<br>vor Abbruch?}
     SNR_Check -->|Ja| WarnSNR[Ausgabe: 'Signalstörung vor Abbruch']
-    SNR_Check -->|Nein| CRC_Check{Anstieg um > 1000\nCRC Fehler?}
+    SNR_Check -->|Nein| CRC_Check{Anstieg um > 1000<br>CRC Fehler?}
     
     WarnSNR --> CRC_Check
     CRC_Check -->|Ja| WarnCRC[Ausgabe: 'Massiver CRC-Fehler-Burst']
-    CRC_Check -->|Nein| Up_Wait[Warte auf PAP AuthAck\nUP-Event]
+    CRC_Check -->|Nein| Up_Wait[Warte auf PAP AuthAck<br>UP-Event]
     
     WarnCRC --> Up_Wait
-    Up_Wait --> Rate_Check{Download Rate\nnach Reconnect\n> 10% geringer?}
+    Up_Wait --> Rate_Check{Download Rate<br>nach Reconnect<br>> 10% geringer?}
     
-    Rate_Check -->|Ja| WarnRate[Ausgabe: Profil-Ruckfall\nMbit/s Differenz anzeigen]
-    Rate_Check -->|Nein| Final[Leitungsanalyse\nAbschliessen]
+    Rate_Check -->|Ja| WarnRate[Ausgabe: Profil-Ruckfall<br>Mbit/s Differenz anzeigen]
+    Rate_Check -->|Nein| Final[Leitungsanalyse<br>Abschliessen]
     WarnRate --> Final
 ```
 
