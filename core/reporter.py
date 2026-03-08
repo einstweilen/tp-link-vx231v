@@ -417,6 +417,7 @@ class TPLinkVX231vReport:
     def _get_connection_analysis(self, hours=24):
         threshold_slow_reconnect = 45
         events = self._analyze_ppp_events(hours)
+        min_level = self.config.getint('Analyse', 'report_disconnects_level', fallback=1)
         
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
         start_ts_dsl = int((datetime.now() - timedelta(hours=hours + 2)).timestamp())
@@ -443,13 +444,18 @@ class TPLinkVX231vReport:
         
         if pado_count > 10:
             recs_list.append(f"<li><span style='color: #d32f2f; font-weight: bold;'>Warnung:</span> {pado_count} PADO-Timeouts (Schwere Discovery-Störung). IPv6/RFC 4638 prüfen oder Provider-Störung melden.</li>")
-            has_issues = True
+            if min_level <= 3:
+                has_issues = True
             
         event_html = ""
         for evt in events:
             trigger = evt['category']
             duration = evt['duration']
             ts = evt['disconnect_ts']
+            
+            severity = 0
+            if trigger == 'PROVIDER_DROP':
+                severity = 1
             
             trigger_labels = {
                 'ROUTER_SCHED': 'Geplanter Neustart (Zeitplan)',
@@ -461,11 +467,13 @@ class TPLinkVX231vReport:
             recommendations = []
             if duration > threshold_slow_reconnect:
                 recommendations.append("Verzögerter Reconnect (Ggfs. Sync-Verlust)")
+                severity = max(severity, 2)
             if trigger == 'PROVIDER_DROP':
                 recommendations.append("Ungeplante Provider-Trennung")
             
             if any(ts[:16] == d[:16] or evt['up_ts'][:16] == d[:16] for d in dns_errors):
                 recommendations.append("DNS-Auflösungsfehler im Zeitfenster")
+                severity = max(severity, 2)
                 
             # DSL Korrelation
             closest_before = None
@@ -485,6 +493,7 @@ class TPLinkVX231vReport:
                 # SNR Check
                 if isinstance(dsl_snr_before, (int, float)) and dsl_snr_before > 0 and dsl_snr_before < 6.0:
                     recommendations.append(f"Signalstörung vor Abbruch (SNR fiel auf {dsl_snr_before} dB)")
+                    severity = max(severity, 3)
                     
                 # CRC Burst Check
                 idx = dsl_rows.index(closest_before)
@@ -495,6 +504,7 @@ class TPLinkVX231vReport:
                         crc_diff = dsl_crc_before - prev_crc
                         if crc_diff > 1000:
                             recommendations.append(f"Massiver CRC-Fehler-Burst vor Trennung (+{int(crc_diff)} Fehler)")
+                            severity = max(severity, 3)
                             
                 # Rate Check (Bandbreitenverlust nach Reconnect)
                 if closest_after:
@@ -504,16 +514,21 @@ class TPLinkVX231vReport:
                             if dsl_rate_after < (dsl_rate_before * 0.9):
                                 diff_mbps = (dsl_rate_before - dsl_rate_after) / 1000.0
                                 recommendations.append(f"Profil-Rückfall! Mit {diff_mbps:.1f} Mbit/s weniger Download neu verbunden")
+                                severity = max(severity, 2)
             
-            rec_str = " | <span style='color: #ed6c02; font-weight: bold;'>HINWEIS:</span> " + ", ".join(recommendations) if recommendations else ""
-            
-            if recommendations:
-                has_issues = True
-                event_html += f"<div style='margin-bottom: 5px;'>[{ts}] {trigger_lbl} | Dauer: {duration}s{rec_str}</div>"
-            else:
-                event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | Dauer: {duration}s</div>"
+            if severity >= min_level:
+                rec_str = " | <span style='color: #ed6c02; font-weight: bold;'>HINWEIS:</span> " + ", ".join(recommendations) if recommendations else ""
+                
+                if recommendations:
+                    has_issues = True
+                    event_html += f"<div style='margin-bottom: 5px;'>[{ts}] {trigger_lbl} | Dauer: {duration}s{rec_str}</div>"
+                else:
+                    event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | Dauer: {duration}s</div>"
 
         if not has_issues and not event_html:
+            if min_level > 0:
+                html_output += "<p style='color: #555; text-align: center; font-style: italic; margin-top: 10px;'>Keine Verbindungsabbrüche auf diesem Schweregrad (Level " + str(min_level) + ") im Auswertungszeitraum gefunden.</p>"
+            return html_output
             html_output = "<div style='color: #388e3c;'>Die Leitungswerte sind im Analysezeitraum unauffällig. Keine signifikanten Störungen erkannt.</div>"
         else:
             if recs_list:

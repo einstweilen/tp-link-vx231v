@@ -37,6 +37,14 @@ sender_password = DEIN_EMAIL_PASSWORT
 # Empfängeradresse des Berichts
 recipient_email = empfaenger@example.com
 
+[Analyse]
+# Steuert welche Verbindungsabbrüche im Statusreport angezeigt werden.
+# 0 = Alles (inklusive unproblematische manuelle Neustarts / Zeitpläne)
+# 1 = Abbrüche durch den Provider (Zwangstrennung) und echte Fehler
+# 2 = Nur Verbindungsabbrüche, die zu Problemen oder Leistungseinbußen geführt haben
+# 3 = Nur schwerwiegende Störungen (physikalische Leitungsprobleme, Timeouts)
+report_disconnects_level = 1
+
 [Events]
 # Filter: Welche Ereignistypen sollen beim Cleanup gelöscht werden
 exclude_types = DHCPD, Mesh
