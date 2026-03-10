@@ -79,6 +79,17 @@ if (\$fromhost-ip == '${ROUTER_IP}') then {
 EOF
 echo "    10-router.conf angelegt/aktualisiert."
 
+echo "==> Rsyslog Systemd-Berechtigungen anpassen..."
+# Moderne Linux-Systeme schuetzen /home vor Diensten wie rsyslog
+mkdir -p /etc/systemd/system/rsyslog.service.d
+sudo tee /etc/systemd/system/rsyslog.service.d/override.conf > /dev/null <<EOF
+[Service]
+ProtectHome=read-only
+ReadWritePaths=${SCRIPT_DIR}
+EOF
+sudo systemctl daemon-reload
+echo "    Systemd-Override fuer Rsyslog eingerichtet."
+
 echo "==> Log-Datei anlegen..."
 if [ -f "${LOG_FILE}" ]; then
     echo "    ${LOG_FILE} bereits vorhanden - übersprungen."
