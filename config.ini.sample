@@ -53,7 +53,7 @@ cleanup_excludes = 3
 
 # Log Level Filter: 0 Notfall   1 Alarm    2 Kritisch  3 Fehler 
 #                   4 Vorsicht  5 Hinweis  6 Info      7 Debug (zeigt alles)
-#                   8 wie 7 Debug aber filtert 'exclude_types' aus
+#                   9 wie 7 Debug aber filtert 'exclude_types' aus
 show_level = 4
 
 [Charts]

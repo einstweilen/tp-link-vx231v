@@ -294,7 +294,7 @@ class TPLinkVX231vReport:
         params = [start_ts]
         exclude_clause = ""
         
-        if show_level == 8:
+        if show_level == 9:
             if exclude_types:
                 exclude_clause = f"AND type NOT IN ({','.join('?' for _ in exclude_types)})"
                 params.extend(exclude_types)

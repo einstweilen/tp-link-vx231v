@@ -156,8 +156,8 @@ Jeder Event ist einem Eventtyp zugeordnet. Die vom Router verwendeten Eventtypen
 
 Besonders die Events der Typen "DHCPD" und "MESH" treten sehr häufig auf, da sie durch das "ständige" An- und Abmelden der Clients entstehen, wie oben bereits bei "show_level = 7" geschrieben.
 <br>
-Um hier eine bessere Übersicht zu schaffen, wurden die bestehenden Eventlevel des Routers um einen weiteren virtuellen Level "8" ergänzt. Level "8" dient dazu, sich zwar alle Logeinträge anzeigen zu lassen, aber gleichzeitig bestimmte Eventtypen, die einen aktuell nicht interessieren, ausblenden zu lassen.
+Um hier eine bessere Übersicht zu schaffen, wurden die bestehenden Eventlevel des Routers um einen weiteren virtuellen Level "9" ergänzt. Level "9" dient dazu, sich zwar alle Logeinträge anzeigen zu lassen, aber gleichzeitig bestimmte Eventtypen, die einen aktuell nicht interessieren, ausblenden zu lassen.
 
-Zur Verwendung dieses Levels trägt man bei **show_level = 8** und bei **exclude_types** die zu ignorierenden Eventtypen ein. 
+Zur Verwendung dieses Levels trägt man bei **show_level = 9** und bei **exclude_types** die zu ignorierenden Eventtypen ein. 
 
-Die Eventtypen "DHCPD" und "MESH" sind in der Standardkonfiguration bereits eingetragen und werden somit bei gewähltem Level 8 nicht im Statusreport angezeigt.<br>Weitere oder andere Eventtypen können in der config.ini im Bereich [Events] unter "exclude_types" konfiguriert werden. Speziell "VOIP" könnte dort ergänzt werden, da dazu viele reine Info-Meldungen geschrieben werden.
+Die Eventtypen "DHCPD" und "MESH" sind in der Standardkonfiguration bereits eingetragen und werden somit bei gewähltem Level 9 nicht im Statusreport angezeigt.<br>Weitere oder andere Eventtypen können in der config.ini im Bereich [Events] unter "exclude_types" konfiguriert werden. Speziell "VOIP" könnte dort ergänzt werden, da dazu viele reine Info-Meldungen geschrieben werden.

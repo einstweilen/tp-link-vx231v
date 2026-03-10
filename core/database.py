@@ -415,7 +415,7 @@ class DatabaseManager:
                 return {
                     'dt': dt,
                     'time_ut': int(dt.timestamp()),
-                    'level_id': 6,  # Default Info da rsyslog keinen Level mitliefert
+                    'level_id': 8,  # Default, da rsyslog keinen Level mitliefert (Level 8 reserviert für rsyslog)
                     'type': payload[:sep].strip(),
                     'event_text': payload[sep + 2:].strip(),
                 }

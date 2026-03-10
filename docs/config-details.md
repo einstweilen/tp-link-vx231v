@@ -66,7 +66,8 @@ Regelt, wie die vielen Event-Logs ("Logbuch") des Routers in der Datenbank und i
 <br>
 *   `show_level`: Steuert direkt, welche Ereignisse im generierten HTML-Report des Tages auftauchen:
     *   `0` bis `7`: Nimmt die Standard-Warnstufen des Routers (von Notfall bis Debug). Ein Wert von `4` (Vorsicht) zeigt also alle Ereignisse zwischen Notfall (0) und Vorsicht (4) an.
-    *   `8`: Ein vom Skript zusätzlicher scriptspezifischer Level.<br>Es zeigt alle Ereignisse der letzten 24 Stunden (entspricht dem Level Debug 7), verbirgt aber explizit die bei `exclude_types` (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.
+    *   `8`: Reserviert für rsyslog importierte Logeinträge.
+    *   `9`: Ein vom Skript zusätzlicher scriptspezifischer Level.<br>Es zeigt alle Ereignisse der letzten 24 Stunden (entspricht dem Level Debug 7), verbirgt aber explizit die bei `exclude_types` (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.
 
 ## [Charts]
 
