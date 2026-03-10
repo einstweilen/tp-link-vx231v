@@ -378,18 +378,41 @@ class DatabaseManager:
             return 0
 
         normalized_events = self._normalize_router_log_timestamps(parsed_events)
-        events_batch = [(e['time_ut'], e['level_id'], e['type'], e['event_text']) for e in normalized_events]
-
-        if not events_batch:
+        if not normalized_events:
             return 0
 
+        inserted_count = 0
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.executemany(
-                "INSERT OR IGNORE INTO events (time_ut, level_id, type, event_text) VALUES (?, ?, ?, ?)",
-                events_batch
-            )
-            return cursor.rowcount
+            
+            for e in normalized_events:
+                time_ut, level_id, evt_type, evt_text = e['time_ut'], e['level_id'], e['type'], e['event_text']
+                
+                # Wenn wir ein GUI-Event haben (echtes Level 0-7), prüfen wir ob ein rsyslog Event (Level 8) existiert
+                if 0 <= level_id <= 7:
+                    # Suche in einem Zeitfenster von +/- 5 Sekunden nach einem passenden Rsyslog Eintrag
+                    cursor.execute('''
+                        UPDATE events 
+                        SET level_id = ?, time_ut = ?
+                        WHERE level_id = 8 
+                          AND type = ? 
+                          AND event_text = ? 
+                          AND time_ut BETWEEN ? AND ?
+                    ''', (level_id, time_ut, evt_type, evt_text, time_ut - 5, time_ut + 5))
+                    
+                    if cursor.rowcount > 0:
+                        inserted_count += cursor.rowcount
+                        continue # Erfolgreich ein rsyslog event geupdated, kein neuer Insert nötig
+                
+                # Wenn kein Update stattfand (oder es ein rsyslog event ist), insert versuchen
+                cursor.execute('''
+                    INSERT OR IGNORE INTO events (time_ut, level_id, type, event_text) 
+                    VALUES (?, ?, ?, ?)
+                ''', (time_ut, level_id, evt_type, evt_text))
+                
+                inserted_count += cursor.rowcount
+                
+            return inserted_count
 
     def _parse_router_log_line(self, line):
         s = line.strip()
