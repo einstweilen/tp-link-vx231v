@@ -582,6 +582,62 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#logspeicherung-beschleunigen-durch-syslog-server-nutzung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logspeicherung beschleunigen durch Syslog-Server Nutzung
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logspeicherung beschleunigen durch Syslog-Server Nutzung">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#router-konfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Router Konfiguration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debiandietpi-installation-und-konfiguration-von-rsyslog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debian/DietPi: Installation und Konfiguration von rsyslog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Debian/DietPi: Installation und Konfiguration von rsyslog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#log-rotation-erklarung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log-Rotation Erklärung
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -943,6 +999,62 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#logspeicherung-beschleunigen-durch-syslog-server-nutzung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logspeicherung beschleunigen durch Syslog-Server Nutzung
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logspeicherung beschleunigen durch Syslog-Server Nutzung">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#router-konfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Router Konfiguration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debiandietpi-installation-und-konfiguration-von-rsyslog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debian/DietPi: Installation und Konfiguration von rsyslog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Debian/DietPi: Installation und Konfiguration von rsyslog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#log-rotation-erklarung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log-Rotation Erklärung
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1037,7 +1149,58 @@ Hier ist es von Vorteil, wenn <strong>Telnet und SNMP</strong> aktiviert sind, d
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a># Datenerfassung: Alle 5 Minuten werden aktuelle DSL-Werte abgefragt.
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>*/5 * * * * cd /pfad/zum/script &amp;&amp; /pfad/zum/script/.venv/bin/python3 vx-info.py --update
 </code></pre></div>
-<p>Hinweis: Der Router kann das Log auch ganz ohne Skript automatisch zur Verfügung stellen, Anleitung und Optionsanpassungen folgen in Kürze!</p>
+<h2 id="logspeicherung-beschleunigen-durch-syslog-server-nutzung">Logspeicherung beschleunigen durch Syslog-Server Nutzung</h2>
+<p>Wenn man auch das Log des Routers ohne GUI-Abfrage empfangen möchte, muss man den Router so konfigurieren, dass er das Log an einen Syslog-Server sendet und auf dem Pi einen Syslog-Server einrichten.<br>
+Die <code>--log</code> Option des Skripts erkennt anhand der lokalen Logdatei, ob ein Syslog-Server eingerichtet ist und importiert die neuen Logeinträge dann direkt aus der Logdatei des Syslog-Servers. </p>
+<h3 id="router-konfiguration">Router Konfiguration</h3>
+<p>Im Router unter Erweiterte Einstellungen &gt; Systemtools &gt; Systemprotokoll &gt; Protokolleinstellungen den eingebauten Syslog-Server aktivieren.
+<img alt="Syslog-Server aktivieren" src="../images/syslog-server-aktivieren.jpg" />  </p>
+<p>Der Router sendet nach Aktivierung des Syslog-Servers <code>[x] Remote speichern</code> die Events per <strong>UDP auf Port 514</strong> (Syslog-Protokoll) an den konfigurierten Empfänger.<br> 
+Auf Debian/DietPi empfängt <strong>rsyslog</strong> diese Pakete – ist jedoch standardmäßig so konfiguriert, dass der UDP-Empfang deaktiviert ist und das vom Router verwendete Syslog-Format (Leerzeichen vor dem Nachrichteninhalt) als ungültig verworfen wird.</p>
+<h3 id="debiandietpi-installation-und-konfiguration-von-rsyslog">Debian/DietPi: Installation und Konfiguration von rsyslog</h3>
+<p>Das Skript <code>pi_router_logging.sh</code> installiert und konfiguriert <code>rsyslog</code> auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.</p>
+<p>Wer das Installationsskript nicht nutzen möchte, kann die Konfiguration auch manuell vornehmen.<br></p>
+<ol>
+<li>
+<p><strong>rsyslog installieren</strong> - unter DietPi via <code>dietpi-software install 102</code>,
+   sonst via <code>apt install rsyslog</code>. DietPi-Installation deaktiviert dabei
+   <code>systemd-journald</code> korrekt und verhindert doppeltes Logging.</p>
+</li>
+<li>
+<p><strong><code>$SpaceLFOnReceive on</code></strong> - weist rsyslog an, das nicht-standardkonforme
+   Format (Leerzeichen vor dem Nachrichteninhalt) des Routers zu akzeptieren.</p>
+</li>
+<li>
+<p><strong><code>imudp</code> aktivieren</strong> - schaltet den UDP-514-Empfang in rsyslog ein.</p>
+</li>
+<li>
+<p><strong>Filterregel</strong> - schreibt ausschliesslich Pakete von der Router-IP in eine
+   separate Datei, damit Router- und System-Logs nicht vermischt werden.
+   Unter DietPi wird <code>/home/&lt;user&gt;/router.log</code> verwendet, da <code>/var/log</code>
+   als tmpfs im RAM liegt und Logs bei Reboot verloren gehen würden.</p>
+</li>
+<li>
+<p><strong>Dateirechte</strong> - Log-Datei gehört <code>root</code> (rsyslog schreibt als root),
+   Gruppe des aktuellen Users darf lesen - kein <code>sudo</code> zum Lesen notwendig.</p>
+</li>
+<li>
+<p><strong>Log-Rotation</strong> - verhindert unkontrolliertes Wachstum der Log-Datei
+   durch tägliche Rotation mit 7 Tagen Aufbewahrung.</p>
+</li>
+</ol>
+<h4 id="log-rotation-erklarung">Log-Rotation Erklärung</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>daily                             # Log täglich rotieren
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>rotate 7                          # 7 alte Versionen aufbewahren, ältere löschen
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>compress                          # rotierte Logs als .gz komprimieren
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>missingok                         # kein Fehler wenn Log-Datei fehlt
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>notifempty                        # keine Rotation wenn Datei leer ist
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>create 644 root ${CURRENT_GROUP}  # neue Log-Datei mit diesen Rechten anlegen
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>postrotate
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    systemctl is-active rsyslog &amp;&amp; # nur wenn rsyslog läuft ...
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    systemctl kill -s HUP rsyslog  # ...neue Datei öffnen lassen
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    || true                        # Fehler ignorieren falls rsyslog gestoppt
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>endscript
+</code></pre></div>
 
 
 
