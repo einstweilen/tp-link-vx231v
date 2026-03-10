@@ -390,19 +390,30 @@ class DatabaseManager:
                 
                 # Wenn wir ein GUI-Event haben (echtes Level 0-7), prüfen wir ob ein rsyslog Event (Level 8) existiert
                 if 0 <= level_id <= 7:
-                    # Suche in einem Zeitfenster von +/- 5 Sekunden nach einem passenden Rsyslog Eintrag
-                    cursor.execute('''
-                        UPDATE events 
-                        SET level_id = ?, time_ut = ?
-                        WHERE level_id = 8 
-                          AND type = ? 
-                          AND event_text = ? 
-                          AND time_ut BETWEEN ? AND ?
-                    ''', (level_id, time_ut, evt_type, evt_text, time_ut - 5, time_ut + 5))
-                    
-                    if cursor.rowcount > 0:
-                        inserted_count += cursor.rowcount
-                        continue # Erfolgreich ein rsyslog event geupdated, kein neuer Insert nötig
+                    try:
+                        # Suche in einem Zeitfenster von +/- 5 Sekunden nach einem passenden Rsyslog Eintrag
+                        cursor.execute('''
+                            UPDATE events 
+                            SET level_id = ?, time_ut = ?
+                            WHERE level_id = 8 
+                              AND type = ? 
+                              AND event_text = ? 
+                              AND time_ut BETWEEN ? AND ?
+                        ''', (level_id, time_ut, evt_type, evt_text, time_ut - 5, time_ut + 5))
+                        
+                        if cursor.rowcount > 0:
+                            inserted_count += cursor.rowcount
+                            continue # Erfolgreich ein rsyslog event geupdated, kein neuer Insert nötig
+                    except sqlite3.IntegrityError:
+                        # Das Update kollidiert mit einem bereits existierendem GUI-Event.
+                        # Wir löschen einfach das überflüssige Rsyslog duplikat
+                        cursor.execute('''
+                            DELETE FROM events 
+                            WHERE level_id = 8 
+                              AND type = ? 
+                              AND event_text = ? 
+                              AND time_ut BETWEEN ? AND ?
+                        ''', (evt_type, evt_text, time_ut - 5, time_ut + 5))
                 
                 # Wenn kein Update stattfand (oder es ein rsyslog event ist), insert versuchen
                 cursor.execute('''
