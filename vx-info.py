@@ -99,35 +99,73 @@ def main():
             if 'gui_client' in locals():
                 gui_client.close()
 
+    def get_rsyslog_path():
+        """Prüft ob rsyslog aktiv ist und gibt den Pfad zur Logdatei zurück."""
+        import os
+        import getpass
+        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        user = getpass.getuser()
+        
+        # Mögliche Pfade (Primär: Skript-Verzeichnis, dann Standard Linux/DietPi)
+        paths = [
+            os.path.join(script_dir, "router.log"),
+            "/var/log/router.log",
+            f"/home/{user}/router.log",
+            f"/home/{user}/vx231v/router.log"
+        ]
+        
+        # Check ob rsyslog läuft (via systemctl)
+        # Wir prüfen nur ob die Datei existiert und lesbar ist, 
+        # das ist ein stärkeres Indiz als nur der Prozess-Status.
+        for p in paths:
+            if os.path.exists(p) and os.access(p, os.R_OK):
+                # Wenn Datei existiert und nicht leer ist (> 0 bytes)
+                if os.path.getsize(p) > 0:
+                    return p
+        return None
+
     try:
         if args.update or args.log:
             use_gui = args.gui
+            rsyslog_log_file = None if args.gui else get_rsyslog_path()
+            
+            # Log-Logik:
+            # 1. Wenn rsyslog gefunden wurde und NICHT --gui erzwungen ist -> rsyslog nutzen
+            # 2. Sonst GUI Scraping (wenn --log gesetzt oder Telnet/SNMP fehlen)
+            
+            if args.log and rsyslog_log_file:
+                print(f"Log: Rsyslog-Datei gefunden ({rsyslog_log_file}) -> Importiere direkt.")
+                try:
+                    with open(rsyslog_log_file, 'r', encoding='utf-8') as f:
+                        log_content = f.read()
+                        added = db.insert_events_from_log(log_content)
+                        print(f"Log: {added} neue Einträge aus rsyslog importiert.")
+                except Exception as e:
+                    print(f"Log: Fehler beim Lesen der rsyslog-Datei: {e}. Falle zurück auf GUI.")
+                    use_gui = True
+            elif args.log:
+                # Kein rsyslog gefunden, aber Log gewünscht -> GUI erzwingen für Log
+                use_gui = True
+
             # Wenn update=True, prüfen, ob wir GUI nutzen müssen (oder erzwungen). 
-            # Wenn update=False, aber log=True, brauchen wir definitv GUI für das Log
             if args.update and not use_gui:
                 is_telnet, is_snmp = router.check_services()
                 if not (is_telnet and is_snmp):
                     use_gui = True
                     print(f"Hinweis: Telnet={is_telnet}, SNMP={is_snmp} -> wechsle automatisch auf --gui.")
-            elif not args.update and args.log:
-                 use_gui = True # Für reines --log brauchen wir GUI
-
 
             if use_gui:
-                fetch_gui_data(args.update, args.log)
+                fetch_gui_data(args.update, args.log and not rsyslog_log_file)
             else:
-                # GUI nur für Log-Download nutzen, weil update via Telnet/SNMP lief
-                if args.log:
-                    fetch_gui_data(False, True)
-
+                # Falls wir oben rsyslog genutzt haben, wurde fetch_gui_data(False, True) vermieden
+                # Wir müssen nur noch den Update-Teil via Telnet/SNMP machen
                 if args.update and router.login():
                     client_data = router.get_clients(db_manager=db)
                     db.insert_system(client_data.get('system', {}), time.time())
                     db.insert_clients(client_data)
-
                     dsl_data = router.get_dsl_data()
                     db.insert_dsl(dsl_data, time.time())
-
                     export_json(args.output, client_data.get('system'), dsl_data)
                     db.update_unknown_hostnames()
                     router.close()

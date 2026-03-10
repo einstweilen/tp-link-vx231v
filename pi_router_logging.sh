@@ -8,13 +8,11 @@ RSYSLOG_CONF="/etc/rsyslog.conf"
 CURRENT_USER="${USER}"
 CURRENT_GROUP="$(id -gn)"
 
-if command -v dietpi-software &> /dev/null; then
-    LOG_FILE="/home/${CURRENT_USER}/router.log"
-    echo "==> DietPi erkannt - Log wird nach ${LOG_FILE} geschrieben."
-else
-    LOG_FILE="/var/log/router.log"
-fi
+# Bestimme das Verzeichnis, in dem dieses Skript liegt
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+LOG_FILE="${SCRIPT_DIR}/router.log"
 
+echo "==> Log-Datei wird in ${LOG_FILE} gespeichert."
 echo "==> Router-IP ermittelt: ${ROUTER_IP}"
 
 echo "==> Pruefe rsyslog Installation..."
@@ -70,14 +68,16 @@ fi
 
 echo "==> Router-Filterregel anlegen..."
 if [ -f /etc/rsyslog.d/10-router.conf ]; then
-    echo "    10-router.conf bereits vorhanden - uebersprungen."
-else
-    sudo tee /etc/rsyslog.d/10-router.conf > /dev/null <<EOF
-if \$fromhost-ip == "${ROUTER_IP}" then ${LOG_FILE}
-& stop
-EOF
-    echo "    10-router.conf angelegt."
+    echo "    10-router.conf bereits vorhanden - wird ueberschrieben um korrekte Syntax sicherzustellen..."
 fi
+
+sudo tee /etc/rsyslog.d/10-router.conf > /dev/null <<EOF
+if (\$fromhost-ip == '${ROUTER_IP}') then {
+    action(type="omfile" file="${LOG_FILE}")
+    stop
+}
+EOF
+echo "    10-router.conf angelegt/aktualisiert."
 
 echo "==> Log-Datei anlegen..."
 if [ -f "${LOG_FILE}" ]; then

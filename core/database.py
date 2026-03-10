@@ -393,39 +393,66 @@ class DatabaseManager:
 
     def _parse_router_log_line(self, line):
         s = line.strip()
-        if len(s) < 28:
-            return None
-        if s[4] != '-' or s[7] != '-' or s[10] != ' ' or s[13] != ':' or s[16] != ':':
+        if not s or len(s) < 19:
             return None
 
+        # 1. Rsyslog Format (ISO8601): 2026-03-10T10:23:47.381632+01:00 192.168.178.1  DHCPD: ...
+        #    Identifizierbar durch das 'T' an Position 11
+        if s[10] == 'T':
+            try:
+                parts = s.split(None, 2)  # Split bei beliebigem Whitespace: [Time, IP, Rest]
+                if len(parts) < 3:
+                    return None
+                
+                dt_str = parts[0]
+                payload = parts[2]
+                
+                sep = payload.find(': ')
+                if sep <= 0:
+                    return None
+                
+                dt = datetime.fromisoformat(dt_str)
+                return {
+                    'dt': dt,
+                    'time_ut': int(dt.timestamp()),
+                    'level_id': 6,  # Default Info da rsyslog keinen Level mitliefert
+                    'type': payload[:sep].strip(),
+                    'event_text': payload[sep + 2:].strip(),
+                }
+            except Exception:
+                return None
+
+        # 2. Natives Format: 2026-10-10 10:23:47 [6] DHCPD: Text...
         try:
-            dt = datetime.strptime(s[:19], '%Y-%m-%d %H:%M:%S')
-        except ValueError:
+            dt_str = s[:19]
+            dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S')
+            
+            rest = s[20:].strip()
+            if not rest.startswith('['):
+                return None
+            
+            rb = rest.find(']')
+            if rb <= 1:
+                return None
+            
+            level_id = int(rest[1:rb])
+            payload = rest[rb + 1:].strip()
+            
+            sep = payload.find(': ')
+            if sep <= 0:
+                return None
+            
+            return {
+                'dt': dt,
+                'time_ut': int(dt.timestamp()),
+                'level_id': level_id,
+                'type': payload[:sep].strip(),
+                'event_text': payload[sep + 2:].strip(),
+            }
+        except Exception:
             return None
 
-        rest = s[20:]
-        if not rest.startswith('['):
-            return None
-        rb = rest.find(']')
-        if rb <= 1:
-            return None
-
-        level_str = rest[1:rb]
-        if not level_str.isdigit():
-            return None
-
-        payload = rest[rb + 2:] if len(rest) > rb + 2 else ""
-        sep = payload.find(': ')
-        if sep <= 0:
-            return None
-
-        return {
-            'dt': dt,
-            'time_ut': int(dt.timestamp()),
-            'level_id': int(level_str),
-            'type': payload[:sep],
-            'event_text': payload[sep + 2:],
-        }
+        return None
 
     def _normalize_router_log_timestamps(self, events):
         if len(events) < 2:

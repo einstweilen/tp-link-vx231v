@@ -1,6 +1,6 @@
 # Setup & Installation
 
-## Einrichtung und Konfiguration
+## OPTION 1: Automatische Einrichtung und Konfiguration per Script
 
 **Schnelle Installation:**
 ```bash
@@ -83,6 +83,13 @@ Fertig!
 ```
 </details>
 <br>
+
+## OPTION 2: Manuelle Einrichtung und Konfiguration
+
+```bash
+git clone https://github.com/einstweilen/tp-link-vx231v.git
+cd tp-link-vx231v
+```
 
 1.  **Voraussetzungen installieren:**
     Neben Python 3 und den Modulen aus `requirements.txt` werden plattformabhängige Systemwerkzeuge benötigt:
