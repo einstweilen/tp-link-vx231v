@@ -89,4 +89,59 @@ Das Skript sollte in diesem Fall ohne die `--log` Option aufgerufen werden, da d
 */5 * * * * cd /pfad/zum/script && /pfad/zum/script/.venv/bin/python3 vx-info.py --update
 ```
 
-Hinweis: Der Router kann das Log auch ganz ohne Skript automatisch zur Verfügung stellen, Anleitung und Optionsanpassungen folgen in Kürze!
+
+## Logspeicherung beschleunigen durch Syslog-Server Nutzung
+
+Wenn man auch das Log des Routers ohne GUI-Abfrage empfangen möchte, muss man den Router so konfigurieren, dass er das Log an einen Syslog-Server sendet und auf dem Pi einen Syslog-Server einrichten.<br>
+Die `--log` Option des Skripts erkennt anhand der lokalen Logdatei, ob ein Syslog-Server eingerichtet ist und importiert die neuen Logeinträge dann direkt aus der Logdatei des Syslog-Servers. 
+
+### Router Konfiguration
+Im Router unter Erweiterte Einstellungen > Systemtools > Systemprotokoll > Protokolleinstellungen den eingebauten Syslog-Server aktivieren.
+![Syslog-Server aktivieren](images/syslog-server-aktivieren.jpg)  
+
+Der Router sendet nach Aktivierung des Syslog-Servers ```[x] Remote speichern``` die Events per **UDP auf Port 514** (Syslog-Protokoll) an den konfigurierten Empfänger.<br> 
+Auf Debian/DietPi empfängt **rsyslog** diese Pakete – ist jedoch standardmäßig so konfiguriert, dass der UDP-Empfang deaktiviert ist und das vom Router verwendete Syslog-Format (Leerzeichen vor dem Nachrichteninhalt) als ungültig verworfen wird.
+
+
+### Debian/DietPi: Installation und Konfiguration von rsyslog
+
+Das Skript `pi_router_logging.sh` installiert und konfiguriert ```rsyslog``` auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.
+
+Wer das Installationsskript nicht nutzen möchte, kann die Konfiguration auch manuell vornehmen.<br>
+
+
+1. **rsyslog installieren** - unter DietPi via `dietpi-software install 102`,
+   sonst via `apt install rsyslog`. DietPi-Installation deaktiviert dabei
+   `systemd-journald` korrekt und verhindert doppeltes Logging.
+
+2. **`$SpaceLFOnReceive on`** - weist rsyslog an, das nicht-standardkonforme
+   Format (Leerzeichen vor dem Nachrichteninhalt) des Routers zu akzeptieren.
+
+3. **`imudp` aktivieren** - schaltet den UDP-514-Empfang in rsyslog ein.
+
+4. **Filterregel** - schreibt ausschliesslich Pakete von der Router-IP in eine
+   separate Datei, damit Router- und System-Logs nicht vermischt werden.
+   Unter DietPi wird `/home/<user>/router.log` verwendet, da `/var/log`
+   als tmpfs im RAM liegt und Logs bei Reboot verloren gehen würden.
+
+5. **Dateirechte** - Log-Datei gehört `root` (rsyslog schreibt als root),
+   Gruppe des aktuellen Users darf lesen - kein `sudo` zum Lesen notwendig.
+
+6. **Log-Rotation** - verhindert unkontrolliertes Wachstum der Log-Datei
+   durch tägliche Rotation mit 7 Tagen Aufbewahrung.
+
+#### Log-Rotation Erklärung
+
+```text
+daily                             # Log täglich rotieren
+rotate 7                          # 7 alte Versionen aufbewahren, ältere löschen
+compress                          # rotierte Logs als .gz komprimieren
+missingok                         # kein Fehler wenn Log-Datei fehlt
+notifempty                        # keine Rotation wenn Datei leer ist
+create 644 root ${CURRENT_GROUP}  # neue Log-Datei mit diesen Rechten anlegen
+postrotate
+    systemctl is-active rsyslog && # nur wenn rsyslog läuft ...
+    systemctl kill -s HUP rsyslog  # ...neue Datei öffnen lassen
+    || true                        # Fehler ignorieren falls rsyslog gestoppt
+endscript
+```

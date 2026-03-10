@@ -1,0 +1,117 @@
+#!/bin/bash
+# Router Syslog Empfang einrichten
+
+set -e
+
+ROUTER_IP=$(ip route | grep default | awk '{print $3}')
+RSYSLOG_CONF="/etc/rsyslog.conf"
+CURRENT_USER="${USER}"
+CURRENT_GROUP="$(id -gn)"
+
+if command -v dietpi-software &> /dev/null; then
+    LOG_FILE="/home/${CURRENT_USER}/router.log"
+    echo "==> DietPi erkannt - Log wird nach ${LOG_FILE} geschrieben."
+else
+    LOG_FILE="/var/log/router.log"
+fi
+
+echo "==> Router-IP ermittelt: ${ROUTER_IP}"
+
+echo "==> Pruefe rsyslog Installation..."
+if ! command -v rsyslogd &> /dev/null; then
+    echo "    rsyslog nicht gefunden - wird installiert..."
+    if command -v dietpi-software &> /dev/null; then
+        echo "    DietPi erkannt - installiere via dietpi-software..."
+        sudo dietpi-software install 102
+    else
+        echo "    Installiere via apt..."
+        sudo apt install rsyslog -y
+    fi
+else
+    echo "    rsyslog bereits installiert - uebersprungen."
+fi
+
+echo "==> Pruefe rsyslog.conf..."
+
+if ! grep -q "SpaceLFOnReceive" "${RSYSLOG_CONF}"; then
+    echo "    SpaceLFOnReceive fehlt - wird eingefuegt..."
+    sudo sed -i '/module(load="imudp")/i $SpaceLFOnReceive on' "${RSYSLOG_CONF}"
+else
+    echo "    SpaceLFOnReceive bereits vorhanden - uebersprungen."
+fi
+
+if grep -q '#module(load="imudp")' "${RSYSLOG_CONF}"; then
+    echo "    imudp ist auskommentiert - wird aktiviert..."
+    sudo sed -i 's/#module(load="imudp")/module(load="imudp")/' "${RSYSLOG_CONF}"
+elif grep -q 'module(load="imudp")' "${RSYSLOG_CONF}"; then
+    echo "    imudp bereits aktiv - uebersprungen."
+else
+    echo "    imudp fehlt komplett - wird eingefuegt..."
+    echo '$SpaceLFOnReceive on
+module(load="imudp")
+input(type="imudp" port="514")' | sudo tee -a "${RSYSLOG_CONF}" > /dev/null
+fi
+
+if grep -q '#input(type="imudp" port="514")' "${RSYSLOG_CONF}"; then
+    echo "    imudp input ist auskommentiert - wird aktiviert..."
+    sudo sed -i 's/#input(type="imudp" port="514")/input(type="imudp" port="514")/' "${RSYSLOG_CONF}"
+elif grep -q 'input(type="imudp" port="514")' "${RSYSLOG_CONF}"; then
+    echo "    imudp input bereits aktiv - uebersprungen."
+fi
+
+echo "==> Pruefe auf doppelte Filterregeln..."
+if [ -f /etc/rsyslog.d/router.conf ] && [ -f /etc/rsyslog.d/10-router.conf ]; then
+    echo "    Doppelte Regel gefunden - router.conf wird entfernt..."
+    sudo rm /etc/rsyslog.d/router.conf
+elif [ -f /etc/rsyslog.d/router.conf ]; then
+    echo "    Alte router.conf gefunden - wird zu 10-router.conf umbenannt..."
+    sudo mv /etc/rsyslog.d/router.conf /etc/rsyslog.d/10-router.conf
+fi
+
+echo "==> Router-Filterregel anlegen..."
+if [ -f /etc/rsyslog.d/10-router.conf ]; then
+    echo "    10-router.conf bereits vorhanden - uebersprungen."
+else
+    sudo tee /etc/rsyslog.d/10-router.conf > /dev/null <<EOF
+if \$fromhost-ip == "${ROUTER_IP}" then ${LOG_FILE}
+& stop
+EOF
+    echo "    10-router.conf angelegt."
+fi
+
+echo "==> Log-Datei anlegen..."
+if [ -f "${LOG_FILE}" ]; then
+    echo "    ${LOG_FILE} bereits vorhanden - uebersprungen."
+else
+    sudo touch "${LOG_FILE}"
+    sudo chown root:${CURRENT_GROUP} "${LOG_FILE}"
+    sudo chmod 644 "${LOG_FILE}"
+    echo "    ${LOG_FILE} angelegt (Eigentuemer: root:${CURRENT_GROUP})."
+fi
+
+echo "==> Log-Rotation einrichten..."
+if [ -f /etc/logrotate.d/router ]; then
+    echo "    logrotate-Regel bereits vorhanden - uebersprungen."
+else
+    sudo tee /etc/logrotate.d/router > /dev/null <<EOF
+${LOG_FILE} {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    create 644 root ${CURRENT_GROUP}
+    postrotate
+        systemctl is-active rsyslog && systemctl kill -s HUP rsyslog || true
+    endscript
+}
+EOF
+    echo "    logrotate-Regel angelegt."
+fi
+
+echo "==> Rsyslog neu starten..."
+sudo systemctl restart rsyslog
+
+echo ""
+echo "==> Fertig. Log ueberwachen mit:"
+echo "    tail -f ${LOG_FILE}"

@@ -3,7 +3,7 @@
 ### 08.03.2026
 
 * **Statusreport**
-  * Zusätzliche Analyse der Verbíndungsdaten auf Leitungsprobleme
+  * Zusätzliche Analyse der Verbindungsdaten auf Leitungsprobleme
 
 ### 07.03.2026
 
