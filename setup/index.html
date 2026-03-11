@@ -494,10 +494,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#einrichtung-und-konfiguration" class="md-nav__link">
+  <a href="#option-1-automatische-einrichtung-und-konfiguration-per-script" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Einrichtung und Konfiguration
+        OPTION 1: Automatische Einrichtung und Konfiguration per Script
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-2-manuelle-einrichtung-und-konfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OPTION 2: Manuelle Einrichtung und Konfiguration
       
     </span>
   </a>
@@ -833,10 +844,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#einrichtung-und-konfiguration" class="md-nav__link">
+  <a href="#option-1-automatische-einrichtung-und-konfiguration-per-script" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Einrichtung und Konfiguration
+        OPTION 1: Automatische Einrichtung und Konfiguration per Script
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-2-manuelle-einrichtung-und-konfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OPTION 2: Manuelle Einrichtung und Konfiguration
       
     </span>
   </a>
@@ -864,7 +886,7 @@
 
 
 <h1 id="setup-installation">Setup &amp; Installation</h1>
-<h2 id="einrichtung-und-konfiguration">Einrichtung und Konfiguration</h2>
+<h2 id="option-1-automatische-einrichtung-und-konfiguration-per-script">OPTION 1: Automatische Einrichtung und Konfiguration per Script</h2>
 <p><strong>Schnelle Installation:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </code></pre></div>
@@ -943,6 +965,10 @@
 </code></pre></div>
 </details>
 <p><br></p>
+<h2 id="option-2-manuelle-einrichtung-und-konfiguration">OPTION 2: Manuelle Einrichtung und Konfiguration</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/einstweilen/tp-link-vx231v.git
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>tp-link-vx231v
+</code></pre></div>
 <ol>
 <li>
 <p><strong>Voraussetzungen installieren:</strong>
@@ -950,13 +976,13 @@
 <ul>
 <li><strong>Python-Umgebung &amp; Pakete:</strong> 
     Auf modernen Linux-Distributionen (z. B. Raspberry Pi OS, Debian) ist die Installation in eine virtuelle Umgebung (venv) notwendig:
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-venv<span class="w">  </span><span class="c1"># falls nicht bereits installiert</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Abhängigkeiten und Browser-Binaries in venv installieren</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>playwright<span class="w"> </span>install<span class="w"> </span>chromium
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-venv<span class="w">  </span><span class="c1"># falls nicht bereits installiert</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># Abhängigkeiten und Browser-Binaries in venv installieren</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>playwright<span class="w"> </span>install<span class="w"> </span>chromium
 </code></pre></div></li>
 <li><strong>SNMP-Client:</strong> Falls auf dem Router der superadmin Account aktiviert, müssen <code>snmpget</code> und <code>snmpwalk</code> verfügbar sein.<ul>
 <li><em>Debian/Raspberry Pi:</em> <code>sudo apt install snmp</code></li>
@@ -979,26 +1005,26 @@ Unter Linux/Debian wird die AI-Analyse aktuell noch übersprungen.<br>
 <li>
 <p><strong>Testlauf durchführen (<code>--test</code>):</strong>
     Überprüfen, ob die Kommunikation mit dem Router funktioniert und alle Abhängigkeiten korrekt installiert sind. Dies sollte als erster Schritt ausgeführt werden (Achtung: venv muss aktiv sein!):
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span>vx-info.py<span class="w"> </span>--test
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python3<span class="w"> </span>vx-info.py<span class="w"> </span>--test
 </code></pre></div>
     Bei einer erfolgreichen Konfiguration sieht die Ausgabe folgendermaßen aus:
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>GUI Scraping
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  ✓  Login in Routerweboberfläche erfolgreich
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Telnet Konfiguration
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  ✓  telnet Login erfolgreich
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>SNMP Konfiguration
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  ✓  snmp Zugriff erfolgreich
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>eMail Konfiguration
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>  ✓  eMail erfolgreich versendet
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>GUI Scraping
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  ✓  Login in Routerweboberfläche erfolgreich
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Telnet Konfiguration
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  ✓  telnet Login erfolgreich
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>SNMP Konfiguration
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  ✓  snmp Zugriff erfolgreich
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>eMail Konfiguration
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>  ✓  eMail erfolgreich versendet
 </code></pre></div></p>
 </li>
 <li>
 <p><strong>Erster Datenabruf:</strong>
     Wenn der Testlauf erfolgreich war, kann das vollständige Logbuch manuell heruntergeladen und die Datenbank initialisiert werden:
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>vx-info.py<span class="w"> </span>--update<span class="w"> </span>--log
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python3<span class="w"> </span>vx-info.py<span class="w"> </span>--update<span class="w"> </span>--log
 </code></pre></div></p>
 </li>
 </ol>

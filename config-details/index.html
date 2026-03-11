@@ -1148,7 +1148,8 @@ Wer Sicherheitsbedenken hat, kann einen gesonderten E-Mail Account dafür anlege
 <br></li>
 <li><code>show_level</code>: Steuert direkt, welche Ereignisse im generierten HTML-Report des Tages auftauchen:<ul>
 <li><code>0</code> bis <code>7</code>: Nimmt die Standard-Warnstufen des Routers (von Notfall bis Debug). Ein Wert von <code>4</code> (Vorsicht) zeigt also alle Ereignisse zwischen Notfall (0) und Vorsicht (4) an.</li>
-<li><code>8</code>: Ein vom Skript zusätzlicher scriptspezifischer Level.<br>Es zeigt alle Ereignisse der letzten 24 Stunden (entspricht dem Level Debug 7), verbirgt aber explizit die bei <code>exclude_types</code> (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.</li>
+<li><code>8</code>: Reserviert für rsyslog importierte Logeinträge.</li>
+<li><code>9</code>: Ein vom Skript zusätzlicher scriptspezifischer Level.<br>Es zeigt alle Ereignisse der letzten 24 Stunden (entspricht dem Level Debug 7), verbirgt aber explizit die bei <code>exclude_types</code> (z. B. den ständigen MESH Handshake der Repeater) herausgefilterten Typen.</li>
 </ul>
 </li>
 </ul>
