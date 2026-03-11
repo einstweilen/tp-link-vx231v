@@ -128,6 +128,20 @@ Abschaltbar im [Statistics] Bereich der config.ini durch setzen der Werte auf Fa
 
 ![Ereignislog](images/report-eventlog.jpg)
 
+Je nach Konfiguration in der `config.ini` passt sich der Statusreport (Headline und Fußzeile) automatisch an, um maximale Übersichtlichkeit zu bieten.
+
+### Beispiel: Events bis Level 4 (Vorsicht)
+Wird in der Konfiguration `show_level = 4` gewählt, lautet die Überschrift entsprechend und in der Fußzeile werden auch nur die tatsächlich möglichen Loglevel 0 bis 4 als Legende eingeblendet:
+![Ereignislog bis Level 4](images/eventlog_header_bis_level.jpg)
+
+Anzeige der Loglevel im Footer
+
+![Ereignislog Footer](images/eventlog_footer_bis_level.jpg)
+
+### Beispiel: Events gefiltert (Level 9)
+Wird hingegen der Filter-Level `show_level = 9` genutzt, zeigt die Überschrift transparent an, welche Event-Typen ausgeschlossen wurden (z.B. DHCPD, Mesh, VoIP):
+![Ereignislog mit Excludes](images/eventlog_header_excludes.jpg)
+
 ### Konfiguration der Ereignisloganzeige
 Was in dem Statusreport angezeigt wird, läßt sich über zwei Parameter steuern, den Loglevel und den Typ des Events.
 
