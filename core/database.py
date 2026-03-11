@@ -569,12 +569,12 @@ class DatabaseManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 if debug:
-                    sql_sel = f"SELECT datetime(time_ut, 'unixepoch', 'localtime'), type, event_text FROM events WHERE time_ut < ? AND type IN ({placeholders})"
+                    sql_sel = f"SELECT datetime(time_ut, 'unixepoch', 'localtime'), type, event_text FROM events WHERE time_ut < ? AND type COLLATE NOCASE IN ({placeholders})"
                     cursor.execute(sql_sel, params)
                     for r in cursor.fetchall():
                         print(f"  -> Lösche: [{r[0]}] {r[1]:<8} | {r[2]}")
 
-                cursor.execute(f"DELETE FROM events WHERE time_ut < ? AND type IN ({placeholders})", params)
+                cursor.execute(f"DELETE FROM events WHERE time_ut < ? AND type COLLATE NOCASE IN ({placeholders})", params)
                 if cursor.rowcount > 0:
                     print(f"Cleanup: {cursor.rowcount} Einträge gelöscht.")
         except Exception as e:

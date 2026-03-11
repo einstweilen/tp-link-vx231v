@@ -296,13 +296,13 @@ class TPLinkVX231vReport:
         
         if show_level == 9:
             if exclude_types:
-                exclude_clause = f"AND type NOT IN ({','.join('?' for _ in exclude_types)})"
+                exclude_clause = f"AND type COLLATE NOCASE NOT IN ({','.join('?' for _ in exclude_types)})"
                 params.extend(exclude_types)
         else:
             if exclude_types:
                 # Zeige Events, die NICHT in exclude_types stehen ODER die ein Fehler/Warnung (<= 4) sind.
                 # UND zeige generell nur Events, die <= show_level sind.
-                exclude_clause = f"AND (type NOT IN ({','.join('?' for _ in exclude_types)}) OR level_id <= 4) AND level_id <= ?"
+                exclude_clause = f"AND (type COLLATE NOCASE NOT IN ({','.join('?' for _ in exclude_types)}) OR level_id <= 4) AND level_id <= ?"
                 params.extend(exclude_types)
                 params.append(show_level)
             else:
@@ -1063,14 +1063,42 @@ class TPLinkVX231vReport:
                 html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>Statistiken</td></tr><tr><td style='padding: 10px; font-size: 13px; color: #333;'>{stat_html}</td></tr></table></td></tr>"
 
         if events:
-            html += "<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>Ereignislog (letzte 24h)</td></tr><tr><td><table width='100%' style='font-size: 11px; color: #555;'>"
+            # 1. Dynamische Legende
+            all_levels = [
+                "0 Notfall", "1 Alarm", "2 Kritisch", "3 Fehler", 
+                "4 Vorsicht", "5 Hinweis", "6 Info", "7 Debug"
+            ]
+            
+            if show_level <= 7:
+                visible_levels = all_levels[:show_level + 1]
+            else:
+                visible_levels = all_levels # Für 8 und 9 alle normalen Level anzeigen
+                
+            legend_html = " &bull; ".join(visible_levels)
+            
+            # 2. Dynamische Überschrift
+            if 0 <= show_level <= 7:
+                # Level Text extrahieren (z.B. "4 Vorsicht")
+                level_text = all_levels[show_level]
+                header_text = f"Ereignislog der letzten 24h bis Level {level_text}"
+            elif show_level == 8:
+                header_text = "Vollständiges Ereignislog der letzten 24h"
+            elif show_level == 9:
+                if exclude:
+                    header_text = f"Ereignislog der letzten 24h ohne {', '.join(exclude)}"
+                else:
+                    header_text = "Vollständiges Ereignislog der letzten 24h"
+            else:
+                header_text = "Ereignislog (letzte 24h)" # Fallback
+                
+            html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{header_text}</td></tr><tr><td><table width='100%' style='font-size: 11px; color: #555;'>"
             for i, e in enumerate(events):
                 bg = "#ffffff" if i % 2 == 0 else "#f9f9f9"
                 html += f"<tr style='background-color: {bg};'><td width='140'>{e[0]}</td><td width='80'>{e[1]}</td><td>{e[2]}</td></tr>"
             
             # Legend for log levels
             html += "<tr><td colspan='3' style='padding-top: 5px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee;'>"
-            html += "0 Notfall &bull; 1 Alarm &bull; 2 Kritisch &bull; 3 Fehler &bull; 4 Vorsicht &bull; 5 Hinweis &bull; 6 Info &bull; 7 Debug"
+            html += legend_html
             html += "</td></tr>"
             
             html += "</table></td></tr></table></td></tr>"
