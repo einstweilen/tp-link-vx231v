@@ -21,6 +21,7 @@ last_import.txt
 # Generierte Dateien
 logs/
 reports/
+screenshots/
 
 # Sample-Datei explizit erlaubt
 !config.ini.sample

@@ -1,5 +1,14 @@
 ## Changelog / Updates
 
+### 11.03.2026
+
+* **Log-Verarbeitung & Rsyslog**
+  * Router-Logs können alternativ und performanter ohne GUI-Scraping über einen lokalen Syslog-Server (rsyslog) eingelesen werden.
+  * Loglevel-Anpassung: Das Level für rsyslog-Events ist nun `8`, während für interne Statistik-Events das virtuelle Level `9` eingeführt wurde.
+
+* **Statusreport**
+  * Das Eventlog im Report zeigt die gewählte Filterstufe an.
+
 ### 08.03.2026
 
 * **Statusreport**

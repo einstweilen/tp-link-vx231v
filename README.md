@@ -37,14 +37,18 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
 * Speicherung der Daten in einer Datenbank
 * Automatisierte Generierung von HTML-Statusreports
+  <br>
+  <img src="images/beispiel-statusreport-sml.jpg" alt="Vorschau Statusreport">
   <details>
-      <summary>Beispiel: Statusreport</summary>
+      <summary>Aufklappen für vollständigen Statusreport</summary>
       <br>
       <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
   </details>
 * Lokales Browser-Dashboard zur Visualisierung
+  <br>
+  <img src="images/beispiel-dashboard-sml.jpg" alt="Vorschau Dashboard">
   <details>
-      <summary>Beispiel: Dashboard</summary>
+      <summary>Aufklappen für vollständiges Dashboard</summary>
       <br>
       <img src="images/beispiel-dashboard.jpg" alt="Beispiel Browser-Dashboard">
   </details>
