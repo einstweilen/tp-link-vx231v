@@ -37,18 +37,22 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
 * Speicherung der Daten in einer Datenbank
 * Automatisierte Generierung von HTML-Statusreports
-  <br>
-  <img src="images/beispiel-statusreport-sml.jpg" alt="Vorschau Statusreport">
   <details>
-      <summary>Aufklappen für vollständigen Statusreport</summary>
+      <summary>
+          <img src="images/beispiel-statusreport-sml.jpg" alt="Vorschau Statusreport">
+          <br>
+          <i>Anklicken für vollständigen Statusreport</i>
+      </summary>
       <br>
       <img src="images/beispiel-statusreport.jpg" alt="Beispiel Statusreport">
   </details>
 * Lokales Browser-Dashboard zur Visualisierung
-  <br>
-  <img src="images/beispiel-dashboard-sml.jpg" alt="Vorschau Dashboard">
   <details>
-      <summary>Aufklappen für vollständiges Dashboard</summary>
+      <summary>
+          <img src="images/beispiel-dashboard-sml.jpg" alt="Vorschau Dashboard">
+          <br>
+          <i>Anklicken für vollständiges Dashboard</i>
+      </summary>
       <br>
       <img src="images/beispiel-dashboard.jpg" alt="Beispiel Browser-Dashboard">
   </details>
@@ -61,7 +65,7 @@ curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/insta
 ```
 <br>
 <details>
-<summary>Beispiel: Installationsverlauf</summary>
+<summary>Beispielablauf der Schnellen Installation</summary>
 
 ```
 curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install.sh | bash
