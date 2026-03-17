@@ -16,7 +16,7 @@ echo "==> Log-Datei wird in ${LOG_FILE} gespeichert."
 echo "==> Router-IP ermittelt: ${ROUTER_IP}"
 
 echo "==> Prüfe rsyslog Installation..."
-if ! command -v rsyslogd &> /dev/null; then
+if ! command -v rsyslogd &> /dev/null && [ ! -x "/usr/sbin/rsyslogd" ]; then
     echo "    rsyslog nicht gefunden - wird installiert..."
     if command -v dietpi-software &> /dev/null; then
         echo "    DietPi erkannt - installiere via dietpi-software..."
@@ -72,8 +72,19 @@ if [ -f /etc/rsyslog.d/10-router.conf ]; then
 fi
 
 sudo tee /etc/rsyslog.d/10-router.conf > /dev/null <<EOF
+# Template: Original-Timestamp des Routers verwenden
+template(name="RouterTimestamp" type="list") {
+    property(name="timereported" dateFormat="rfc3339")
+    constant(value=" ")
+    property(name="hostname")
+    constant(value=" ")
+    property(name="syslogtag")
+    property(name="msg" spifno1stsp="on")
+    constant(value="\n")
+}
+
 if (\$fromhost-ip == '${ROUTER_IP}') then {
-    action(type="omfile" file="${LOG_FILE}")
+    action(type="omfile" file="${LOG_FILE}" template="RouterTimestamp")
     stop
 }
 EOF

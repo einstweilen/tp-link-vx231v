@@ -39,7 +39,7 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Automatisierte Generierung von HTML-Statusreports
   <details>
       <summary>
-          <img src="images/beispiel-statusreport-sml.jpg" alt="Vorschau Statusreport">
+          <span><img src="images/beispiel-statusreport-sml.jpg" alt="Vorschau Statusreport"></span>
           <br>
           <i>Anklicken für vollständigen Statusreport</i>
       </summary>
@@ -49,7 +49,7 @@ Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Dar
 * Lokales Browser-Dashboard zur Visualisierung
   <details>
       <summary>
-          <img src="images/beispiel-dashboard-sml.jpg" alt="Vorschau Dashboard">
+          <span><img src="images/beispiel-dashboard-sml.jpg" alt="Vorschau Dashboard"></span>
           <br>
           <i>Anklicken für vollständiges Dashboard</i>
       </summary>

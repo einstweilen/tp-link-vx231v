@@ -105,7 +105,7 @@ Auf Debian/DietPi empfängt **rsyslog** diese Pakete – ist jedoch standardmä�
 
 ### Debian/DietPi: Installation und Konfiguration von rsyslog
 
-Das Skript `pi_router_logging.sh` installiert und konfiguriert ```rsyslog``` auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.
+Das Skript `pi_rsyslog_setup.sh` installiert und konfiguriert ```rsyslog``` auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.
 
 Wer das Installationsskript nicht nutzen möchte, kann die Konfiguration auch manuell vornehmen.<br>
 
@@ -124,10 +124,15 @@ Wer das Installationsskript nicht nutzen möchte, kann die Konfiguration auch ma
    Unter DietPi wird `/home/<user>/router.log` verwendet, da `/var/log`
    als tmpfs im RAM liegt und Logs bei Reboot verloren gehen würden.
 
-5. **Dateirechte** - Log-Datei gehört `root` (rsyslog schreibt als root),
+5. **Original-Zeitstempel** - Das rsyslog-Template sorgt dafür, dass nicht die lokale Empfangszeit 
+   des Raspberry Pi, sondern der vom Router übermittelte Original-Zeitstempel für den Log-Eintrag 
+   verwendet wird. Damit ist das rsyslog-Protokoll identisch mit der Eventlog-Ansicht auf dem Router.<br>
+   _In Tests hatte sich gezeigt, dass die Routerevents bis zu 8 Sekunden Zeitdifferenz zur wahren Uhrzeit haben können._
+
+6. **Dateirechte** - Log-Datei gehört `root` (rsyslog schreibt als root),
    Gruppe des aktuellen Users darf lesen - kein `sudo` zum Lesen notwendig.
 
-6. **Log-Rotation** - verhindert unkontrolliertes Wachstum der Log-Datei
+7. **Log-Rotation** - verhindert unkontrolliertes Wachstum der Log-Datei
    durch tägliche Rotation mit 7 Tagen Aufbewahrung.
 
 #### Log-Rotation Erklärung
