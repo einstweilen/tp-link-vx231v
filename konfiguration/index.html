@@ -1158,7 +1158,7 @@ Die <code>--log</code> Option des Skripts erkennt anhand der lokalen Logdatei, o
 <p>Der Router sendet nach Aktivierung des Syslog-Servers <code>[x] Remote speichern</code> die Events per <strong>UDP auf Port 514</strong> (Syslog-Protokoll) an den konfigurierten Empfänger.<br> 
 Auf Debian/DietPi empfängt <strong>rsyslog</strong> diese Pakete – ist jedoch standardmäßig so konfiguriert, dass der UDP-Empfang deaktiviert ist und das vom Router verwendete Syslog-Format (Leerzeichen vor dem Nachrichteninhalt) als ungültig verworfen wird.</p>
 <h3 id="debiandietpi-installation-und-konfiguration-von-rsyslog">Debian/DietPi: Installation und Konfiguration von rsyslog</h3>
-<p>Das Skript <code>pi_router_logging.sh</code> installiert und konfiguriert <code>rsyslog</code> auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.</p>
+<p>Das Skript <code>pi_rsyslog_setup.sh</code> installiert und konfiguriert <code>rsyslog</code> auf Debian/DietPi, um die Router-Logs empfangen zu können. Es ist nicht notwendig, das Skript auszuführen, wenn man das Log des Routers nur per Web-Scraping empfangen möchte.</p>
 <p>Wer das Installationsskript nicht nutzen möchte, kann die Konfiguration auch manuell vornehmen.<br></p>
 <ol>
 <li>
@@ -1178,6 +1178,12 @@ Auf Debian/DietPi empfängt <strong>rsyslog</strong> diese Pakete – ist jedoch
    separate Datei, damit Router- und System-Logs nicht vermischt werden.
    Unter DietPi wird <code>/home/&lt;user&gt;/router.log</code> verwendet, da <code>/var/log</code>
    als tmpfs im RAM liegt und Logs bei Reboot verloren gehen würden.</p>
+</li>
+<li>
+<p><strong>Original-Zeitstempel</strong> - Das rsyslog-Template sorgt dafür, dass nicht die lokale Empfangszeit 
+   des Raspberry Pi, sondern der vom Router übermittelte Original-Zeitstempel für den Log-Eintrag 
+   verwendet wird. Damit ist das rsyslog-Protokoll identisch mit der Eventlog-Ansicht auf dem Router.<br>
+   <em>In Tests hatte sich gezeigt, dass die Routerevents bis zu 8 Sekunden Zeitdifferenz zur wahren Uhrzeit haben können.</em></p>
 </li>
 <li>
 <p><strong>Dateirechte</strong> - Log-Datei gehört <code>root</code> (rsyslog schreibt als root),
