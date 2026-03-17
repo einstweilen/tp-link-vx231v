@@ -1,5 +1,12 @@
 ## Changelog / Updates
 
+### 17.03.2026
+* **Neue Option / Feature**
+  * Der Parameter `--reconnect` akzeptiert nun optional eine Wartezeit in Sekunden vor dem Wiederverbinden (z. B. `--reconnect 15`).
+
+* **Log-Verarbeitung & Rsyslog**
+  * Konfiguration von `rsyslog` geändert, sodass nun direkt die Zeitstempel des Routers statt der lokalen Empfangszeit verwendet werden.
+
 ### 11.03.2026
 
 * **Log-Verarbeitung & Rsyslog**
