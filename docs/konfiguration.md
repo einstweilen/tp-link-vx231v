@@ -55,7 +55,7 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 <br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
 <br>
-*   `--reconnect`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus.
+*   `--reconnect [SEKUNDEN]`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus. Optional kann die Wartezeit vor dem Wiederverbinden in Sekunden angegeben werden (Standard: 5).
 
 *   `--dashboard`: Startet einen lokalen Webserver (Standard: Port 31311) zur interaktiven Anzeige historischer Metriken.
 

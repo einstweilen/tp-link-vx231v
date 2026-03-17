@@ -34,3 +34,7 @@ site/
 
 # Dateien ignorieren, deren Name mit 'nogit' beginnt
 nogit*
+
+# Tools und externe Skripte
+update_clients.sh
+vx_status_snmp.8s.sh

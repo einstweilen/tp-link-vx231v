@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--report-send', action='store_true', help='Statusreport generieren und versenden')
     parser.add_argument('--report-show', action='store_true', help='Statusreport generieren und im Browser anzeigen')
     parser.add_argument('--dashboard', action='store_true', help='Starte Browser-Dashboard')
-    parser.add_argument('--reconnect', action='store_true', help='Führt einen PPPoE-Reconnect durch')
+    parser.add_argument('--reconnect', nargs='?', const=5, type=int, help='Führt einen PPPoE-Reconnect durch (Optionale Wartezeit in s)')
     parser.add_argument('--json-only', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--test', action='store_true', help='Technologien und Konfiguration testen')
@@ -190,7 +190,7 @@ def main():
                 debug=args.debug
             )
             try:
-                success = gui_client.reconnect_wan()
+                success = gui_client.reconnect_wan(wait_time=args.reconnect)
                 if success:
                     print("PPPoE Reconnect erfolgreich ausgeführt.")
                 else:

@@ -352,7 +352,7 @@ class TPLinkVX231vPlaywright:
         except Exception:
             return {}
 
-    def reconnect_wan(self):
+    def reconnect_wan(self, wait_time=5):
         """(Erweiterte Einstellungen -> Netzwerk -> DSL-WAN) den Trennen/Verbinden klicken"""
         if not self.page and not self.login():
             return False
@@ -390,8 +390,8 @@ class TPLinkVX231vPlaywright:
                 if disconnect_btn.is_visible():
                     self._log("Button 'Trennen' gefunden, klicke per JS...")
                     disconnect_btn.evaluate("node => node.click()")
-                    self._log("Warte 5 Sekunden bis Verbindung getrennt ist...")
-                    time.sleep(5)
+                    self._log(f"Warte {wait_time} Sekunden bis Verbindung getrennt ist...")
+                    time.sleep(wait_time)
             except Exception:
                 self._log("Kein 'Trennen'-Button sichtbar. Eventuell ist die Verbindung bereits getrennt.")
 
