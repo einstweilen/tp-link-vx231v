@@ -3,6 +3,21 @@
 
 set -e
 
+# Farben
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+info() { echo -e "  ${BLUE}ℹ${NC} $1"; }
+success() { echo -e "  ${GREEN}✓${NC} $1"; }
+error() { echo -e "  ${RED}✗${NC} $1"; }
+step() { echo -e "\n${BOLD}==> $1${NC}"; }
+
+echo -e "${BOLD}==== Router Syslog Einrichtung ====${NC}"
+
 ROUTER_IP=$(ip route | grep default | awk '{print $3}')
 RSYSLOG_CONF="/etc/rsyslog.conf"
 CURRENT_USER="${USER}"
@@ -12,63 +27,66 @@ CURRENT_GROUP="$(id -gn)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOG_FILE="${SCRIPT_DIR}/router.log"
 
-echo "==> Log-Datei wird in ${LOG_FILE} gespeichert."
-echo "==> Router-IP ermittelt: ${ROUTER_IP}"
+info "Log-Datei wird in ${LOG_FILE} gespeichert."
+info "Router-IP ermittelt: ${ROUTER_IP}"
 
-echo "==> Prüfe rsyslog Installation..."
+step "Prüfe rsyslog Installation..."
 if ! command -v rsyslogd &> /dev/null && [ ! -x "/usr/sbin/rsyslogd" ]; then
-    echo "    rsyslog nicht gefunden - wird installiert..."
+    info "rsyslog nicht gefunden - wird installiert..."
     if command -v dietpi-software &> /dev/null; then
-        echo "    DietPi erkannt - installiere via dietpi-software..."
-        sudo dietpi-software install 102
+        info "DietPi erkannt - installiere via dietpi-software..."
+        sudo dietpi-software install 102 > /dev/null 2>&1
     else
-        echo "    Installiere via apt..."
-        sudo apt install rsyslog -y
+        info "Installiere via apt..."
+        sudo apt update > /dev/null 2>&1 && sudo apt install rsyslog -y > /dev/null 2>&1
     fi
+    success "rsyslog installiert."
 else
-    echo "    rsyslog bereits installiert - übersprungen."
+    success "rsyslog bereits installiert."
 fi
 
-echo "==> Prüfe rsyslog.conf..."
+step "Prüfe rsyslog.conf..."
 
 if ! grep -q "SpaceLFOnReceive" "${RSYSLOG_CONF}"; then
-    echo "    SpaceLFOnReceive fehlt - wird eingefuegt..."
+    info "SpaceLFOnReceive fehlt - wird eingefuegt..."
     sudo sed -i '/module(load="imudp")/i $SpaceLFOnReceive on' "${RSYSLOG_CONF}"
 else
-    echo "    SpaceLFOnReceive bereits vorhanden - übersprungen."
+    success "SpaceLFOnReceive bereits vorhanden."
 fi
 
 if grep -q '#module(load="imudp")' "${RSYSLOG_CONF}"; then
-    echo "    imudp ist auskommentiert - wird aktiviert..."
+    info "imudp ist auskommentiert - wird aktiviert..."
     sudo sed -i 's/#module(load="imudp")/module(load="imudp")/' "${RSYSLOG_CONF}"
 elif grep -q 'module(load="imudp")' "${RSYSLOG_CONF}"; then
-    echo "    imudp bereits aktiv - übersprungen."
+    success "imudp bereits aktiv."
 else
-    echo "    imudp fehlt komplett - wird eingefuegt..."
+    info "imudp fehlt komplett - wird eingefuegt..."
     echo '$SpaceLFOnReceive on
 module(load="imudp")
 input(type="imudp" port="514")' | sudo tee -a "${RSYSLOG_CONF}" > /dev/null
 fi
 
 if grep -q '#input(type="imudp" port="514")' "${RSYSLOG_CONF}"; then
-    echo "    imudp input ist auskommentiert - wird aktiviert..."
+    info "imudp input ist auskommentiert - wird aktiviert..."
     sudo sed -i 's/#input(type="imudp" port="514")/input(type="imudp" port="514")/' "${RSYSLOG_CONF}"
 elif grep -q 'input(type="imudp" port="514")' "${RSYSLOG_CONF}"; then
-    echo "    imudp input bereits aktiv - übersprungen."
+    success "imudp input bereits aktiv."
 fi
 
-echo "==> Prüfe auf doppelte Filterregeln..."
+step "Prüfe auf doppelte Filterregeln..."
 if [ -f /etc/rsyslog.d/router.conf ] && [ -f /etc/rsyslog.d/10-router.conf ]; then
-    echo "    Doppelte Regel gefunden - router.conf wird entfernt..."
+    info "Doppelte Regel gefunden - router.conf wird entfernt..."
     sudo rm /etc/rsyslog.d/router.conf
 elif [ -f /etc/rsyslog.d/router.conf ]; then
-    echo "    Alte router.conf gefunden - wird zu 10-router.conf umbenannt..."
+    info "Alte router.conf gefunden - wird zu 10-router.conf umbenannt..."
     sudo mv /etc/rsyslog.d/router.conf /etc/rsyslog.d/10-router.conf
+else
+    success "Keine doppelten Regeln."
 fi
 
-echo "==> Router-Filterregel anlegen..."
+step "Router-Filterregel anlegen..."
 if [ -f /etc/rsyslog.d/10-router.conf ]; then
-    echo "    10-router.conf bereits vorhanden - wird überschrieben um korrekte Syntax sicherzustellen..."
+    info "10-router.conf bereits vorhanden - wird aktualisiert..."
 fi
 
 sudo tee /etc/rsyslog.d/10-router.conf > /dev/null <<EOF
@@ -88,31 +106,31 @@ if (\$fromhost-ip == '${ROUTER_IP}') then {
     stop
 }
 EOF
-echo "==> Rsyslog Systemd-Berechtigungen anpassen..."
-# Moderne Linux-Systeme schuetzen /home vor Diensten wie rsyslog
+success "Filterregel geschrieben."
+
+step "Rsyslog Systemd-Berechtigungen anpassen..."
 sudo mkdir -p /etc/systemd/system/rsyslog.service.d
 sudo tee /etc/systemd/system/rsyslog.service.d/override.conf > /dev/null <<EOF
 [Service]
 ProtectHome=read-only
 ReadWritePaths=${SCRIPT_DIR}
 EOF
-sudo systemctl daemon-reload
-echo "    Systemd-Override fuer Rsyslog eingerichtet."
+sudo systemctl daemon-reload > /dev/null 2>&1
+success "Systemd-Override eingerichtet."
 
-echo "==> Log-Datei anlegen..."
+step "Log-Datei anlegen..."
 if [ -f "${LOG_FILE}" ]; then
-    echo "    ${LOG_FILE} bereits vorhanden - übersprungen."
+    success "${LOG_FILE} bereits vorhanden."
 else
     sudo touch "${LOG_FILE}"
     sudo chown root:${CURRENT_GROUP} "${LOG_FILE}"
     sudo chmod 644 "${LOG_FILE}"
-    echo "    ${LOG_FILE} angelegt (Owner: root:${CURRENT_GROUP}"
-    echo "                                 lesbar für Standarduser)"
+    success "${LOG_FILE} angelegt (Owner: root:${CURRENT_GROUP})."
 fi
 
-echo "==> Log-Rotation einrichten..."
+step "Log-Rotation einrichten..."
 if [ -f /etc/logrotate.d/router ]; then
-    echo "    logrotate-Regel bereits vorhanden - übersprungen."
+    success "logrotate-Regel bereits vorhanden."
 else
     sudo tee /etc/logrotate.d/router > /dev/null <<EOF
 ${LOG_FILE} {
@@ -127,12 +145,12 @@ ${LOG_FILE} {
     endscript
 }
 EOF
-    echo "    logrotate-Regel angelegt."
+    success "logrotate-Regel angelegt."
 fi
 
-echo "==> Rsyslog neu starten..."
-sudo systemctl restart rsyslog
+step "Rsyslog neu starten..."
+sudo systemctl restart rsyslog > /dev/null 2>&1
+success "Rsyslog erfolgreich neu gestartet."
 
-echo ""
-echo "==> Fertig. Log überwachen mit:"
-echo "    tail -f ${LOG_FILE}"
+echo -e "\n${BOLD}==== Fertig ====${NC}"
+info "Log überwachen mit: tail -f ${LOG_FILE}\n"

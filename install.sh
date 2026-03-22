@@ -7,97 +7,114 @@
 # Bei Fehler abbrechen
 set -e
 
+# Farben
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# Hilfsfunktionen
+info() { echo -e "  ${BLUE}ℹ${NC} $1"; }
+success() { echo -e "  ${GREEN}✓${NC} $1"; }
+error() { echo -e "  ${RED}✗${NC} $1"; }
+step() { echo -e "\n${BOLD}==> $1${NC}"; }
+prompt_text() { echo -ne "  ${YELLOW}?${NC} $1"; }
+
 main() {
-    echo "==== tp-link-vx231v Installation ===="
+    echo -e "${BOLD}==== tp-link-vx231v Installation ====${NC}"
 
     # Pre-flight Checks
     if ! command -v python3 &> /dev/null; then
-        echo "FEHLER: Python 3 ist nicht installiert. Bitte zuerst installieren."
+        error "Python 3 ist nicht installiert. Bitte zuerst installieren."
         exit 1
     fi
 
     if [ ! -d "tp-link-vx231v" ] && [ ! -f "requirements.txt" ]; then
-        echo "[1/11] Klone das Repository..."
-        git clone https://github.com/einstweilen/tp-link-vx231v.git
-        echo "[2/11] Wechsle in das Verzeichnis..."
+        step "[1/12] Klone das Repository..."
+        info "Lade Repository-Daten herunter (Details: .install.log)..."
+        git clone https://github.com/einstweilen/tp-link-vx231v.git > .install.log 2>&1
+        success "Repository geklont."
+        step "[2/12] Wechsle in das Verzeichnis..."
         cd tp-link-vx231v
     elif [ -d "tp-link-vx231v" ]; then
-        echo "[1/11] Verzeichnis 'tp-link-vx231v' existiert bereits."
-        echo "[2/11] Wechsle in das Verzeichnis..."
+        step "[1/12] Klone das Repository..."
+        info "Verzeichnis 'tp-link-vx231v' existiert bereits."
+        step "[2/12] Wechsle in das Verzeichnis..."
         cd tp-link-vx231v
     else
-        echo "[1/11] Befinde mich bereits im Repository."
-        echo "[2/11] Verzeichniswechsel übersprungen."
+        step "[1/12] Klone das Repository..."
+        info "Befinde mich bereits im Repository."
+        step "[2/12] Wechsle in das Verzeichnis..."
+        info "Verzeichniswechsel übersprungen."
     fi
 
-    echo "[3/11] Erstelle virtuelle Umgebung..."
+    step "[3/12] Erstelle virtuelle Umgebung..."
     if [ ! -d ".venv" ]; then
         python3 -m venv .venv
     fi
-    echo "      Aktiviere virtuelle Umgebung..."
+    info "Aktiviere virtuelle Umgebung..."
     source .venv/bin/activate
+    success "Virtuelle Umgebung bereit."
 
-    echo "[4/11] Installiere Abhängigkeiten..."
-    pip install --upgrade pip
-    pip install -r requirements.txt
+    step "[4/12] Installiere Abhängigkeiten..."
+    info "pip install (Details: .install.log)..."
+    pip install --upgrade pip >> .install.log 2>&1
+    pip install -r requirements.txt >> .install.log 2>&1
+    success "Abhängigkeiten installiert."
 
-    echo "[5/11] Installiere Chromium in Playwright..."
-    playwright install chromium
+    step "[5/12] Installiere Chromium in Playwright..."
+    info "Lade Chromium herunter (Dies dauert einen Moment...)"
+    playwright install chromium >> .install.log 2>&1
+    success "Chromium installiert."
 
-    echo ""
-    echo "[6/11] OPTIONAL: SNMP / TELNET verwenden"
-    echo "      Falls mit dem superadmin Account des Routers"
-    echo "      SNMP und Telnet aktiviert wurden, können"
-    echo "      Routerdaten auch darüber abgerufen werden."
-    echo "      Hinweis: Werden SNMP/Telnet genutzt, läuft"
-    echo "      --update im schnellen SNMP/Telnet-Modus."
-    echo "      Andernfalls wird das langsamere GUI-Scraping genutzt."
-    read -p "      Sollen SNMP-Tools jetzt installiert werden? (j/N) " SNMP_ANSWER
+    step "[6/12] OPTIONAL: SNMP / TELNET verwenden"
+    info "Falls mit dem superadmin Account des Routers SNMP und"
+    info "Telnet aktiviert wurden, können Routerdaten darüber"
+    info "abgerufen werden (--update läuft dann schneller)."
+    prompt_text "Sollen SNMP-Tools jetzt installiert werden? (j/N) "
+    read -r SNMP_ANSWER
     if [[ "$SNMP_ANSWER" =~ ^[jJ] ]]; then
         if [[ "$(uname)" == "Darwin" ]]; then
-            echo "      Installiere net-snmp via Homebrew (macOS)..."
+            info "Installiere net-snmp via Homebrew (macOS)..."
             if command -v brew &> /dev/null; then
-                brew install net-snmp
+                brew install net-snmp >> .install.log 2>&1
+                success "net-snmp wurde erfolgreich installiert!"
             else
-                echo "      FEHLER: Homebrew nicht gefunden. Bitte manuell installieren: brew install net-snmp"
+                error "Homebrew nicht gefunden. Bitte manuell installieren: brew install net-snmp"
             fi
         elif [[ -f "/etc/debian_version" ]]; then
-            echo "      Installiere snmp via apt (Debian/Ubuntu/Raspberry Pi)..."
-            sudo apt update && sudo apt install -y snmp
+            info "Installiere snmp via apt (Debian/Ubuntu/Raspberry Pi)..."
+            sudo apt update >> .install.log 2>&1 && sudo apt install -y snmp >> .install.log 2>&1
+            success "snmp wurde erfolgreich installiert!"
         else
-            echo "      Betriebssystem nicht automatisch erkannt."
-            echo "      Bitte SNMP-Tools manuell installieren (z.B. sudo apt install snmp / brew install net-snmp)."
+            info "Betriebssystem nicht automatisch erkannt."
+            info "Bitte SNMP-Tools manuell installieren (z.B. sudo apt install snmp / brew install net-snmp)."
         fi
     else
-        echo "      SNMP-Installation übersprungen."
+        info "SNMP-Installation übersprungen."
     fi
 
-    echo ""
-    echo "[7/11] Überprüfe Konfigurationsdatei..."
+    step "[7/12] Überprüfe Konfigurationsdatei..."
     if [ ! -f "config.ini" ]; then
         cp config.ini.sample config.ini
-        echo "      -> config.ini wurde aus der Vorlage (config.ini.sample) erstellt."
+        success "config.ini wurde aus der Vorlage (config.ini.sample) erstellt."
     else
-        echo "      -> config.ini existiert bereits."
+        success "config.ini existiert bereits."
     fi
 
-    echo ""
-    echo "[8/11] Interaktive Router-Konfiguration"
+    step "[8/12] Interaktive Router-Konfiguration"
     while true; do
-        read -p "      Wie lautet die IP-Adresse des Routers? [192.168.1.1]: " ROUTER_IP
+        prompt_text "Wie lautet die IP-Adresse des Routers? [192.168.1.1]: "
+        read -r ROUTER_IP
         ROUTER_IP=${ROUTER_IP:-192.168.1.1}
         
-        prompt="      Bitte das Passwort für das Web-Interface (GUI) eingeben: "
-        while IFS= read -p "$prompt" -r -s -n 1 char; do
-            if [[ $char == $'\0' ]]; then
-                break
-            fi
-            prompt='*'
-            GUI_PASS+="$char"
-        done
+        prompt_text "Bitte das Passwort für das Web-Interface (GUI) eingeben: "
+        read -rs GUI_PASS
         echo ""
 
-        echo "      Trage Daten in config.ini ein..."
+        info "Trage Daten in config.ini ein..."
         if [[ "$(uname)" == "Darwin" ]]; then
             sed -i '' "s/routerip = .*/routerip = $ROUTER_IP/g" config.ini
             sed -i '' "s/password = .*/password = $GUI_PASS/g" config.ini
@@ -106,7 +123,7 @@ main() {
             sed -i "s/password = .*/password = $GUI_PASS/g" config.ini
         fi
 
-        echo "      Teste Login mit den angegebenen Daten..."
+        info "Teste Login mit den angegebenen Daten..."
         python_test_code="
 import sys, configparser
 from core.playwright_client import TPLinkVX231vPlaywright
@@ -129,21 +146,21 @@ except Exception as e:
     sys.exit(1)
 "
         if python3 -c "$python_test_code"; then
-             echo "      ✓ Login am Router erfolgreich!"
+             success "Login am Router erfolgreich!"
              break
         else
-             echo "      ✗ FEHLER: Login fehlgeschlagen."
-             read -p "      Soll die Eingabe wiederholt werden? (J/n - n = manuell konfigurieren) " retry
+             error "Login fehlgeschlagen."
+             prompt_text "Soll die Eingabe wiederholt werden? (J/n - n = manuell konfigurieren) " 
+             read -r retry
              if [[ "$retry" =~ ^[nN] ]]; then
-                  echo "      Überspringe Konfiguration. config.ini später manuell anpassen!"
+                  info "Überspringe Konfiguration. config.ini später manuell anpassen!"
                   break
              fi
              GUI_PASS="" # Reset password
         fi
     done
 
-    echo ""
-    echo "[9/11] Globalen Befehl (Alias) einrichten..."
+    step "[9/12] Globalen Befehl (Alias) einrichten..."
     mkdir -p "$HOME/.local/bin"
     WRAPPER_SCRIPT="$HOME/.local/bin/vx-info"
     
@@ -174,30 +191,29 @@ WRAPPER_EOF
     if [[ -n "$DETECTED_RC" ]]; then
        if ! grep -q "$HOME/.local/bin" "$DETECTED_RC" 2>/dev/null; then
             echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$DETECTED_RC"
-            echo "      Pfad wurde zu $DETECTED_RC hinzugefügt."
+            info "Pfad wurde zu $DETECTED_RC hinzugefügt."
        fi
-       echo "      Befehl 'vx-info' (z.B. vx-info --dashboard) ist jetzt global verfügbar."
-       echo "      (Wirksam nach einem Neustart des Terminals oder nach: source $DETECTED_RC)"
+       success "Befehl 'vx-info' (z.B. vx-info --dashboard) ist jetzt global verfügbar."
+       info "(Wirksam nach einem Neustart des Terminals oder nach: source $DETECTED_RC)"
     else
-       echo "      Konnte Shell-Profil nicht automatisch erkennen."
-       echo "      Bitte sicherstellen, dass ~/.local/bin im \$PATH liegt,"
-       echo "      um den Befehl 'vx-info' global ausführen zu können."
+       info "Konnte Shell-Profil nicht automatisch erkennen."
+       info "Bitte sicherstellen, dass ~/.local/bin im \$PATH liegt,"
+       info "um den Befehl 'vx-info' global ausführen zu können."
     fi
 
-    echo ""
-    echo "[10/11] OPTIONAL: AI-Analyse Einrichtung (nur macOS)..."
+    step "[10/12] OPTIONAL: AI-Analyse Einrichtung (nur macOS)..."
     if [[ "$(uname)" == "Darwin" ]]; then
-        echo "      Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt."
-        echo "      Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden,"
-        echo "      wie in der Dokumentation beschrieben."
-        read -p "      Wurde der Kurzbefehl 'ai-cloud' bereits angelegt oder soll dies später erfolgen? [Enter]"
+        info "Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt."
+        info "Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden."
+        prompt_text "Wurde der Kurzbefehl 'ai-cloud' bereits angelegt oder soll dies später erfolgen? [Enter]"
+        read -r
     else
-        echo "      Übersprungen: Die AI-Analyse wird derzeit unter Linux/Debian nicht unterstützt."
+        info "Übersprungen: Die AI-Analyse wird derzeit unter Linux/Debian nicht unterstützt."
     fi
 
-    echo ""
-    echo "[11/11] Cronjobs automatisch einrichten"
-    read -p "      Sollen die periodischen Abfrage-Jobs für cron eingerichtet werden? (j/N) " CRON_SETUP
+    step "[11/12] Cronjobs automatisch einrichten"
+    prompt_text "Sollen die periodischen Abfrage-Jobs für cron eingerichtet werden? (j/N) " 
+    read -r CRON_SETUP
     
     if [[ "$CRON_SETUP" =~ ^[jJ] ]]; then
         TMP_CRON=$(mktemp)
@@ -205,39 +221,40 @@ WRAPPER_EOF
         
         # Determine schedule based on SNMP usage earlier
         if [[ "$SNMP_ANSWER" =~ ^[jJ] ]]; then
-            echo "      Es wurde angegeben, SNMP/Telnet zu nutzen."
-            echo "      Hinzugefügt: Alle 15 Min '--update', 5 Min nach der vollen Stunde '--log'"
+            info "Es wurde angegeben, SNMP/Telnet zu nutzen."
+            info "Hinzugefügt: Alle 15 Min '--update', 5 Min nach der vollen Stunde '--log'"
             echo "*/15 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update" >> "$TMP_CRON"
             echo "5 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --log" >> "$TMP_CRON"
         else
-            echo "      Kein SNMP/Telnet. Nutze Fallback-Rhythmus mit GUI-Scraping."
-            echo "      Hinzugefügt: Zu jeder vollen Stunde '--update --log --gui'"
+            info "Kein SNMP/Telnet. Nutze Fallback-Rhythmus mit GUI-Scraping."
+            info "Hinzugefügt: Zu jeder vollen Stunde '--update --log --gui'"
             echo "0 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update --log --gui" >> "$TMP_CRON"
         fi
 
-        read -p "      Soll täglich um 06:10 Uhr ein Statusbericht per Mail versandt werden? (j/N) " MAIL_SETUP
+        prompt_text "Soll täglich um 06:10 Uhr ein Statusbericht per Mail versandt werden? (j/N) " 
+        read -r MAIL_SETUP
         if [[ "$MAIL_SETUP" =~ ^[jJ] ]]; then
-            echo "      Hinzugefügt: Täglich 06:10 Uhr '--report-send'"
+            info "Hinzugefügt: Täglich 06:10 Uhr '--report-send'"
             echo "10 6 * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --report-send" >> "$TMP_CRON"
         fi
 
         crontab "$TMP_CRON"
         rm -f "$TMP_CRON"
-        echo "      ✓ Cronjobs erfolgreich eingerichtet!"
+        success "Cronjobs erfolgreich eingerichtet!"
     else
-        echo "      Übersprungen. Die Crontab kann später jederzeit mit 'crontab -e' bearbeitet werden."
+        info "Übersprungen. Die Crontab kann später jederzeit mit 'crontab -e' bearbeitet werden."
     fi
 
-    echo ""
-    echo "[12/12] Installation testen..."
-    echo "      Es wird nun ein kurzer Verbindungstest ausgeführt..."
+    step "[12/12] Installation testen..."
+    info "Es wird nun ein kurzer Verbindungstest ausgeführt..."
     cd "$(pwd)" && .venv/bin/python3 vx-info.py --test
 
+    echo -e "\n${BOLD}==== Installation abgeschlossen! ====${NC}\n"
+    info "Tipp: Da der Alias angelegt wurde, kann das Script ab sofort direkt aufgerufen werden:"
+    info "vx-info --dashboard"
     echo ""
-    echo "==== Installation abgeschlossen! ===="
-    echo ""
-    echo "Tipp: Da der Alias angelegt wurde, kann das Script ab sofort direktmit aufgerufen werden:"
-    echo "vx-info --$OPTION
+    info "Wenn rsyslog verwendet werden soll, kann es mit folgendem Script eingerichtet werden:"
+    info "./pi_rsyslog_setup.sh"
     echo ""
 }
 
