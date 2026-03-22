@@ -73,3 +73,6 @@ cleanup_reports = 7 # Reports älter als x Tage löschen
 # Diese Werte auf False setzen, um keine Auswertung zu erhalten
 reconnects = True # Zeigt die Anzahl der Routereinwahlen
 PADO_timeouts = True # Zeigt die Anzahl der PADO-Timeouts
+
+[AI] # AI = Modul aktiviert, noAI = Modul deaktiviert
+

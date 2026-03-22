@@ -201,14 +201,20 @@ WRAPPER_EOF
        info "um den Befehl 'vx-info' global ausführen zu können."
     fi
 
-    step "[10/12] OPTIONAL: AI-Analyse Einrichtung (nur macOS)..."
-    if [[ "$(uname)" == "Darwin" ]]; then
-        info "Die Routerdatenanalyse wird über einen Apple Kurzbefehl 'ai-cloud' ausgeführt."
-        info "Dieser Kurzbefehl muss manuell in der Kurzbefehle-App angelegt werden."
-        prompt_text "Wurde der Kurzbefehl 'ai-cloud' bereits angelegt oder soll dies später erfolgen? [Enter]"
-        read -r
+    step "[10/12] KI Analyse Einrichtung"
+    info "Falls im Tagesreport eine KI Analyse der aktuellen Routerdaten erfolgen soll,"
+    info "wird ein kostenloser API Key von Google Gemini benötigt."
+    prompt_text "Soll eine KI Datenanalyse durchgeführt werden [J/N]: "
+    read -r AI_SETUP
+    if [[ "$AI_SETUP" =~ ^[jJ] ]]; then
+        if [ -f "setup_ai_key.sh" ]; then
+            chmod +x setup_ai_key.sh
+            ./setup_ai_key.sh
+        else
+            error "setup_ai_key.sh nicht gefunden!"
+        fi
     else
-        info "Übersprungen: Die AI-Analyse wird derzeit unter Linux/Debian nicht unterstützt."
+        info "Übersprungen: Keine KI-Analyse gewünscht."
     fi
 
     step "[11/12] Cronjobs automatisch einrichten"

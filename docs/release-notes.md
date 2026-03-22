@@ -1,5 +1,15 @@
 ## Changelog / Updates
 
+### 22.03.2026
+
+* **KI-Analyse & Statusreport & Dokumentation**
+  * Optionale KI Analyse der DSL-Verbindungsdaten, die bisher nur am Mac durch einen Apple Shortcut realisiert wurde, um eine plattformunabhängige Integration der kostenlosen Google Gemini API ergänzt. Privacy Policy Disclaimer auf der Seite beachten!
+  * Setup-Wizard um die Abfrage des API-Keys ergänzt, sowie direkte Links in das Google AI Studio zur Key Generierung ergänzt.
+  * Schritt für Schritt Anleitung zur Generierung des kostenlosen Gemini-Keys im Google AI Studio hinzugefügt.
+  * Erweiterung der `config.ini` um eine AI Key Sektion mit An/Aus 'Schalter'
+  * Statusreport um die Angabe der vorherigen IPv4 & IPv6 Adressen und der Zeit seit dem letzten Wechsel ergänzt
+ 
+
 ### 17.03.2026
 * **Neue Option / Feature**
   * Der Parameter `--reconnect` akzeptiert nun optional eine Wartezeit in Sekunden vor dem Wiederverbinden (z. B. `--reconnect 15`).

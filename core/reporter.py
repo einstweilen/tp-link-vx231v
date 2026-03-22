@@ -349,10 +349,21 @@ class TPLinkVX231vReport:
                 int(r[0]),
                 datetime.fromtimestamp(int(r[0])).strftime('%d.%m.%y %H:%M:%S'),
                 r[1],
-                r[2]
             ]
             for r in rows
         ]
+
+    def _get_last_ip_change(self, current_ip, is_ipv6=False):
+        if not current_ip: return None, None
+        col = "ip6_curr" if is_ipv6 else "ip4_curr"
+        sql_prev = f"SELECT id, {col} FROM dsl WHERE {col} != ? AND {col} != '' AND {col} IS NOT NULL ORDER BY id DESC LIMIT 1"
+        _, prev_rows = self._run_query(sql_prev, [current_ip])
+        if not prev_rows: return None, None
+        prev_id, prev_ip = prev_rows[0]
+        sql_chg = f"SELECT time_ut FROM dsl WHERE id > ? AND {col} = ? ORDER BY id ASC LIMIT 1"
+        _, chg_rows = self._run_query(sql_chg, [prev_id, current_ip])
+        if chg_rows: return int(chg_rows[0][0]), prev_ip
+        return None, None
 
     def _analyze_ppp_events(self, hours=24):
         main_query = """
@@ -893,10 +904,37 @@ class TPLinkVX231vReport:
 
         CSV Daten:
         """ + output.getvalue() + events_as_text
+
+        provider = self.config.get('AI', 'ai_provider', fallback=None)
+        api_key = self.config.get('AI', 'ai_api_key', fallback=None)
+        
+        if provider == "gemini" and api_key:
+            try:
+                import urllib.request
+                import urllib.parse
+                import json
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={urllib.parse.quote(api_key)}"
+                data = json.dumps({"contents": [{"parts":[{"text": prompt}]}]}).encode('utf-8')
+                req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+                with urllib.request.urlopen(req) as response:
+                    res_json = json.loads(response.read().decode('utf-8'))
+                    try:
+                        out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                        if out: return out
+                    except (KeyError, IndexError):
+                        self._log("Fehler beim Parsen der Gemini API Antwort.")
+            except Exception as e:
+                self._log(f"Fehler bei Gemini API-Analyse: {e}")
+                
         try:
             res = subprocess.run(["shortcuts", "run", "ai-cloud"], input=prompt.encode('utf-8'), capture_output=True, timeout=60)
-            return res.stdout.decode('utf-8', errors='ignore').strip()
-        except: return None
+            if res.returncode == 0:
+                out = res.stdout.decode('utf-8', errors='ignore').strip()
+                if out: return out
+        except Exception as e:
+            self._log(f"Fehler beim Aufruf des Apple Shortcuts 'ai-cloud': {e}")
+            
+        return None
 
     def _get_reconnect_stats(self, hours):
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
@@ -945,7 +983,7 @@ class TPLinkVX231vReport:
         exclude = [t.strip() for t in self.config.get('Events', 'exclude_types', fallback='').split(',') if t.strip()]
         conn_since, ip4, ip6, down, up = self._get_connection_status()
         uptime_data = self._get_router_uptime()
-        latest_ips = self._get_ip_changes(3)
+        latest_ips = self._get_ip_changes(10)
         fw_upd, fw_old, fw_act, rn_t, rn_d, rn_txt = self._check_firmware_update()
         ai_text = self._run_ai_analysis(evt_hours)
         conn_analysis_html = self._get_connection_analysis(evt_hours)
@@ -984,8 +1022,23 @@ class TPLinkVX231vReport:
             s_down = f"{float(down)/1000:.1f}".replace('.', ',') + " Mbit/s" if down else "n/a"
             s_up = f"{float(up)/1000:.1f}".replace('.', ',') + " Mbit/s" if up else "n/a"
             
-            ipv4_str = f"IPv4 {ip4}" if ip4 else "IPv4 unbekannt"
-            ipv6_str = f"IPv6 {ip6}" if ip6 else "IPv6 unbekannt"
+            prev_ip4_str = ""
+            if ip4:
+                chg_time_ip4, prev_ip4 = self._get_last_ip_change(ip4, is_ipv6=False)
+                if chg_time_ip4 and prev_ip4:
+                    diff = datetime.now() - datetime.fromtimestamp(chg_time_ip4)
+                    prev_ip4_str = f" &nbsp;&nbsp;&nbsp; Letzter IP-Wechsel vor {diff.days} Tagen {diff.seconds // 3600} Stunden ({prev_ip4})"
+
+            prev_ip6_str = ""
+            if ip6:
+                chg_time_ip6, prev_ip6 = self._get_last_ip_change(ip6, is_ipv6=True)
+                if chg_time_ip6 and prev_ip6:
+                    diff = datetime.now() - datetime.fromtimestamp(chg_time_ip6)
+                    short_prev_ip6 = ':'.join(prev_ip6.split(':')[:4]) + ':…' if len(prev_ip6.split(':')) > 4 else prev_ip6
+                    prev_ip6_str = f" &nbsp;&nbsp;&nbsp; Letzter IP-Wechsel vor {diff.days} Tagen {diff.seconds // 3600} Stunden ({short_prev_ip6})"
+
+            ipv4_str = f"IPv4 {ip4}{prev_ip4_str}" if ip4 else "IPv4 unbekannt"
+            ipv6_str = f"IPv6 {ip6}{prev_ip6_str}" if ip6 else "IPv6 unbekannt"
             
             html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>Verbunden seit {s_since}{time_diff_str}<br>Aktuelle {ipv4_str}<br>Aktuelle {ipv6_str}<br>Datenrate Down {s_down} Up {s_up}."
             

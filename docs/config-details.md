@@ -91,3 +91,17 @@ Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen kön
 
 *   `reconnects`: Wenn `True`, berechnet das Skript aus den Logs der letzten 24 Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") verloren hat.
 *   `PADO_timeouts`: Wenn `True`, wird gezielt nach Einwahl-Fehlern gesucht (Provider-Störungen beim Zuteilen der IP) und deren Anzahl ausgeworfen.
+
+## [AI] / [noAI]
+
+Ob das AI Modul im Statusreport genutzt wird, kann durch Ändern des Abschnittsnamens gesteuert werden.
+
+Standardmäßig ist das AI Modul nach Eingabe eines gültigen Keys aktiviert.<br>
+
+```ini
+[AI] # AI = Modul aktiviert noAI = Modul deaktiviert
+ai_provider = gemini
+ai_api_key = AIza …
+```
+
+Um das Modul im Statusreport zu deaktivieren, muss der Abschnittsname von `[AI]` in `[noAI]` geändert werden bzw. um es wieder zu reaktivieren, muss der Abschnittsname von `[noAI]` zurück in `[AI]` geändert werden.

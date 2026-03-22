@@ -32,6 +32,7 @@ nav:
   - Startseite: index.md
   - Einrichtung & Konfiguration:
     - Setup & Installation: setup.md
+    - Gemini API Key anlegen: setup/gemini_api_key.md
     - Konfiguration & Automatisierung: konfiguration.md
     - Die config.ini im Detail: config-details.md
     - Release Notes: release-notes.md
