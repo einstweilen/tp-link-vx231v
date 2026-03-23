@@ -908,10 +908,15 @@
 
 <h1 id="tp-link-vx231v-tracker">TP-Link VX231v Tracker</h1>
 <p>Eine Sammlung von Python-Skripten zur Erfassung, Speicherung und Visualisierung der Router-Daten.</p>
-<p>Ausgangspunkt war der Wunsch, DSL-Leitungswerte und Netzwerk-Clients kontinuierlich aufzuzeichnen, um Verbindungsabbrüche und Fehlerraten im zeitlichen Verlauf nachvollziehen zu können.<br>
-Da der TP-Link VX231v keine offizielle API für diese Zwecke bereitstellt, automatisiert dieses Skript-Set den Datenabruf über die am Router verfügbaren Schnittstellen.<br><br>
-Ist auf dem Router der superadmin-Zugang aktiviert (<a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md">Zur Anleitung</a>) können die Leitungswerte per Telnet und SNMP in Sekunden erfasst werden.<br>
-Für Daten, die darüber nicht zugänglich sind oder falls der superadmin-Zugang nicht aktiviert ist, erfolgt ein automatisiertes Auslesen der Daten aus der Weboberfläche des Router, was allerdings länger dauert.</p>
+<p>Ausgangspunkt war der Wunsch, die DSL-Leitungswerte und die aktuell verbundenen Clients im Heimnetzwerk regelmäßig zu erfassen und darzustellen.</p>
+<p>Eine Zusammenfassung der wichtigsten in den letzten 24 Stunden erfassten Daten sollte visuell aufbereitet und als täglicher Report automatisch per E-Mail versendet werden.</p>
+<p>Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden. Hierfür werden im Skript zwei Mechanismen genutzt: einmal eine <strong>optionale</strong> Analyse der DSL-Werte und des Router-Logs durch <strong>Google Gemini KI</strong> (kostenlos, Link wird angeboten) und zum anderen eine rein lokale regelbasierte Analyse der Routerdaten, die primär auf Probleme beim Verbinungsaufbau hinweist.</p>
+<p>Da der Router keine offiziell dokumentierte API bietet, wurden die Daten zuerst nur über Web-Scraping ausgelesen. 
+Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.<br>
+Durch die Verwendung einer <a href="https://github.com/AlexandrErohin/TP-Link-Archer-C6U">Third-Party-Router API von Alexandr Erohin</a> wurde die Datenabfrage soweit beschleunigt, dass auf die Aktivierung und Verwendung von Telnet und SNMP zur reinen Datenerfassung verzichtet werden kann.</p>
+<p>OPTIONAL: Telnet und SNMP sind zwar in der Firmware des Routers vorhanden, aber der superadmin Account auf dem Router muss aktiviert sein, um Telnet und SNMP aktivieren und nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung <strong><a href="superadmin_telnet_snmp_iperf.md">Aktivierung superadmin, Telnet, SNMP und iPerf3</a></strong> beschrieben.</p>
+<p><strong>Alle Funktionen</strong> des Skripts können <strong>auch ohne aktivierten superadmin Account</strong> genutzt werden. Durch die Verwendung der API in der aktuellen Skriptversion hat man gegenüber Telnet und SNMP kaum zeitliche Nachteile.<br>
+Ohne superadmin Account wechselt das Skript <strong>automatisch</strong> zurück in den API Modus und wenn der API Modus z.B. wegen Änderungen an der Firmware bzw. der Verwendung neuer Verschlüsselungen seitens TP-Link nicht verfügbar ist, wechselt das Skript <strong>automatisch</strong> zurück in den langsamen Webscraping Modus, alternativ kann man diesen Modus <strong>trotz</strong> aktiviertem superadmin Account mit <code>--gui</code> beim Skriptaufruf erzwingen.</p>
 <details class="info">
 <summary>Beispiel für einen Statusreport</summary>
 <p><img alt="Beispiel Statusreport" src="images/beispiel-statusreport.jpg" /></p>
