@@ -2,13 +2,22 @@ import sys
 import shutil
 import subprocess
 
-def print_result(label, success):
+def print_result(label, success, results=None):
     icon = "✓" if success else "✗"
-    print(f"  {icon}  {label}")
+    line = f"  {icon}  {label}"
+    print(line)
+    if results is not None:
+        results.append(line)
 
 def run_tests(config, debug=False):
+    test_report = []
+
+    def log(msg):
+        print(msg)
+        test_report.append(msg)
+
     # --- GUI Scraping ---
-    print("\nGUI Scraping")
+    log("\nGUI Scraping")
     pw_installed = False
     pw_chromium_installed = False
     try:
@@ -69,15 +78,15 @@ def run_tests(config, debug=False):
             sys.exit = original_exit
 
     if gui_login_ok:
-        print_result("Login in Routerweboberfläche erfolgreich", True)
+        print_result("Login in Routerweboberfläche erfolgreich", True, test_report)
     else:
-        print_result("playwright installiert", pw_installed)
-        print_result("playwright chromium installiert", pw_chromium_installed)
-        print_result("GUI Zugangsdaten in der Config", has_gui_creds)
-        print_result("Login in Routerweboberfläche erfolgreich", gui_login_ok)
+        print_result("playwright installiert", pw_installed, test_report)
+        print_result("playwright chromium installiert", pw_chromium_installed, test_report)
+        print_result("GUI Zugangsdaten in der Config", has_gui_creds, test_report)
+        print_result("Login in Routerweboberfläche erfolgreich", gui_login_ok, test_report)
 
     # --- API Client ---
-    print("\nAPI Konfiguration")
+    log("\nAPI Konfiguration")
     api_lib_ok = False
     crypto_lib_ok = False
     try:
@@ -108,15 +117,15 @@ def run_tests(config, debug=False):
             pass
             
     if api_login_ok:
-        print_result("API Login erfolgreich (AES-GCM)", True)
+        print_result("API Login erfolgreich (AES-GCM)", True, test_report)
     else:
-        print_result("tplinkrouterc6u Bibliothek installiert", api_lib_ok)
-        print_result("pycryptodome (Crypto) installiert", crypto_lib_ok)
-        print_result("API Login erfolgreich (AES-GCM)", api_login_ok)
+        print_result("tplinkrouterc6u Bibliothek installiert", api_lib_ok, test_report)
+        print_result("pycryptodome (Crypto) installiert", crypto_lib_ok, test_report)
+        print_result("API Login erfolgreich (AES-GCM)", api_login_ok, test_report)
 
 
     # --- Telnet ---
-    print("\nTelnet Konfiguration")
+    log("\nTelnet Konfiguration")
     telnet_cmd = shutil.which('telnet') is not None
     
     try:
@@ -151,15 +160,15 @@ def run_tests(config, debug=False):
             pass
 
     if telnet_login_ok:
-        print_result("telnet Login erfolgreich", True)
+        print_result("telnet Login erfolgreich", True, test_report)
     else:
-        print_result("telnet Kommando installiert", telnet_cmd)
-        print_result("telnet Zugangsdaten in der Config", has_telnet_creds)
-        print_result("telnet Login erfolgreich", telnet_login_ok)
+        print_result("telnet Kommando installiert", telnet_cmd, test_report)
+        print_result("telnet Zugangsdaten in der Config", has_telnet_creds, test_report)
+        print_result("telnet Login erfolgreich", telnet_login_ok, test_report)
     
     
     # --- SNMP ---
-    print("\nSNMP Konfiguration")
+    log("\nSNMP Konfiguration")
     snmpget_cmd = shutil.which('snmpget') is not None
     snmpwalk_cmd = shutil.which('snmpwalk') is not None
     snmp_cmd_ok = snmpget_cmd and snmpwalk_cmd
@@ -188,14 +197,14 @@ def run_tests(config, debug=False):
             pass
 
     if snmp_access_ok:
-        print_result("snmp Zugriff erfolgreich", True)
+        print_result("snmp Zugriff erfolgreich", True, test_report)
     else:
-        print_result("snmp (snmpget/walk) Kommando installiert", snmp_cmd_ok)
-        print_result("snmp Zugangsdaten in der Config", has_snmp_creds)
-        print_result("snmp Zugriff erfolgreich", snmp_access_ok)
+        print_result("snmp (snmpget/walk) Kommando installiert", snmp_cmd_ok, test_report)
+        print_result("snmp Zugangsdaten in der Config", has_snmp_creds, test_report)
+        print_result("snmp Zugriff erfolgreich", snmp_access_ok, test_report)
 
     # --- Email ---
-    print("\neMail Konfiguration")
+    log("\neMail Konfiguration")
     try:
         smtp_server = config.get('Email', 'smtp_server', fallback='')
         smtp_port = config.getint('Email', 'smtp_port', fallback=0)
@@ -238,7 +247,8 @@ def run_tests(config, debug=False):
                 msg_root['From'] = email_user
                 msg_root['To'] = email_recipient
                 
-                msg_root.attach(MIMEText("Testversand erfolgreich", 'plain'))
+                email_body = "\n".join(test_report) + "\n\nTestversand erfolgreich"
+                msg_root.attach(MIMEText(email_body, 'plain'))
                 server.send_message(msg_root)
                 email_sent_ok = True
 
@@ -250,10 +260,10 @@ def run_tests(config, debug=False):
             pass
 
     if email_sent_ok:
-        print_result("eMail erfolgreich versendet", True)
+        print_result("eMail erfolgreich versendet", True, test_report)
     else:
-        print_result("eMail Zugangsdaten in der Config", has_email_config)
-        print_result("SMTP Server Login möglich", email_login_ok)
-        print_result("eMail erfolgreich versendet", email_sent_ok)
+        print_result("eMail Zugangsdaten in der Config", has_email_config, test_report)
+        print_result("SMTP Server Login möglich", email_login_ok, test_report)
+        print_result("eMail erfolgreich versendet", email_sent_ok, test_report)
         
     print()
