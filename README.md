@@ -34,7 +34,7 @@ Zusätzliche Funktionen des Router aktivieren und nutzen.
 ### 2. [Router Monitoring: VX-Info Tracker](vx-info.md)
 Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Darstellung der Routerdaten.
 **Inhalte:**
-* Datenabruf von DSL-Werten und der verbundenen Clients via SNMP, Telnet und Web-Scraping
+* Datenabruf von DSL-Werten und der verbundenen Clients via API, Web-Scraping und optional SNMP, Telnet
 * Speicherung der Daten in einer Datenbank
 * Automatisierte Generierung von HTML-Statusreports
   <details>

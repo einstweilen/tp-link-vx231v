@@ -8,26 +8,25 @@ Ausgangspunkt war der Wunsch, die DSL-Leitungswerte und die aktuell verbundenen 
 
 Eine Zusammenfassung der wichtigsten in den letzten 24 Stunden erfassten Daten sollte visuell aufbereitet und als täglicher Report automatisch per E-Mail versendet werden.
 
-Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden.
+Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden. Hierfür werden im Skript zwei Mechanismen genutzt: einmal eine **optionale** Analyse der DSL-Werte und des Router-Logs durch **Google Gemini KI*** (kostenlos) und zum anderen eine rein lokale regelbasierte Analyse der Routerdaten, die primär auf Probleme beim Verbinungsaufbau hinweist.
 
-Da der Router keine allgemein zugängliche API bietet, wurden die Daten zuerst nur über Web-Scraping ausgelesen. 
-Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.
+Da der Router keine offiziell dokumentierte API bietet, wurden die Daten zuerst nur über Web-Scraping ausgelesen. 
+Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.<br>
+Durch die Verwendung einer [Third-Party-Router API von Alexandr Erohin](https://github.com/AlexandrErohin/TP-Link-Archer-C6U) wurde die Datenabfrage soweit beschleunigt, dass auf die Aktivierung und Verwendung von Telnet und SNMP zur reinen Datenerfassung verzichtet werden kann.
 
-Hierbei ist zu beachten, dass Telnet und SNMP zwar in der Firmware des Routers vorhanden sind, aber der superadmin Account auf dem Router aktiviert sein muss, um Telnet und SNMP nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung **[Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)** beschrieben.
+OPTIONAL: Telnet und SNMP sind zwar in der Firmware des Routers vorhanden, aber der superadmin Account auf dem Router muss aktiviert sein, um Telnet und SNMP aktivieren und nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung **[Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)** beschrieben.
 
-**Alle Funktionen** des Skripts können **auch ohne aktivierten superadmin Account** genutzt werden, allerdings ist dann das Web-Scraping die einzige Methode der Datenabfrage, was die langsamste und unsicherste Methode der Datenabfrage ist, so dass auch schonmal eine Abfrage fehlschlagen kann. Im Verzeichnis `logs/` finden sich dann entsprechende Fehlermeldungen.<br>
-Ohne superadmin Account wechselt das Skript **automatisch** zurück zum Webscraping Modus, alternativ kann man diesen Modus **trotz** aktiviertem superadmin Account mit `--gui` erzwingen.
+**Alle Funktionen** des Skripts können **auch ohne aktivierten superadmin Account** genutzt werden. Durch die Verwendnung der API in der aktuellen Skriptversion hat man dadurch gegenüber Telent und SNMP kaum zeitliche Nachteile.<br>
+Ohne superadmin Account wechselt das Skript **automatisch** zurück in den API Modus und wenn der API Modus z.B. wegen Änderungen an der Firmware bzw. der Verwendung neuer Verschlüsselungen seitens TP-Link nicht verfügbar ist, wechselt das Skript **automatisch** zurück in den langsamen Webscraping Modus, alternativ kann man diesen Modus **trotz** aktiviertem superadmin Account mit `--gui` beim Skriptaufruf erzwingen.
 
 
 
 ## Funktionen
 
-### 1. Abfrage der Routerdaten via Telnet, SNMP und Web-Scraping
+### 1. Abfrage der Routerdaten via Telnet, SNMP, API und Web-Scraping
 Das Skript nutzt bei aktiviertem **superadmin Account** Telnet und SNMP für den primären Abruf von Systemzuständen und DSL-Werten.
-Für Daten, die über diese Schnittstellen nicht zugänglich sind, erfolgt ein automatisierter Login in die Weboberfläche mithilfe von Playwright.
-Ist der **superadmin Account** nicht aktiviert, erfolgt der Datenabruf automatisch ausschließlich über das Web-Scraping-Interface.
-
-Das Webscraping ist die langsamste Methode der Datenabfrage, daher sollte wenn möglich Telnet und SNMP genutzt werden.
+Für Daten, die über diese Schnittstellen nicht zugänglich sind, erfolgt ein automatisierter Login in die Weboberfläche mithilfe der API und wenn dieses auch nicht zur Verfügung steht Playwright.
+Ist der **superadmin Account** nicht aktiviert, erfolgt der Datenabruf automatisch ausschließlich über die API und Web-Scraping des Routerinterface.
 
 
 ### 2. Routerclients
@@ -74,11 +73,11 @@ curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/insta
 
 Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 
-*   `--update`: Fragt grundlegende Daten (Systemstatus, DSL-Werte, Client-Liste) primär über Telnet/SNMP ab und speichert sie in der Datenbank. Sind Telnet/SNMP nicht verfügbar, wird das Web-Scraping-Interface genutzt.
+*   `--update`: Fragt grundlegende Daten (Systemstatus, DSL-Werte, Client-Liste) primär über Telnet/SNMP ab und speichert sie in der Datenbank. Sind Telnet/SNMP nicht verfügbar, wird die API oder das Web-Scraping-Interface genutzt.
 <br>
-*   `--log`: Lädt das vollständige Systemprotokoll ("Logbuch") des Routers via Playwright-(Web-Scraping) herunter und importiert neue Ereignisse (wie DHCP/Mesh). Häufig in Kombination mit `--update` genutzt.
+*   `--log`: Lädt das vollständige Systemprotokoll ("Logbuch") des Routers via API und Web-Scraping herunter und importiert neue Ereignisse (wie DHCP/Mesh). Häufig in Kombination mit `--update` genutzt.
 <br>
-*   `--gui`: Erzwingt den Datenabruf (Systemstatus, DSL, Clients) ausschließlich über das Web-Scraping-Interface anstelle von Telnet/SNMP.
+*   `--gui`: Erzwingt den Datenabruf (Systemstatus, DSL, Clients) ausschließlich per API oder Web-Scraping anstelle von Telnet/SNMP.
 <br><br>
 *   `--report-show`: Generiert den HTML-Statusreport basierend auf den aktuellen Datenbankwerten und öffnet diesen direkt im Standard-Browser.
 <br><br>
@@ -90,9 +89,9 @@ Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 <br><br>
 *   `--dashboard`: Startet einen lokalen Webserver (Standard: Port 31311) zur interaktiven Anzeige historischer Metriken.
 <br><br>
-*   `--reconnect`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus.
+*   `--reconnect [Sek]`: Führt einen PPPoE-Reconnect der Internetverbindung über die Weboberfläche aus. Optional kann eine Wartezeit in Sekunden angegeben werden, bevor der Reconnect durchgeführt wird.
 <br><br>
-*   `--test`: Testet alle installierten Technologien (Telnet, SNMP, Playwright) und verifiziert die in der `config.ini` hinterlegten Zugangsdaten sowie die E-Mail-Konfiguration. Idealerweise nach der Ersteinrichtung aufzurufen.
+*   `--test`: Testet alle genutzten Technologien (API, Playwright, Telnet, SNMP) und verifiziert die in der `config.ini` hinterlegten Zugangsdaten sowie die E-Mail-Konfiguration durch Testaufrufe.
 <br>
 *   `--debug`: Aktiviert eine ausführlichere Konsolenausgabe zur Fehlerdiagnose.
 
