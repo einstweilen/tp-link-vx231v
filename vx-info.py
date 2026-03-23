@@ -14,6 +14,7 @@ from pathlib import Path
 from core.database import DatabaseManager
 from core.telnet_client import TPLinkVX231vTelnet
 from core.playwright_client import TPLinkVX231vPlaywright
+from core.api_client import TPLinkVX231vAPI
 from core.reporter import TPLinkVX231vReport
 from core.dashboard import DataCharter
 
@@ -25,7 +26,7 @@ def main():
     parser.add_argument('--output')
     parser.add_argument('--update', action='store_true', help='Daten in DB aktualisieren')
     parser.add_argument('--log', action='store_true', help='Router-Log erfassen')
-    parser.add_argument('--gui', action='store_true', help='Alle Daten per WebGUI-Scraping holen')
+    parser.add_argument('--gui', action='store_true', help='Alle Daten per API/WebGUI holen')
     parser.add_argument('--report-send', action='store_true', help='Statusreport generieren und versenden')
     parser.add_argument('--report-show', action='store_true', help='Statusreport generieren und im Browser anzeigen')
     parser.add_argument('--dashboard', action='store_true', help='Starte Browser-Dashboard')
@@ -64,12 +65,37 @@ def main():
                 print(f"Fehler beim JSON Export: {e}")
 
     def fetch_gui_data(do_update, do_log):
-        gui_client = TPLinkVX231vPlaywright(
-            config['Router']['routerip'],
-            config['GUI']['username'],
-            config['GUI']['password'],
-            debug=args.debug
-        )
+        # Check if we should force scraping or use the new API
+        force_scraping = config.getboolean('GUI', 'force_scraping', fallback=False)
+        gui_client = None
+        
+        if not force_scraping:
+            print("Mode: JSON API Client (Standard)")
+            gui_client = TPLinkVX231vAPI(
+                config['Router']['routerip'],
+                config['GUI']['username'],
+                config['GUI']['password'],
+                debug=args.debug
+            )
+            # Try login with API
+            if not gui_client.login():
+                print("Hinweis: API Login fehlgeschlagen. Automatische Fallback auf Playwright...")
+                gui_client.close()
+                gui_client = None
+        
+        if gui_client is None:
+            if force_scraping:
+                print("Mode: Playwright GUI Scraping (erzwungen durch config.ini)")
+            else:
+                print("Mode: Playwright GUI Scraping (Fallback nach API-Fehler)")
+                
+            gui_client = TPLinkVX231vPlaywright(
+                config['Router']['routerip'],
+                config['GUI']['username'],
+                config['GUI']['password'],
+                debug=args.debug
+            )
+
         try:
             if gui_client.login():
                 if do_log:
@@ -183,13 +209,35 @@ def main():
                 db.print_summary()
 
         if args.reconnect:
-            gui_client = TPLinkVX231vPlaywright(
-                config['Router']['routerip'],
-                config['GUI']['username'],
-                config['GUI']['password'],
-                debug=args.debug
-            )
+            force_scraping = config.getboolean('GUI', 'force_scraping', fallback=False)
+            gui_client = None
+            
+            if not force_scraping:
+                gui_client = TPLinkVX231vAPI(
+                    config['Router']['routerip'],
+                    config['GUI']['username'],
+                    config['GUI']['password'],
+                    debug=args.debug
+                )
+                if not gui_client.login():
+                    print("Hinweis: Reconnect via API fehlgeschlagen. Versuche Fallback auf Playwright...")
+                    gui_client.close()
+                    gui_client = None
+                    
+            if gui_client is None:
+                gui_client = TPLinkVX231vPlaywright(
+                    config['Router']['routerip'],
+                    config['GUI']['username'],
+                    config['GUI']['password'],
+                    debug=args.debug
+                )
+                
             try:
+                # Playwright login exit falls Login fehlschlägt, API login wurde oben schon probiert
+                if not hasattr(gui_client, 'router') or gui_client.router is not None:
+                    if not gui_client.login():
+                        return # Sollte bei Playwright nicht passieren wegen sys.exit
+                
                 success = gui_client.reconnect_wan(wait_time=args.reconnect)
                 if success:
                     print("PPPoE Reconnect erfolgreich ausgeführt.")

@@ -76,6 +76,44 @@ def run_tests(config, debug=False):
         print_result("GUI Zugangsdaten in der Config", has_gui_creds)
         print_result("Login in Routerweboberfläche erfolgreich", gui_login_ok)
 
+    # --- API Client ---
+    print("\nAPI Konfiguration")
+    api_lib_ok = False
+    crypto_lib_ok = False
+    try:
+        import tplinkrouterc6u
+        api_lib_ok = True
+        import Crypto
+        crypto_lib_ok = True
+    except ImportError:
+        pass
+        
+    api_login_ok = False
+    if api_lib_ok and crypto_lib_ok and has_gui_creds:
+        from core.api_client import TPLinkVX231vAPI
+        try:
+            client = TPLinkVX231vAPI(
+                config.get('Router', 'routerip', fallback='192.168.1.1'),
+                gui_user,
+                gui_pass,
+                debug=debug
+            )
+            if client.login():
+                api_login_ok = True
+            client.close()
+        except Exception:
+            if debug:
+                import traceback
+                traceback.print_exc()
+            pass
+            
+    if api_login_ok:
+        print_result("API Login erfolgreich (AES-GCM)", True)
+    else:
+        print_result("tplinkrouterc6u Bibliothek installiert", api_lib_ok)
+        print_result("pycryptodome (Crypto) installiert", crypto_lib_ok)
+        print_result("API Login erfolgreich (AES-GCM)", api_login_ok)
+
 
     # --- Telnet ---
     print("\nTelnet Konfiguration")

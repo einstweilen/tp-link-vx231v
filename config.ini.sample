@@ -23,6 +23,8 @@ community = DEIN_SNMP_COMMUNITY_STRING
 username = DEIN_ROUTER_BENUTZER
 # Passwort für das Web-Interface
 password = DEIN_ROUTER_PASSWORT
+# normalerweise wird zuerst die API genutzt, falls das fehlschlägt wird Playwright verwendet
+force_scraping = False # True => Playwright GUI Scraping statt API verwenden
 
 [Email]
 # Postausgangsserver (SMTP) für den Report-Versand

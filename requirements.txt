@@ -1,3 +1,7 @@
 playwright
+tplinkrouterc6u
+pycryptodome
+macaddress
+requests
 flask
 matplotlib
