@@ -123,16 +123,16 @@ main() {
             sed -i "s/password = .*/password = $GUI_PASS/g" config.ini
         fi
 
-        info "Teste Login mit den angegebenen Daten..."
+        info "Teste Login mit den angegebenen Daten (API)..."
         python_test_code="
 import sys, configparser
-from core.playwright_client import TPLinkVX231vPlaywright
+from core.api_client import TPLinkVX231vAPI
 
 config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
 config.read('config.ini')
 
 try:
-    client = TPLinkVX231vPlaywright(
+    client = TPLinkVX231vAPI(
         config['Router']['routerip'],
         config['GUI']['username'],
         config['GUI']['password'],
@@ -232,7 +232,7 @@ WRAPPER_EOF
             echo "*/15 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update" >> "$TMP_CRON"
             echo "5 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --log" >> "$TMP_CRON"
         else
-            info "Kein SNMP/Telnet. Nutze Fallback-Rhythmus mit GUI-Scraping."
+            info "Kein SNMP/Telnet. Nutze Fallback-Rhythmus mit API/WebGUI."
             info "Hinzugefügt: Zu jeder vollen Stunde '--update --log --gui'"
             echo "0 * * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --update --log --gui" >> "$TMP_CRON"
         fi
