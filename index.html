@@ -915,8 +915,7 @@
 Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.<br>
 Durch die Verwendung einer <a href="https://github.com/AlexandrErohin/TP-Link-Archer-C6U">Third-Party-Router API von Alexandr Erohin</a> wurde die Datenabfrage soweit beschleunigt, dass auf die Aktivierung und Verwendung von Telnet und SNMP zur reinen Datenerfassung verzichtet werden kann.</p>
 <p>OPTIONAL: Telnet und SNMP sind zwar in der Firmware des Routers vorhanden, aber der superadmin Account auf dem Router muss aktiviert sein, um Telnet und SNMP aktivieren und nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung <strong><a href="superadmin_telnet_snmp_iperf.md">Aktivierung superadmin, Telnet, SNMP und iPerf3</a></strong> beschrieben.</p>
-<p><strong>Alle Funktionen</strong> des Skripts können <strong>auch ohne aktivierten superadmin Account</strong> genutzt werden. Durch die Verwendung der API in der aktuellen Skriptversion hat man gegenüber Telnet und SNMP kaum zeitliche Nachteile.<br>
-Ohne superadmin Account wechselt das Skript <strong>automatisch</strong> zurück in den API Modus und wenn der API Modus z.B. wegen Änderungen an der Firmware bzw. der Verwendung neuer Verschlüsselungen seitens TP-Link nicht verfügbar ist, wechselt das Skript <strong>automatisch</strong> zurück in den langsamen Webscraping Modus, alternativ kann man diesen Modus <strong>trotz</strong> aktiviertem superadmin Account mit <code>--gui</code> beim Skriptaufruf erzwingen.</p>
+<p><strong>Alle Funktionen</strong> des Skripts können <strong>auch ohne aktivierten superadmin Account</strong> genutzt werden. </p>
 <details class="info">
 <summary>Beispiel für einen Statusreport</summary>
 <p><img alt="Beispiel Statusreport" src="images/beispiel-statusreport.jpg" /></p>
