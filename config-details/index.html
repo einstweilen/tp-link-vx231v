@@ -1178,9 +1178,10 @@
 <p>Login-Daten für das reguläre TP-Link Web-Interface.</p>
 <ul>
 <li><code>username</code> / <code>password</code>: Die Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.<ul>
-<li><strong>Nutzung:</strong> Das Skript nutzt einen headless Browser, um das vollständige Eventlog des Routers (<code>--log</code>) herunterzuladen und Client-Hostnames auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (<code>--update</code>) automatisch auf diesem Weg ermittelt.</li>
+<li><strong>Nutzung:</strong> Das Skript nutzt entweder eine API oder einen headless Browser, um die Daten vom Router auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (<code>--update</code>) automatisch auf diesem Weg ermittelt.</li>
 </ul>
 </li>
+<li><code>force_scraping</code> False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen. </li>
 </ul>
 <h2 id="email">[Email]</h2>
 <p>Einstellungen für den automatisierten E-Mail-Versand des HTML-Statusreports (<code>vx-info.py --report-send</code>).</p>
@@ -1209,7 +1210,7 @@ Wer Sicherheitsbedenken hat, kann einen gesonderten E-Mail Account dafür anlege
 <li><code>table_1</code> / <code>field_1</code>: Bestimmt die auszuwertende Spalte aus der Datenbank. <code>table_1 = dsl</code> und <code>field_1 = downstream_noise_margin</code> greift auf die historische Rauschtoleranz im Download zu.</li>
 <li><code>label_1</code>: Die Überschrift des Diagramms im Report (z.B. "Downstream Störabstand (dB)").</li>
 <li><code>hours_back</code>: Bestimmt die zeitliche Breite (X-Achse) des Diagramms im generierten Statusreport (Standard: z.B. <code>48</code> Stunden).</li>
-<li><code>start_hour</code>: Wenn auf <code>0</code> gesetzt, zwingt es das System, den betrachteten Zeitraum eines Tages immer um 00:00 Uhr und nicht "genau heute vor 24 Stunden" beginnen zu lassen.</li>
+<li><code>start_hour</code>: Wenn auf <code>0</code> gesetzt, zwingt es das System, den betrachteten Zeitraum eines Tages immer um 00:00 Uhr und nicht "jetzt vor 24 Stunden" beginnen zu lassen.</li>
 </ul>
 <h2 id="reports">[Reports]</h2>
 <p>Verwaltung der lokal gespeicherten Berichte</p>
@@ -1218,11 +1219,10 @@ Wer Sicherheitsbedenken hat, kann einen gesonderten E-Mail Account dafür anlege
 Entspricht dieser Wert z. B. <code>7</code>, so werden alle Berichte, die älter als 7 Tage sind, bei der Skriptausführung automatisch gelöscht, um das Verzeichnis nicht unendlich wachsen zu lassen. <code>0</code> deaktiviert die Löschfunktion.</li>
 </ul>
 <h2 id="statistics">[Statistics]</h2>
-<p>Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen können, um beim Debugging zu unterstützen</p>
-<ul>
-<li><code>reconnects</code>: Wenn <code>True</code>, berechnet das Skript aus den Logs der letzten 24 Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") verloren hat.</li>
-<li><code>PADO_timeouts</code>: Wenn <code>True</code>, wird gezielt nach Einwahl-Fehlern gesucht (Provider-Störungen beim Zuteilen der IP) und deren Anzahl ausgeworfen.</li>
-</ul>
+<p>Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen können, um beim Debugging zu unterstützen
+Die hatte ich ursprünglich für mich ergänzt und dann im Report gelassen, falls es jemand gebrauchen kann.
+*   <code>reconnects</code>: Wenn <code>True</code>, berechnet das Skript aus den Logs der letzten 24 Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") verloren hat.
+*   <code>PADO_timeouts</code>: Wenn <code>True</code>, wird gezielt nach Einwahl-Fehlern gesucht (Provider-Störungen beim Zuteilen der IP) und deren Anzahl ausgeworfen.</p>
 <h2 id="ai-noai">[AI] / [noAI]</h2>
 <p>Ob das AI Modul im Statusreport genutzt wird, kann durch Ändern des Abschnittsnamens gesteuert werden.</p>
 <p>Standardmäßig ist das AI Modul nach Eingabe eines gültigen Keys aktiviert.<br></p>

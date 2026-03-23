@@ -715,10 +715,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-ai-analyse-der-routerdaten-der-letzten-2448-stunden" class="md-nav__link">
+  <a href="#optional-ai-analyse-der-routerdaten-der-letzten-48-stunden" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OPTIONAL: AI Analyse der Routerdaten der letzten 24/48 Stunden
+        OPTIONAL: AI Analyse der Routerdaten der letzten 48 Stunden
       
     </span>
   </a>
@@ -1055,10 +1055,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-ai-analyse-der-routerdaten-der-letzten-2448-stunden" class="md-nav__link">
+  <a href="#optional-ai-analyse-der-routerdaten-der-letzten-48-stunden" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OPTIONAL: AI Analyse der Routerdaten der letzten 24/48 Stunden
+        OPTIONAL: AI Analyse der Routerdaten der letzten 48 Stunden
       
     </span>
   </a>
@@ -1254,11 +1254,10 @@ Dieser Bericht kann direkt mit dem lokalen Browser geöffnet oder zeitgesteuert 
 <p>Falls eine neue Firmware verfügbar ist, werden die dazugehörigen Releasenotes angezeigt. 
 Die Releasenotes werden von der TP-Link Seite geladen und 1:1 ausgegeben.</p>
 <p>Hinweis: TP-Link stellt diese Informationen nicht in strukturierter Form zur Verfügung, weshalb die Gestaltung sich von Note zu Note ändern kann.</p>
-<h2 id="optional-ai-analyse-der-routerdaten-der-letzten-2448-stunden">OPTIONAL: AI Analyse der Routerdaten der letzten 24/48 Stunden</h2>
+<h2 id="optional-ai-analyse-der-routerdaten-der-letzten-48-stunden">OPTIONAL: AI Analyse der Routerdaten der letzten 48 Stunden</h2>
 <p><img alt="AI Analyse" src="../images/report-ai.jpg" /></p>
-<p>Wenn auf dem Mac der AI Shortcut installiert ist, werden die Routerdaten der letzten 24/48 Stunden analysiert und ein kurzer Bericht erstellt.
-Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen Apple/GPT Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt.
-Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.</p>
+<p>Wenn man während des Setups einen API Key hinterlegt hat und in der config.ini der Abschnitt [AI] vorhanden ist, wird anhand der erfaßten Routerdaten der letzten 48 Stunden eine Bewertung der Leitungsdaten erstellt.<br>
+Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen KI-Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt. Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.</p>
 <h2 id="eventubersicht-leitungsanalyse">Eventübersicht &amp; Leitungsanalyse</h2>
 <p><img alt="Eventübersicht" src="../images/report-events.jpg" /></p>
 <p>Die Eventübersicht zeigt Leitungstrennungen und Neuverbindungen der letzten 48 Stunden.
@@ -1307,7 +1306,7 @@ Durch unterschiedliche Farbgebung wird zwischen den verschiedenen Verbindungsart
 <p>Clientnamen
 Wenn im Router unter "WLAN-Teilnehmer" oder "Kabelgebundene Teilnehmer" ein Clientname hinterlegt ist, wird dieser im Statusreport angezeigt.
 Der hinterlegte Name entspricht dem Namen, den der Client bei der Verbindung dem Router mitgeteilt hat. Hat man diesen in Webinterface überschrieben, wird der manuell überschriebene Name angezeigt.</p>
-<p>Damit auch bei der schnellen Datenerfassung via Telnet/SNMP die Namen neuer Clients ermittelt werden können, prüft das Skript vor der Reporterstellung automatisch, ob noch unbekannte ("Unknown") Geräte in der Datenbank vorhanden sind. Ist dies der Fall, wird kurzzeitig auf das Web-Scraping-Interface zurückgegriffen, um die Namen auszulesen und in der Datenbank dauerhaft zu verknüpfen. Schlägt auch diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown" gefolgt von seiner MAC-Adresse.</p>
+<p>Damit auch bei der schnellen Datenerfassung via Telnet/SNMP die Namen neuer Clients ermittelt werden können, prüft das Skript vor der Reporterstellung automatisch, ob noch unbekannte ("Unknown") Geräte in der Datenbank vorhanden sind. Ist dies der Fall, wird kurzzeitig auf das API oder Web-Scraping-Interface zurückgegriffen, um die Namen auszulesen und in der Datenbank dauerhaft zu verknüpfen. Schlägt auch diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown" gefolgt von seiner MAC-Adresse.</p>
 <h2 id="heimnetzubersicht-aktuell-aktiver-clients">Heimnetzübersicht aktuell aktiver Clients</h2>
 <p><img alt="Heimnetzübersicht" src="../images/report-aktive.jpg" /></p>
 <p>Zeigt die zum Zeitpunkt der Berichtserstellung im Heimnetz aktiven Clients an.</p>
