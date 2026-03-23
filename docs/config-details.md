@@ -46,7 +46,8 @@ Optionale Zugangsparameter für SNMP (Simple Network Management Protocol).
 Login-Daten für das reguläre TP-Link Web-Interface.
 
 *   `username` / `password`: Die Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.
-    *   **Nutzung:** Das Skript nutzt einen headless Browser, um das vollständige Eventlog des Routers (`--log`) herunterzuladen und Client-Hostnames auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (`--update`) automatisch auf diesem Weg ermittelt.
+    *   **Nutzung:** Das Skript nutzt entweder eine API oder einen headless Browser, um die Daten vom Router auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (`--update`) automatisch auf diesem Weg ermittelt.
+* `force_scraping` False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen. 
 
 ## [Email]
 
@@ -76,7 +77,7 @@ Konfiguration der historischen DSL-Balkendiagramme, vorwiegend für den täglich
 *   `table_1` / `field_1`: Bestimmt die auszuwertende Spalte aus der Datenbank. `table_1 = dsl` und `field_1 = downstream_noise_margin` greift auf die historische Rauschtoleranz im Download zu.
 *   `label_1`: Die Überschrift des Diagramms im Report (z.B. "Downstream Störabstand (dB)").
 *   `hours_back`: Bestimmt die zeitliche Breite (X-Achse) des Diagramms im generierten Statusreport (Standard: z.B. `48` Stunden).
-*   `start_hour`: Wenn auf `0` gesetzt, zwingt es das System, den betrachteten Zeitraum eines Tages immer um 00:00 Uhr und nicht "genau heute vor 24 Stunden" beginnen zu lassen.
+*   `start_hour`: Wenn auf `0` gesetzt, zwingt es das System, den betrachteten Zeitraum eines Tages immer um 00:00 Uhr und nicht "jetzt vor 24 Stunden" beginnen zu lassen.
 
 ## [Reports]
 
@@ -88,7 +89,7 @@ Entspricht dieser Wert z. B. `7`, so werden alle Berichte, die älter als 7 Tage
 ## [Statistics]
 
 Kleine Indikatoren, die im Statusreport im Bereich "Statistiken" auftauchen können, um beim Debugging zu unterstützen
-
+Die hatte ich ursprünglich für mich ergänzt und dann im Report gelassen, falls es jemand gebrauchen kann.
 *   `reconnects`: Wenn `True`, berechnet das Skript aus den Logs der letzten 24 Stunden, wie oft der Router die DSL-Verbindung ("PPP down / up") verloren hat.
 *   `PADO_timeouts`: Wenn `True`, wird gezielt nach Einwahl-Fehlern gesucht (Provider-Störungen beim Zuteilen der IP) und deren Anzahl ausgeworfen.
 

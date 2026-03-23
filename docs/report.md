@@ -29,13 +29,12 @@ Die Releasenotes werden von der TP-Link Seite geladen und 1:1 ausgegeben.
 
 Hinweis: TP-Link stellt diese Informationen nicht in strukturierter Form zur Verfügung, weshalb die Gestaltung sich von Note zu Note ändern kann.
 
-## OPTIONAL: AI Analyse der Routerdaten der letzten 24/48 Stunden
+## OPTIONAL: AI Analyse der Routerdaten der letzten 48 Stunden
 
 ![AI Analyse](images/report-ai.jpg)
 
-Wenn auf dem Mac der AI Shortcut installiert ist, werden die Routerdaten der letzten 24/48 Stunden analysiert und ein kurzer Bericht erstellt.
-Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen Apple/GPT Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt.
-Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.
+Wenn man während des Setups einen API Key hinterlegt hat und in der config.ini der Abschnitt [AI] vorhanden ist, wird anhand der erfaßten Routerdaten der letzten 48 Stunden eine Bewertung der Leitungsdaten erstellt.<br>
+Sollten die erfassten Routerdaten zu umfangreich für die Nutzung der kostenlosen KI-Schnittstelle sein, wird der Analyseprompt als Textdatei ai_prompt_debug.txt im Skriptordner abgelegt und der Bericht nicht erstellt. Man kann bei Bedarf diese Datei durch eine andere KI auswerten lassen.
 
 ## Eventübersicht & Leitungsanalyse
 
@@ -97,8 +96,7 @@ Clientnamen
 Wenn im Router unter "WLAN-Teilnehmer" oder "Kabelgebundene Teilnehmer" ein Clientname hinterlegt ist, wird dieser im Statusreport angezeigt.
 Der hinterlegte Name entspricht dem Namen, den der Client bei der Verbindung dem Router mitgeteilt hat. Hat man diesen in Webinterface überschrieben, wird der manuell überschriebene Name angezeigt.
 
-Damit auch bei der schnellen Datenerfassung via Telnet/SNMP die Namen neuer Clients ermittelt werden können, prüft das Skript vor der Reporterstellung automatisch, ob noch unbekannte ("Unknown") Geräte in der Datenbank vorhanden sind. Ist dies der Fall, wird kurzzeitig auf das Web-Scraping-Interface zurückgegriffen, um die Namen auszulesen und in der Datenbank dauerhaft zu verknüpfen. Schlägt auch diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown" gefolgt von seiner MAC-Adresse.
-
+Damit auch bei der schnellen Datenerfassung via Telnet/SNMP die Namen neuer Clients ermittelt werden können, prüft das Skript vor der Reporterstellung automatisch, ob noch unbekannte ("Unknown") Geräte in der Datenbank vorhanden sind. Ist dies der Fall, wird kurzzeitig auf das API oder Web-Scraping-Interface zurückgegriffen, um die Namen auszulesen und in der Datenbank dauerhaft zu verknüpfen. Schlägt auch diese Zuordnung fehl, erhält der Client in der Grafik die Bezeichnung "unknown" gefolgt von seiner MAC-Adresse.
 
 
 ## Heimnetzübersicht aktuell aktiver Clients

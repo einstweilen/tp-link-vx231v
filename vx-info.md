@@ -8,7 +8,7 @@ Ausgangspunkt war der Wunsch, die DSL-Leitungswerte und die aktuell verbundenen 
 
 Eine Zusammenfassung der wichtigsten in den letzten 24 Stunden erfassten Daten sollte visuell aufbereitet und als täglicher Report automatisch per E-Mail versendet werden.
 
-Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden. Hierfür werden im Skript zwei Mechanismen genutzt: einmal eine **optionale** Analyse der DSL-Werte und des Router-Logs durch **Google Gemini KI*** (kostenlos) und zum anderen eine rein lokale regelbasierte Analyse der Routerdaten, die primär auf Probleme beim Verbinungsaufbau hinweist.
+Zusätzlich sollte auf Auffälligkeiten in den erfassten Daten, wie z.B. Verbindungsabbrüche oder hohe Fehlerraten, hingewiesen werden. Hierfür werden im Skript zwei Mechanismen genutzt: einmal eine **optionale** Analyse der DSL-Werte und des Router-Logs durch **Google Gemini KI** (kostenlos, Link wird angeboten) und zum anderen eine rein lokale regelbasierte Analyse der Routerdaten, die primär auf Probleme beim Verbinungsaufbau hinweist.
 
 Da der Router keine offiziell dokumentierte API bietet, wurden die Daten zuerst nur über Web-Scraping ausgelesen. 
 Im nächsten Schritt wurden Telnet und SNMP hinzugefügt, um die Daten schneller und zuverlässiger auszulesen.<br>
@@ -16,7 +16,7 @@ Durch die Verwendung einer [Third-Party-Router API von Alexandr Erohin](https://
 
 OPTIONAL: Telnet und SNMP sind zwar in der Firmware des Routers vorhanden, aber der superadmin Account auf dem Router muss aktiviert sein, um Telnet und SNMP aktivieren und nutzen zu können. Die Aktivierung des Accounts wird in der Anleitung **[Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)** beschrieben.
 
-**Alle Funktionen** des Skripts können **auch ohne aktivierten superadmin Account** genutzt werden. Durch die Verwendnung der API in der aktuellen Skriptversion hat man dadurch gegenüber Telent und SNMP kaum zeitliche Nachteile.<br>
+**Alle Funktionen** des Skripts können **auch ohne aktivierten superadmin Account** genutzt werden. Durch die Verwendung der API in der aktuellen Skriptversion hat man gegenüber Telnet und SNMP kaum zeitliche Nachteile.<br>
 Ohne superadmin Account wechselt das Skript **automatisch** zurück in den API Modus und wenn der API Modus z.B. wegen Änderungen an der Firmware bzw. der Verwendung neuer Verschlüsselungen seitens TP-Link nicht verfügbar ist, wechselt das Skript **automatisch** zurück in den langsamen Webscraping Modus, alternativ kann man diesen Modus **trotz** aktiviertem superadmin Account mit `--gui` beim Skriptaufruf erzwingen.
 
 
