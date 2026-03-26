@@ -64,7 +64,27 @@ TRANSLATIONS = {
         'footer': 'Automatisch generiert und ohne Unterschrift gültig',
         'generated_in': 'Der Bericht wurde generiert und liegt unter',
         'mail_success': 'E-Mail erfolgreich versendet.',
-        'mail_error': 'Versandfehler:'
+        'mail_error': 'Versandfehler:',
+        'warning': 'Warnung:',
+        'pado_timeout_msg': 'PADO-Timeouts (Schwere Discovery-Störung). IPv6/RFC 4638 prüfen oder Provider-Störung melden.',
+        'planned_reboot': 'Geplanter Neustart (Zeitplan)',
+        'manual_reset': 'Benutzer / System Reset',
+        'provider_drop': 'Trennungsanforderung (ISP)',
+        'delayed_reconnect': 'Verzögerter Reconnect (Ggfs. Sync-Verlust)',
+        'unplanned_drop': 'Ungeplante Provider-Trennung',
+        'dns_error_window': 'DNS-Auflösungsfehler im Zeitfenster',
+        'signal_error_before_drop': 'Signalstörung vor Abbruch (Fiel auf {snr})',
+        'massive_crc_burst': 'Massiver CRC-Fehler-Burst vor Trennung (+{crc} Fehler)',
+        'profile_fallback': 'Profil-Rückfall! Mit {diff} weniger Download neu verbunden',
+        'hint': 'HINWEIS:',
+        'duration': 'Dauer:',
+        'no_disconnects_level': 'Keine Verbindungsabbrüche auf diesem Schweregrad (Level {level}) im Auswertungszeitraum gefunden.',
+        'line_stable': 'Die Leitungswerte sind im Analysezeitraum unauffällig. Keine signifikanten Störungen erkannt.',
+        'daily_fluctuations': 'Tagesschwankungen',
+        'last_3_months': '(letzte 3 Monate)',
+        'max_hourly_fluctuation': 'Max. stündliche Schwankung (Delta):',
+        'lower_is_better': '(Je geringer, desto stabiler)',
+        'no_data': 'Keine Daten'
     },
     'en': {
         'title': 'Router Status Report',
@@ -98,7 +118,27 @@ TRANSLATIONS = {
         'footer': 'Auto-generated and valid without signature',
         'generated_in': 'Report generated at',
         'mail_success': 'Email sent successfully.',
-        'mail_error': 'Mail error:'
+        'mail_error': 'Mail error:',
+        'warning': 'Warning:',
+        'pado_timeout_msg': 'PADO timeouts (Severe discovery disruption). Check IPv6/RFC 4638 or report ISP issue.',
+        'planned_reboot': 'Planned reboot (Schedule)',
+        'manual_reset': 'User / System Reset',
+        'provider_drop': 'Disconnect request (ISP)',
+        'delayed_reconnect': 'Delayed reconnect (Possible sync loss)',
+        'unplanned_drop': 'Unplanned ISP disconnect',
+        'dns_error_window': 'DNS resolution errors in time window',
+        'signal_error_before_drop': 'Signal drop before disconnect (Fell to {snr})',
+        'massive_crc_burst': 'Massive CRC error burst before disconnect (+{crc} errors)',
+        'profile_fallback': 'Profile fallback! Reconnected with {diff} less download',
+        'hint': 'NOTE:',
+        'duration': 'Duration:',
+        'no_disconnects_level': 'No connection drops found at this severity level (Level {level}) during the analysis period.',
+        'line_stable': 'Line values are unremarkable during the analysis period. No significant disruptions detected.',
+        'daily_fluctuations': 'Daily Fluctuations',
+        'last_3_months': '(last 3 months)',
+        'max_hourly_fluctuation': 'Max. hourly fluctuation (Delta):',
+        'lower_is_better': '(Lower is more stable)',
+        'no_data': 'No data'
     }
 }
 # ---------------------------------------------------------------------------
@@ -892,7 +932,7 @@ class Reporter:
         recs_list = []
         
         if pado_count > 10:
-            recs_list.append(f"<li><span style='color: #d32f2f; font-weight: bold;'>Warnung:</span> {pado_count} PADO-Timeouts (Schwere Discovery-Störung). IPv6/RFC 4638 prüfen oder Provider-Störung melden.</li>")
+            recs_list.append(f"<li><span style='color: #d32f2f; font-weight: bold;'>{self.t['warning']}</span> {pado_count} {self.t['pado_timeout_msg']}</li>")
             if min_level <= 3:
                 has_issues = True
             
@@ -904,21 +944,21 @@ class Reporter:
             severity = 0
             
             trigger_labels = {
-                'ROUTER_SCHED': 'Geplanter Neustart (Zeitplan)',
-                'MANUAL': 'Benutzer / System Reset',
-                'PROVIDER_DROP': 'Trennungsanforderung (ISP)'
+                'ROUTER_SCHED': self.t['planned_reboot'],
+                'MANUAL': self.t['manual_reset'],
+                'PROVIDER_DROP': self.t['provider_drop']
             }
             trigger_lbl = trigger_labels.get(trigger, trigger)
             
             recommendations = []
             if duration > threshold_slow_reconnect:
-                recommendations.append("Verzögerter Reconnect (Ggfs. Sync-Verlust)")
+                recommendations.append(self.t['delayed_reconnect'])
                 severity = max(severity, 2)
             if trigger == 'PROVIDER_DROP':
-                recommendations.append("Ungeplante Provider-Trennung")
+                recommendations.append(self.t['unplanned_drop'])
             
             if any(ts[:16] == d[:16] or evt['up_ts'][:16] == d[:16] for d in dns_errors):
-                recommendations.append("DNS-Auflösungsfehler im Zeitfenster")
+                recommendations.append(self.t['dns_error_window'])
                 severity = max(severity, 2)
                 
             # DSL Korrelation
@@ -938,7 +978,7 @@ class Reporter:
                 
                 # SNR Check
                 if isinstance(dsl_snr_before, (int, float)) and dsl_snr_before > 0 and dsl_snr_before < 6.0:
-                    recommendations.append(f"Signalstörung vor Abbruch (SNR fiel auf {dsl_snr_before} dB)")
+                    recommendations.append(self.t['signal_error_before_drop'].replace('{snr}', f"{dsl_snr_before} dB"))
                     severity = max(severity, 3)
                     
                 # CRC Burst Check
@@ -949,7 +989,7 @@ class Reporter:
                     if isinstance(dsl_crc_before, (int, float)) and isinstance(prev_crc, (int, float)):
                         crc_diff = dsl_crc_before - prev_crc
                         if crc_diff > 1000:
-                            recommendations.append(f"Massiver CRC-Fehler-Burst vor Trennung (+{int(crc_diff)} Fehler)")
+                            recommendations.append(self.t['massive_crc_burst'].replace('{crc}', str(int(crc_diff))))
                             severity = max(severity, 3)
                             
                 # Rate Check (Bandbreitenverlust nach Reconnect)
@@ -959,23 +999,23 @@ class Reporter:
                         if dsl_rate_before > 0 and dsl_rate_after > 0:
                             if dsl_rate_after < (dsl_rate_before * 0.9):
                                 diff_mbps = (dsl_rate_before - dsl_rate_after) / 1000.0
-                                recommendations.append(f"Profil-Rückfall! Mit {diff_mbps:.1f} Mbit/s weniger Download neu verbunden")
+                                recommendations.append(self.t['profile_fallback'].replace('{diff}', f"{diff_mbps:.1f} Mbit/s"))
                                 severity = max(severity, 2)
             
             if severity >= min_level:
-                rec_str = " | <span style='color: #ed6c02; font-weight: bold;'>HINWEIS:</span> " + ", ".join(recommendations) if recommendations else ""
+                rec_str = f" | <span style='color: #ed6c02; font-weight: bold;'>{self.t['hint']}</span> " + ", ".join(recommendations) if recommendations else ""
                 
                 if recommendations:
                     has_issues = True
-                    event_html += f"<div style='margin-bottom: 5px;'>[{ts}] {trigger_lbl} | Dauer: {duration}s{rec_str}</div>"
+                    event_html += f"<div style='margin-bottom: 5px;'>[{ts}] {trigger_lbl} | {self.t['duration']} {duration}s{rec_str}</div>"
                 else:
-                    event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | Dauer: {duration}s</div>"
+                    event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | {self.t['duration']} {duration}s</div>"
 
         if not has_issues and not event_html:
             if min_level > 0:
-                html_output += "<p style='color: #555; text-align: center; font-style: italic; margin-top: 10px;'>Keine Verbindungsabbrüche auf diesem Schweregrad (Level " + str(min_level) + ") im Auswertungszeitraum gefunden.</p>"
+                html_output += f"<p style='color: #555; text-align: center; font-style: italic; margin-top: 10px;'>{self.t['no_disconnects_level'].replace('{level}', str(min_level))}</p>"
             return html_output
-            html_output = "<div style='color: #388e3c;'>Die Leitungswerte sind im Analysezeitraum unauffällig. Keine signifikanten Störungen erkannt.</div>"
+            html_output = f"<div style='color: #388e3c;'>{self.t['line_stable']}</div>"
         else:
             if recs_list:
                 html_output += "<ul style='margin-top: 0; margin-bottom: 10px; padding-left: 20px;'>" + "".join(recs_list) + "</ul>"
@@ -1280,6 +1320,68 @@ class Reporter:
 
         return img_str
 
+    def _generate_snr_variance_html(self, table_name, field_name, label_name):
+        three_months_start = int((datetime.now() - timedelta(days=90)).timestamp())
+        _, rows = self.db._run_query(f"SELECT time_ut, {field_name} FROM {table_name} WHERE time_ut >= ? AND {field_name} > 0", [three_months_start])
+        
+        if not rows:
+            return ""
+            
+        hourly_data = {h: [] for h in range(24)}
+        for ts, val in rows:
+            try:
+                hour = datetime.fromtimestamp(int(ts)).hour
+                hourly_data[hour].append(float(val))
+            except:
+                pass
+                
+        hourly_avg = {}
+        for h, vals in hourly_data.items():
+            if vals:
+                hourly_avg[h] = sum(vals) / len(vals)
+                
+        if not hourly_avg:
+            return ""
+            
+        min_avg = min(hourly_avg.values())
+        max_avg = max(hourly_avg.values())
+        delta = max_avg - min_avg
+        
+        html = f'''
+        <div style="border: 1px solid #ddd; background-color: #fcfcfc; padding: 15px; border-radius: 5px; margin-bottom: 5px;">
+            <div style="font-size: 14px; font-weight: bold; color: #4acbd6; margin-bottom: 5px; font-family: sans-serif;">{self.t['daily_fluctuations']} {label_name} <span style="font-size: 12px; font-weight: normal; color: #666;">{self.t['last_3_months']}</span></div>
+            <div style="font-size: 12px; color: #555; margin-bottom: 10px; font-family: sans-serif;">
+                {self.t['max_hourly_fluctuation']} <strong>{delta:.2f}</strong> 
+                <span style="color: #888; font-size: 11px;">{self.t['lower_is_better']}</span>
+            </div>
+            <div style="display: flex; width: 100%; height: 30px; border-radius: 3px; overflow: hidden; border: 1px solid #ccc;">
+        '''
+        
+        for h in range(24):
+            avg = hourly_avg.get(h, None)
+            if avg is None:
+                color = "#eeeeee"
+                title = f"{h:02d}:00 - {self.t['no_data']}"
+            else:
+                if max_avg > min_avg:
+                    score = (avg - min_avg) / delta
+                else:
+                    score = 0.5
+                hue = int(score * 120)
+                color = f"hsl({hue}, 100%, 45%)"
+                title = f"{h:02d}:00 - Ø {avg:.2f}"
+            
+            html += f'<div style="flex: 1; background-color: {color};" title="{title}"></div>'
+            
+        html += '''
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 10px; color: #888; margin-top: 4px; font-family: sans-serif;">
+                <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+            </div>
+        </div>
+        '''
+        return html
+
     def _generate_charts(self, hours=24):
         import matplotlib
         matplotlib.use('Agg')
@@ -1306,6 +1408,20 @@ class Reporter:
             fig, ax = plt.subplots(figsize=(12, 4))
             ax.plot(ts, vs, color='#4acbd6', linewidth=2, marker='o', markerfacecolor='#93365e', markeredgecolor='#93365e', markersize=6)
             ax.fill_between(ts, vs, min(vs)-0.1, color='#4acbd6', alpha=0.1)
+            
+            if i == 1:
+                three_months_start = int((datetime.now() - timedelta(days=90)).timestamp())
+                _, min_max_rows = self.db._run_query(f"SELECT MIN({field}), MAX({field}) FROM {table} WHERE time_ut >= ? AND {field} > 0", [three_months_start])
+                if min_max_rows and min_max_rows[0][0] is not None:
+                    try:
+                        min_val = float(min_max_rows[0][0])
+                        max_val = float(min_max_rows[0][1])
+                        ax.axhline(min_val, color='red', linestyle='--', linewidth=1.5, alpha=0.8, label=f'3M Min: {min_val:.1f}')
+                        ax.axhline(max_val, color='green', linestyle='--', linewidth=1.5, alpha=0.8, label=f'3M Max: {max_val:.1f}')
+                        ax.legend(loc='lower left', fontsize=8, frameon=True)
+                    except:
+                        pass
+                        
             ax.grid(True, linestyle='--', linewidth=0.5, color='#ddd')
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.\n%H:%M'))
             plt.tight_layout()
@@ -1339,9 +1455,14 @@ class Reporter:
         Verbotsliste: Keine Aufzählungen, keine Wiederholung von Rohdaten, keine Kommentare zu Routine-Events oder fehlenden Updates.
         Fokus: Benenne nur das 'Warum' der Störung (z.B. 'Kombination aus sinkendem SNR und steigenden Fehlern deutet auf Leitungsstörung hin').
         TOP PRIO!!! Prüfe, ob Du tatsächlich maximal drei Sätze verwendet hast, sonst erneut bearbeiten!
+        """
+        
+        if self.lang == 'en':
+            prompt += "\nIMPORTANT: You MUST provide your final response purely in ENGLISH language."
+        else:
+            prompt += "\nWICHTIG: Erstelle deine finale Antwort zwingend auf DEUTSCH."
 
-        CSV Daten:
-        """ + output.getvalue() + events_as_text
+        prompt += "\n\nCSV Daten:\n" + output.getvalue() + events_as_text
 
         provider = self.config.get('AI', 'ai_provider', fallback=None)
         api_key = self.config.get('AI', 'ai_api_key', fallback=None)
@@ -1511,6 +1632,14 @@ class Reporter:
         for idx, (lbl, chart_data) in enumerate(charts):
             img_src = f"cid:chart_{idx}" if send_email else f"data:image/png;base64,{chart_data}"
             html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{lbl}</td></tr><tr><td style='text-align: center;'><img src='{img_src}' style='width: 100%; max-width: 700px;'></td></tr></table></td></tr>"
+            
+        t_table = self.config.get('Charts', 'table_1', fallback='dsl')
+        t_field = self.config.get('Charts', 'field_1', fallback='downstream_noise_margin')
+        t_label = self.config.get('Charts', 'label_1', fallback=t_field)
+        
+        variance_html = self._generate_snr_variance_html(t_table, t_field, t_label)
+        if variance_html:
+            html += f"<tr><td style='padding: 10px 20px;'>{variance_html}</td></tr>"
             
         if events:
             all_levels = [
