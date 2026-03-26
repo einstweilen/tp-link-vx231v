@@ -74,15 +74,37 @@ main() {
             info "Bereinige unvollständige virtuelle Umgebung..."
             rm -rf .venv
         fi
+        
         if ! python3 -m venv .venv 2>/tmp/venv_error.log; then
-            cat /tmp/venv_error.log
             PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-            echo -e "\n${RED}FEHLER: 'python3-venv' scheint zu fehlen!${NC}"
-            echo -e "Auf Debian/Ubuntu/DietPi-Systemen beheben Sie dies mit:"
-            echo -e "${BOLD}sudo apt update && sudo apt install python$PY_VER-venv${NC}"
-            echo -e "\nDanach starten Sie den Installer erneut."
-            rm -f /tmp/venv_error.log
-            exit 1
+            info "Virtuelle Umgebung konnte nicht erstellt werden ('python$PY_VER-venv' fehlt?)."
+            
+            if command -v apt-get &> /dev/null; then
+                info "Versuche 'python$PY_VER-venv' automatisch via apt zu installieren..."
+                prompt_text "Darf das System per 'sudo apt' aktualisiert und das Paket installiert werden? [J/N]: "
+                read -r INSTALL_VENV
+                if [[ "$INSTALL_VENV" =~ ^[jJ] ]]; then
+                    sudo apt-get update && sudo apt-get install -y "python$PY_VER-venv"
+                    info "Versuche erneut, die virtuelle Umgebung zu erstellen..."
+                    if ! python3 -m venv .venv 2>/tmp/venv_error.log; then
+                        cat /tmp/venv_error.log
+                        error "Erneuter Versuch fehlgeschlagen. Bitte manuell prüfen."
+                        rm -f /tmp/venv_error.log
+                        exit 1
+                    fi
+                else
+                    cat /tmp/venv_error.log
+                    error "Installation abgelehnt. Bitte manuell installieren mit:"
+                    echo -e "${BOLD}sudo apt update && sudo apt install python$PY_VER-venv${NC}"
+                    rm -f /tmp/venv_error.log
+                    exit 1
+                fi
+            else
+                cat /tmp/venv_error.log
+                error "Fehlendes Paket 'python$PY_VER-venv'. Automatisierte Installation nur für apt/Debian möglich."
+                rm -f /tmp/venv_error.log
+                exit 1
+            fi
         fi
         rm -f /tmp/venv_error.log
     fi
