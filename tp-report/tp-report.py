@@ -362,9 +362,43 @@ class RouterAPI:
             code, response = self.router._request(url, data_str="", encrypt=True)
             if code == 200:
                 return re.sub(r"(202\d-)", r"\n\1", response, count=1)
+            return self._downloadrouterlog_http_fallback()
         except Exception as e:
-            self._log(f"Fehler Log-Download: {e}")
-        return None
+            self._log(f"Verschlüsselter Log-Download fehlgeschlagen ({e}), versuche HTTP-Fallback...")
+            return self._downloadrouterlog_http_fallback()
+
+    def _downloadrouterlog_http_fallback(self):
+        """Fallback: Log als Dateidownload über cgi/log?down (wie Playwright, ohne AES-GCM)."""
+        try:
+            import ssl
+            import urllib.request
+
+            base_url = self.router.host
+            logurl = f"{base_url}/cgi/log?down"
+            self._log(f"HTTP-Fallback Log-Download: {logurl}")
+
+            cookie_str = "; ".join([f"{c.name}={c.value}" for c in self.router.req.cookies])
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'text/plain,*/*;q=0.8',
+                'Referer': base_url,
+                'Cookie': cookie_str
+            }
+            if self.router._token:
+                headers['TokenID'] = self.router._token
+
+            context = ssl._create_unverified_context()
+            req = urllib.request.Request(logurl, headers=headers)
+            with urllib.request.urlopen(req, context=context, timeout=10) as response:
+                logcontent = response.read().decode('utf-8')
+
+            if logcontent and len(logcontent) > 20:
+                self._log(f"HTTP-Fallback erfolgreich: {len(logcontent)} Zeichen.")
+                return re.sub(r"(202\d-)", r"\n\1", logcontent, count=1)
+            return None
+        except Exception as e:
+            self._log(f"HTTP-Fallback fehlgeschlagen: {e}")
+            return None
 
 # ---------------------------------------------------------------------------
 # DATABASE MANAGER (Lightweight)

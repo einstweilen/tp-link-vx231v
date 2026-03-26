@@ -74,19 +74,53 @@ class TPLinkVX231vAPI:
             return None
         try:
             self._log("Starte Log-Download über API...")
-            # Wir nutzen die interne _request Methode der Library
-            # WICHTIG: Die URL muss über _get_url generiert werden, wie in get_vx_syslog.py
             url = self.router._get_url('cgi/log')
             code, response = self.router._request(url, data_str="", encrypt=True)
             
             if code != 200:
                 self._log(f"HTTP-Fehler beim Log-Download: {code}", force=True)
-                return None
+                return self._downloadrouterlog_http_fallback()
                 
             # Formatierung sicherstellen (wie in playwright_client)
             return re.sub(r"(202\d-)", r"\n\1", response, count=1)
         except Exception as e:
-            self._log(f"Fehler beim Log-Download (API): {e}", force=True)
+            self._log(f"Verschlüsselter Log-Download fehlgeschlagen ({e}), versuche HTTP-Fallback...", force=True)
+            return self._downloadrouterlog_http_fallback()
+
+    def _downloadrouterlog_http_fallback(self):
+        """Fallback: Log als Dateidownload über cgi/log?down (wie Playwright, ohne AES-GCM)."""
+        try:
+            import ssl
+            import urllib.request
+
+            base_url = self.router.host  # z.B. https://192.168.1.1
+            logurl = f"{base_url}/cgi/log?down"
+            self._log(f"HTTP-Fallback: {logurl}")
+
+            # Session-Cookie und Token aus der Library-Session übernehmen
+            cookie_str = "; ".join([f"{c.name}={c.value}" for c in self.router.req.cookies])
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'text/plain,*/*;q=0.8',
+                'Referer': base_url,
+                'Cookie': cookie_str
+            }
+            if self.router._token:
+                headers['TokenID'] = self.router._token
+
+            context = ssl._create_unverified_context()
+            req = urllib.request.Request(logurl, headers=headers)
+            with urllib.request.urlopen(req, context=context, timeout=10) as response:
+                logcontent = response.read().decode('utf-8')
+
+            if logcontent and len(logcontent) > 20:
+                self._log(f"HTTP-Fallback erfolgreich: {len(logcontent)} Zeichen empfangen.")
+                return re.sub(r"(202\d-)", r"\n\1", logcontent, count=1)
+            else:
+                self._log("HTTP-Fallback: Leere oder ungültige Antwort.", force=True)
+                return None
+        except Exception as e:
+            self._log(f"HTTP-Fallback fehlgeschlagen: {e}", force=True)
             return None
 
     def _safe_int(self, value, default=0):
