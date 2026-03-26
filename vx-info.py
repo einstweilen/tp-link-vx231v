@@ -96,9 +96,11 @@ def main():
                 debug=args.debug
             )
 
+        is_api_client = isinstance(gui_client, TPLinkVX231vAPI)
+
         try:
             if gui_client.login():
-                if do_log:
+                if do_log or is_api_client:
                     log_txt = gui_client.downloadrouterlog_to_memory()
                     if log_txt:
                         added = db.insert_events_from_log(log_txt)

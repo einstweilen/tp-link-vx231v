@@ -112,27 +112,6 @@ main() {
     success "Virtuelle Umgebung bereit."
 
     step "[2/7] Installiere Abhängigkeiten..."
-    # Prüfe ob C-Compiler vorhanden ist (wird für numpy/matplotlib Kompilierung benötigt)
-    if ! command -v gcc &> /dev/null && ! command -v cc &> /dev/null; then
-        info "Kein C-Compiler gefunden (wird für numpy/matplotlib benötigt)."
-        if command -v apt-get &> /dev/null; then
-            info "Versuche 'build-essential' automatisch via apt zu installieren..."
-            prompt_text "Darf 'sudo apt install build-essential' ausgeführt werden? [J/N]: "
-            read -r INSTALL_BUILD
-            if [[ "$INSTALL_BUILD" =~ ^[jJ] ]]; then
-                sudo apt-get update && sudo apt-get install -y build-essential
-                success "build-essential installiert."
-            else
-                error "Ohne C-Compiler schlägt die Installation fehl. Bitte manuell installieren:"
-                echo -e "${BOLD}sudo apt install build-essential${NC}"
-                exit 1
-            fi
-        else
-            error "Kein C-Compiler und kein apt gefunden. Bitte 'build-essential' oder 'gcc' manuell installieren."
-            exit 1
-        fi
-    fi
-
     if [ -f "requirements.txt" ]; then
         info "pip install (Details: .install_report.log)..."
         touch .install_report.log
