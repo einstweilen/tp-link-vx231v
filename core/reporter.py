@@ -130,7 +130,7 @@ class TPLinkVX231vReport:
             
         if act_v == web_v and web_v != (0,):
             cutoff = (datetime.now() - timedelta(hours=48)).timestamp()
-            if old_ts > cutoff:
+            if old_fw and old_fw != act_fw and old_ts > cutoff:
                 return True, old_fw, act_fw, rn_title, rn_date, rn_txt
                 
         return False, old_fw, act_fw, rn_title, rn_date, rn_txt
