@@ -1,4 +1,4 @@
-# Installations-Anleitung: TP-Link Daily Report
+# Installations-Anleitung: TP-Link Report
 
 Diese Anleitung beschreibt die Einrichtung des `tp-report.py` Skripts, welches täglich einen detaillierten Statusbericht aller durch die [Third-Party-Router API von Alexandr Erohin ](https://github.com/AlexandrErohin/TP-Link-Archer-C6U) unterstützten Router per E-Mail versendet.<br>
 Es ist die abgespeckte Version des `vx-info.py` Skripts. Die Datenstruktur ist identisch, so dass man bei Bedarf auf die größere Version 
@@ -6,7 +6,6 @@ Es ist die abgespeckte Version des `vx-info.py` Skripts. Die Datenstruktur ist i
 ## Installation
 
 Im Terminal
-
 ```bash
 curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/install_report.sh | bash
 ```
@@ -50,8 +49,8 @@ Das Skript kann jederzeit manuell aufgerufen werden:
 
 | Befehl | Beschreibung |
 | :--- | :--- |
-| `python3 tp-report.py --update` | Abruf aktueller Daten vom Router und Speicherung in der DB. |
-| `python3 tp-report.py --report-show` | Generierung des HTML-Berichts und sofortige Anzeige im Browser. |
-| `python3 tp-report.py --report-send` | Generierung des Berichts und Versendung per E-Mail. |
-| `python3 tp-report.py --de` / `--en` | Umschalten der Berichtssprache. |
+| `tp-report.py --update` | Abruf aktueller Daten vom Router und Speicherung in der DB. |
+| `tp-report.py --report-show` | Generierung des HTML-Berichts und sofortige Anzeige im Browser. |
+| `tp-report.py --report-send` | Generierung des Berichts und Versendung per E-Mail. |
+| `tp-report.py --de` / `--en` | Umschalten der Berichtssprache. |
 
