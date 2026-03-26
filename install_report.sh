@@ -69,7 +69,11 @@ main() {
     fi
 
     step "[1/7] Erstelle virtuelle Umgebung..."
-    if [ ! -d ".venv" ]; then
+    if [ ! -f ".venv/bin/activate" ]; then
+        if [ -d ".venv" ]; then
+            info "Bereinige unvollständige virtuelle Umgebung..."
+            rm -rf .venv
+        fi
         if ! python3 -m venv .venv 2>/tmp/venv_error.log; then
             cat /tmp/venv_error.log
             PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
