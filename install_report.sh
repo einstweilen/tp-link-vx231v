@@ -70,7 +70,17 @@ main() {
 
     step "[1/7] Erstelle virtuelle Umgebung..."
     if [ ! -d ".venv" ]; then
-        python3 -m venv .venv
+        if ! python3 -m venv .venv 2>/tmp/venv_error.log; then
+            cat /tmp/venv_error.log
+            PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            echo -e "\n${RED}FEHLER: 'python3-venv' scheint zu fehlen!${NC}"
+            echo -e "Auf Debian/Ubuntu/DietPi-Systemen beheben Sie dies mit:"
+            echo -e "${BOLD}sudo apt update && sudo apt install python$PY_VER-venv${NC}"
+            echo -e "\nDanach starten Sie den Installer erneut."
+            rm -f /tmp/venv_error.log
+            exit 1
+        fi
+        rm -f /tmp/venv_error.log
     fi
     info "Aktiviere virtuelle Umgebung..."
     source .venv/bin/activate
