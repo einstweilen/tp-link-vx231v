@@ -74,7 +74,7 @@ main() {
     info "Telnet aktiviert wurden, können Routerdaten darüber"
     info "abgerufen werden (--update läuft dann schneller)."
     prompt_text "Sollen SNMP-Tools jetzt installiert werden? (j/N) "
-    read -r SNMP_ANSWER
+    read -r SNMP_ANSWER < /dev/tty
     if [[ "$SNMP_ANSWER" =~ ^[jJ] ]]; then
         if [[ "$(uname)" == "Darwin" ]]; then
             info "Installiere net-snmp via Homebrew (macOS)..."
@@ -107,11 +107,11 @@ main() {
     step "[8/12] Interaktive Router-Konfiguration"
     while true; do
         prompt_text "Wie lautet die IP-Adresse des Routers? [192.168.1.1]: "
-        read -r ROUTER_IP
+        read -r ROUTER_IP < /dev/tty
         ROUTER_IP=${ROUTER_IP:-192.168.1.1}
         
         prompt_text "Bitte das Passwort für das Web-Interface (GUI) eingeben: "
-        read -rs GUI_PASS
+        read -rs GUI_PASS < /dev/tty
         echo ""
 
         info "Trage Daten in config.ini ein..."
@@ -151,7 +151,7 @@ except Exception as e:
         else
              error "Login fehlgeschlagen."
              prompt_text "Soll die Eingabe wiederholt werden? (J/n - n = manuell konfigurieren) " 
-             read -r retry
+             read -r retry < /dev/tty
              if [[ "$retry" =~ ^[nN] ]]; then
                   info "Überspringe Konfiguration. config.ini später manuell anpassen!"
                   break
@@ -205,7 +205,7 @@ WRAPPER_EOF
     info "Falls im Tagesreport eine KI Analyse der aktuellen Routerdaten erfolgen soll,"
     info "wird ein kostenloser API Key von Google Gemini benötigt."
     prompt_text "Soll eine KI Datenanalyse durchgeführt werden [J/N]: "
-    read -r AI_SETUP
+    read -r AI_SETUP < /dev/tty
     if [[ "$AI_SETUP" =~ ^[jJ] ]]; then
         if [ -f "setup_ai_key.sh" ]; then
             chmod +x setup_ai_key.sh
@@ -219,7 +219,7 @@ WRAPPER_EOF
 
     step "[11/12] Cronjobs automatisch einrichten"
     prompt_text "Sollen die periodischen Abfrage-Jobs für cron eingerichtet werden? (j/N) " 
-    read -r CRON_SETUP
+    read -r CRON_SETUP < /dev/tty
     
     if [[ "$CRON_SETUP" =~ ^[jJ] ]]; then
         TMP_CRON=$(mktemp)
@@ -238,7 +238,7 @@ WRAPPER_EOF
         fi
 
         prompt_text "Soll täglich um 06:10 Uhr ein Statusbericht per Mail versandt werden? (j/N) " 
-        read -r MAIL_SETUP
+        read -r MAIL_SETUP < /dev/tty
         if [[ "$MAIL_SETUP" =~ ^[jJ] ]]; then
             info "Hinzugefügt: Täglich 06:10 Uhr '--report-send'"
             echo "10 6 * * * cd \"$(pwd)\" && \"$(pwd)/.venv/bin/python3\" vx-info.py --report-send" >> "$TMP_CRON"

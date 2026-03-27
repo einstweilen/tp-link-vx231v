@@ -81,7 +81,7 @@ main() {
             if command -v apt-get &> /dev/null; then
                 info "Versuche 'python$PY_VER-venv' automatisch via apt zu installieren..."
                 prompt_text "Darf das System per 'sudo apt' aktualisiert und das Paket installiert werden? [J/N]: "
-                read -r INSTALL_VENV
+                read -r INSTALL_VENV < /dev/tty
                 if [[ "$INSTALL_VENV" =~ ^[jJ] ]]; then
                     sudo apt-get update && sudo apt-get install -y "python$PY_VER-venv"
                     info "Versuche erneut, die virtuelle Umgebung zu erstellen..."
@@ -149,11 +149,11 @@ main() {
     step "[4/7] Interaktive Router-Konfiguration"
     while true; do
         prompt_text "Wie lautet die IP-Adresse des Routers? [192.168.1.1]: "
-        read -r ROUTER_IP
+        read -r ROUTER_IP < /dev/tty
         ROUTER_IP=${ROUTER_IP:-192.168.1.1}
         
         prompt_text "Bitte das Passwort für das Web-Interface (GUI) eingeben: "
-        read -rs GUI_PASS
+        read -rs GUI_PASS < /dev/tty
         echo ""
 
         info "Trage Daten in $CONFIG_FILE ein..."
@@ -185,7 +185,7 @@ except Exception as e:
         else
              error "Login fehlgeschlagen. Bitte IP und Passwort prüfen."
              prompt_text "Soll die Eingabe wiederholt werden? (J/n) " 
-             read -r retry
+             read -r retry < /dev/tty
              if [[ "$retry" =~ ^[nN] ]]; then
                   info "Überspringe Konfiguration. $CONFIG_FILE später manuell anpassen!"
                   break
@@ -195,7 +195,7 @@ except Exception as e:
 
     step "[5/7] KI Analyse Einrichtung"
     prompt_text "Soll eine KI Datenanalyse im Report erfolgen? (Gemini API Key benötigt) [J/N]: "
-    read -r AI_SETUP
+    read -r AI_SETUP < /dev/tty
     if [[ "$AI_SETUP" =~ ^[jJ] ]]; then
         if [ -f "setup_ai_key.sh" ]; then
             chmod +x setup_ai_key.sh
@@ -209,7 +209,7 @@ except Exception as e:
 
     step "[6/7] Cronjobs einrichten"
     prompt_text "Sollen die automatischen Jobs (Update & Report) in die crontab eingetragen werden? (j/N) " 
-    read -r CRON_SETUP
+    read -r CRON_SETUP < /dev/tty
     
     if [[ "$CRON_SETUP" =~ ^[jJ] ]]; then
         TMP_CRON=$(mktemp)
@@ -221,7 +221,7 @@ except Exception as e:
         
         # Daily Report
         prompt_text "Zu welcher Uhrzeit soll der tägliche Bericht gesendet werden? [06:10]: "
-        read -r REPORT_TIME
+        read -r REPORT_TIME < /dev/tty
         REPORT_TIME=${REPORT_TIME:-06:10}
         H=$(echo $REPORT_TIME | cut -d: -f1)
         M=$(echo $REPORT_TIME | cut -d: -f2)

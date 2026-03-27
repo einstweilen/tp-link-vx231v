@@ -36,7 +36,7 @@ while true; do
         LAST_FOUR="${EXISTING_KEY: -4}"
         info "Es ist bereits ein Gemini API Key in $CONFIG_FILE hinterlegt (\"AIza…$LAST_FOUR\")"
         prompt_text "Diesen Key verwenden (J/N): "
-        read -n 1 -r USE_EXISTING
+        read -n 1 -r USE_EXISTING < /dev/tty
         echo ""
         if [[ "$USE_EXISTING" =~ ^[jJ] ]]; then
             API_KEY="$EXISTING_KEY"
@@ -54,7 +54,7 @@ while true; do
         echo ""
 
         prompt_text "Bitte Option wählen (V/G/N): "
-        read -n 1 -r AI_CHOICE
+        read -n 1 -r AI_CHOICE < /dev/tty
         echo ""
         AI_CHOICE=$(echo "$AI_CHOICE" | tr '[:lower:]' '[:upper:]')
 
@@ -82,7 +82,7 @@ while true; do
         echo ""
         info "Feld leerlassen um keinen Key zu hinterlegen."
         prompt_text "Bitte den API Key einfügen: "
-        read -r RAW_API_KEY
+        read -r RAW_API_KEY < /dev/tty
         API_KEY=$(echo -n "$RAW_API_KEY" | tr -d '\r\n[:space:]')
         echo ""
     fi
