@@ -1053,9 +1053,7 @@ class Reporter:
                     event_html += f"<div style='margin-bottom: 5px; color: #555;'>[{ts}] {trigger_lbl} | {self.t['duration']} {duration}s</div>"
 
         if not has_issues and not event_html:
-            if min_level > 0:
-                html_output += f"<p style='color: #555; text-align: center; font-style: italic; margin-top: 10px;'>{self.t['no_disconnects_level'].replace('{level}', str(min_level))}</p>"
-            return html_output
+            return ""
             html_output = f"<div style='color: #388e3c;'>{self.t['line_stable']}</div>"
         else:
             if recs_list:
@@ -1638,6 +1636,12 @@ class Reporter:
         return reconnects
 
     def _get_router_uptime(self):
+        _, rows = self.db._run_query("SELECT uptime_seconds FROM system ORDER BY time_ut DESC LIMIT 1")
+        if rows:
+            seconds = int(rows[0][0])
+            days = seconds // 86400
+            hours = (seconds % 86400) // 3600
+            return days, hours
         return None
 
     def generate_report(self, send_email=True, show_browser=False):
@@ -1720,7 +1724,7 @@ class Reporter:
             
             if uptime_data:
                 u_days, u_hours = uptime_data
-                html += f"<br><br>{self.t['firmware']} {fw_act} {self.t['last_reboot']} {u_days} {self.t['days']} {u_hours} {self.t['hours']}"
+                html += f"<br>{self.t['firmware']} {fw_act} {self.t['last_reboot']} {u_days} {self.t['days']} {u_hours} {self.t['hours']}"
                 
             html += "</td></tr>"
             
