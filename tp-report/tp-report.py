@@ -41,11 +41,11 @@ TRANSLATIONS = {
         'hours': 'Stunden',
         'minutes': 'Minuten',
         'days': 'Tagen',
-        'connected_since': 'Verbunden seit',
+        'connected_since': '<b>Verbunden seit</b>',
         'current': 'Aktuelle',
-        'data_rate_down': 'Datenrate Down',
+        'data_rate_down': '<b>Datenrate</b> Down',
         'up': 'Up',
-        'last_ip_change': 'Letzter IP-Wechsel vor',
+        'last_ip_change': '<b>IP-Wechsel vor</b>',
         'firmware': 'Firmware:',
         'last_reboot': 'Letzter Routerneustart vor',
         'fw_notice': 'Firmware Hinweis',
@@ -85,9 +85,9 @@ TRANSLATIONS = {
         'max_hourly_fluctuation': 'Max. stündliche Schwankung (Delta):',
         'lower_is_better': '(Je geringer, desto stabiler)',
         'no_data': 'Keine Daten',
-        'snr_stats_hours': '{hours} Stunden Maximalwert {max} Minimalwert {min} Median {median}',
+        'snr_stats_hours': '<b>{hours} Stunden</b> Maximalwert {max} Minimalwert {min} Median {median}',
         'median_7d': 'Median der letzten {days} Tage {median}',
-        'stats_3m': '3 Monatswerte Maximalwert {max} Minimalwert {min} Median {median}'
+        'stats_3m': '<b>3 Monats</b> Maximalwert {max} Minimalwert {min} Median {median}'
     },
     'en': {
         'title': 'Router Status Report',
@@ -98,11 +98,11 @@ TRANSLATIONS = {
         'hours': 'hours',
         'minutes': 'minutes',
         'days': 'days',
-        'connected_since': 'Connected since',
+        'connected_since': '<b>Connected since</b>',
         'current': 'Current',
-        'data_rate_down': 'Data rate Down',
+        'data_rate_down': '<b>Data rate</b> Down',
         'up': 'Up',
-        'last_ip_change': 'Last IP change',
+        'last_ip_change': '<b>IP change</b>',
         'firmware': 'Firmware:',
         'last_reboot': 'Last router reboot',
         'fw_notice': 'Firmware Notice',
@@ -142,9 +142,9 @@ TRANSLATIONS = {
         'max_hourly_fluctuation': 'Max. hourly fluctuation (Delta):',
         'lower_is_better': '(Lower is more stable)',
         'no_data': 'No data',
-        'snr_stats_hours': '{hours} hours Maximum {max} Minimum {min} Median {median}',
+        'snr_stats_hours': '<b>{hours} hours</b> Maximum {max} Minimum {min} Median {median}',
         'median_7d': 'Median of the last {days} days {median}',
-        'stats_3m': '3 month values Maximum {max} Minimum {min} Median {median}'
+        'stats_3m': '<b>3 months</b> Maximum {max} Minimum {min} Median {median}'
     }
 }
 # ---------------------------------------------------------------------------
@@ -1759,7 +1759,6 @@ class Reporter:
                 
                 stats_html = f"<div style='font-size: 13px; color: #333; margin-top: 5px; margin-bottom: 15px; font-family: sans-serif; line-height: 1.6; background: #f9f9f9; padding: 10px; border-left: 4px solid #4acbd6;'>"
                 stats_html += self.t['snr_stats_hours'].format(hours=hours_back, max=f"{hb_stats['max']:.1f}", min=f"{hb_stats['min']:.1f}", median=f"{hb_stats['median']:.1f}") + "<br>"
-                stats_html += self.t['median_7d'].format(days=ma_days, median=f"{median_xd:.1f}") + "<br><br>"
                 stats_html += self.t['stats_3m'].format(max=f"{m3_stats['max']:.1f}", min=f"{m3_stats['min']:.1f}", median=f"{m3_stats['median']:.1f}")
                 stats_html += "</div>"
                 html += f"<tr><td style='padding: 0 20px;'>{stats_html}</td></tr>"
