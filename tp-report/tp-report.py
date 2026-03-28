@@ -760,8 +760,8 @@ class Reporter:
 
         return client_activity
 
-    def _get_connected_clients(self):
-        client_activity = self._build_client_sessions(hours=24)
+    def _get_connected_clients(self, hours=24):
+        client_activity = self._build_client_sessions(hours=hours)
         current_time = datetime.now().timestamp()
 
         # Active calculation
@@ -1297,7 +1297,8 @@ class Reporter:
         sorted_macs = sorted(active_clients.keys(), key=sort_key, reverse=True)
 
         # Plotting
-        fig_height = max(4, len(sorted_macs) * 0.4)
+        # Schmalere Balken (0.4 statt 0.6) und engere Abstände (0.25 statt 0.4)
+        fig_height = max(2, len(sorted_macs) * 0.25)
         fig, ax = plt.subplots(figsize=(10, fig_height))
 
         y_ticks = []
@@ -1325,7 +1326,7 @@ class Reporter:
                 net = sess.get('network', 'home')
                 bar_color = COLOR_GUEST if net == 'guest' else COLOR_HOME
 
-                ax.barh(i, end - start, left=start, height=0.6,
+                ax.barh(i, end - start, left=start, height=0.4,
                         color=bar_color, alpha=0.7, edgecolor=bar_color)
 
         ax.set_yticks(y_ticks)
@@ -1337,6 +1338,13 @@ class Reporter:
         ax.set_xlim(start_dt, end_dt)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+        
+        # Zeitschritte auf der X-Achse optimieren (alle 6 Stunden bei mehr als 24h)
+        if hours > 24:
+            ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0, 6, 12, 18]))
+        else:
+            ax.xaxis.set_major_locator(mdates.AutoDateLocator(maxticks=10))
+
         ax.grid(True, axis='x', linestyle='--', alpha=0.5)
 
         # 00:00 Uhr Linie durchgehend, aber im exakt gleichen Stil (Dicke/Farbe/Transparenz) wie das Grid
@@ -1657,7 +1665,7 @@ class Reporter:
         conn_analysis_html = self._get_connection_analysis(evt_hours)
         timeline = self._generate_timeline(evt_hours)
         gantt = self._generate_client_gantt(evt_hours)
-        clients = self._get_connected_clients()
+        clients = self._get_connected_clients(evt_hours)
         traffic = self._get_data_volume_clients()
         charts = self._generate_charts(hours_back)
         show_level = self.config.getint('Events', 'show_level', fallback=4)
@@ -1723,25 +1731,22 @@ class Reporter:
                 {self.t['fw_installed']} <span style="color: #2e7d32; font-weight: bold;">{fw_act}</span><br>
                 {self.t['fw_available']} <strong>{rn_t}</strong><br>
                 <div style="border-top: 1px solid #ffcc80; margin-top: 10px; padding-top: 10px;"><strong>{self.t['rn']} ({rn_ds}):</strong><br>{rn_txt}</div></div></div></td></tr>"""
+        
+        # 1. AI Analyse
         if ai_text:
             html += f"<tr><td style='padding: 20px;'><div style='border: 2px solid #4acbd6; background-color: #f9ffff; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #008ba3;'>{self.t['at_a_glance']}</h3><div style='font-size: 14px; color: #333;'>{ai_text}</div></div></td></tr>"
-        if conn_analysis_html:
-            padding_top = "0px" if ai_text else "20px"
-            html += f"<tr><td style='padding: 20px; padding-top: {padding_top};'><div style='border: 1px solid #b0bec5; background-color: #fcfcfc; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #455a64;'>{self.t['line_analysis']}</h3><div style='font-size: 14px; color: #333;'>{conn_analysis_html}</div></div></td></tr>"
+            
+        # 2. Eventübersichtschart (Timeline)
         if timeline:
             img_src = "cid:timeline_img" if send_email else f"data:image/png;base64,{timeline}"
             html += f"<tr><td style='padding: 0 20px 20px 20px;'><div style='border: 1px solid #ddd; background-color: #fff; padding: 10px; border-radius: 5px;'><div style='font-size: 12px; font-weight: bold; color: #666;'>{self.t['event_overview']}</div><img src='{img_src}' style='width: 100%; max-width: 700px;'></div></td></tr>"
-        if gantt:
-            img_src = "cid:gantt_img" if send_email else f"data:image/png;base64,{gantt}"
-            html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{self.t['presence']}</td></tr><tr><td><img src='{img_src}' style='width: 100%; max-width: 700px;'></td></tr></table></td></tr>"
-        if clients['home']:
-            html += f"<tr><td style='padding: 10px 20px;'><table width='100%' style='border-collapse: collapse;'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{self.t['home_network']}</td></tr><tr><td><table width='100%' style='font-size: 13px;'>"
-            for i, c in enumerate(clients['home']):
-                bg = "#ffffff" if i % 2 == 0 else "#f9f9f9"
-                typ = f"LAN {c[3]}" if str(c[2]).lower() == 'lan' and c[3] != 0 else c[2]
-                html += f"<tr style='background-color: {bg};'><td>{c[0]}</td><td style='color: #666;'>{c[1]}</td><td>{typ}</td></tr>"
-            html += "</table></td></tr></table></td></tr>"
-        
+            
+        # 3. Leitungsanalyse
+        if conn_analysis_html:
+            padding_top = "0px" if timeline else "20px"
+            html += f"<tr><td style='padding: 20px; padding-top: {padding_top};'><div style='border: 1px solid #b0bec5; background-color: #fcfcfc; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #455a64;'>{self.t['line_analysis']}</h3><div style='font-size: 14px; color: #333;'>{conn_analysis_html}</div></div></td></tr>"
+            
+        # 4. Chart Downstreamstörabstand (SNR Chart + Stats)
         for idx, (lbl, chart_data) in enumerate(charts):
             img_src = f"cid:chart_{idx}" if send_email else f"data:image/png;base64,{chart_data}"
             html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{lbl}</td></tr><tr><td style='text-align: center;'><img src='{img_src}' style='width: 100%; max-width: 700px;'></td></tr></table></td></tr>"
@@ -1758,14 +1763,28 @@ class Reporter:
                 stats_html += self.t['stats_3m'].format(max=f"{m3_stats['max']:.1f}", min=f"{m3_stats['min']:.1f}", median=f"{m3_stats['median']:.1f}")
                 stats_html += "</div>"
                 html += f"<tr><td style='padding: 0 20px;'>{stats_html}</td></tr>"
-            
+
+        # 5. Tagesschwankungschart (SNR Heatmap)
         t_table = self.config.get('Charts', 'table_1', fallback='dsl')
         t_field = self.config.get('Charts', 'field_1', fallback='downstream_noise_margin')
         t_label = self.config.get('Charts', 'label_1', fallback=t_field)
-        
         variance_html = self._generate_snr_variance_html(t_table, t_field, t_label)
         if variance_html:
             html += f"<tr><td style='padding: 10px 20px;'>{variance_html}</td></tr>"
+
+        # 6. Anwesenheits GANTT Chart
+        if gantt:
+            img_src = "cid:gantt_img" if send_email else f"data:image/png;base64,{gantt}"
+            html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{self.t['presence']}</td></tr><tr><td><img src='{img_src}' style='width: 100%; max-width: 700px;'></td></tr></table></td></tr>"
+
+        # 7. Heimnetzübersicht aktiver Clients
+        if clients['home']:
+            html += f"<tr><td style='padding: 10px 20px;'><table width='100%' style='border-collapse: collapse;'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{self.t['home_network']}</td></tr><tr><td><table width='100%' style='font-size: 13px;'>"
+            for i, c in enumerate(clients['home']):
+                bg = "#ffffff" if i % 2 == 0 else "#f9f9f9"
+                typ = f"LAN {c[3]}" if str(c[2]).lower() == 'lan' and c[3] != 0 else c[2]
+                html += f"<tr style='background-color: {bg};'><td>{c[0]}</td><td style='color: #666;'>{c[1]}</td><td>{typ}</td></tr>"
+            html += "</table></td></tr></table></td></tr>"
             
         if events:
             all_levels = [
