@@ -14,6 +14,7 @@ recipient_email = recipient@example.com
 
 [Charts]
 hours_back = 48
+moving_average_days = 7
 start_hour = 0
 
 table_1 = dsl

@@ -84,7 +84,10 @@ TRANSLATIONS = {
         'last_3_months': '(letzte 3 Monate)',
         'max_hourly_fluctuation': 'Max. stündliche Schwankung (Delta):',
         'lower_is_better': '(Je geringer, desto stabiler)',
-        'no_data': 'Keine Daten'
+        'no_data': 'Keine Daten',
+        'snr_stats_hours': '{hours} Stunden Maximalwert {max} Minimalwert {min} Median {median}',
+        'median_7d': 'Median der letzten {days} Tage {median}',
+        'stats_3m': '3 Monatswerte Maximalwert {max} Minimalwert {min} Median {median}'
     },
     'en': {
         'title': 'Router Status Report',
@@ -138,7 +141,10 @@ TRANSLATIONS = {
         'last_3_months': '(last 3 months)',
         'max_hourly_fluctuation': 'Max. hourly fluctuation (Delta):',
         'lower_is_better': '(Lower is more stable)',
-        'no_data': 'No data'
+        'no_data': 'No data',
+        'snr_stats_hours': '{hours} hours Maximum {max} Minimum {min} Median {median}',
+        'median_7d': 'Median of the last {days} days {median}',
+        'stats_3m': '3 month values Maximum {max} Minimum {min} Median {median}'
     }
 }
 # ---------------------------------------------------------------------------
@@ -173,7 +179,8 @@ class ConfigManager:
             'hours_back': '48',
             'table_1': 'dsl',
             'field_1': 'downstream_noise_margin',
-            'label_1': 'SNR Downstream (dB)'
+            'label_1': 'SNR Downstream (dB)',
+            'moving_average_days': '7'
         }
         self.config['Events'] = {
             'hours_back': '24',
@@ -1416,20 +1423,69 @@ class Reporter:
         '''
         return html
 
+        return html
+    
+    def _calculate_median(self, data):
+        if not data: return 0.0
+        sorted_data = sorted(data)
+        n = len(sorted_data)
+        if n % 2 == 1:
+            return sorted_data[n // 2]
+        else:
+            return (sorted_data[n // 2 - 1] + sorted_data[n // 2]) / 2.0
+
+    def _get_snr_stats(self, table, field, hours_back):
+        now = datetime.now()
+        moving_avg_days = self.config.getint('Charts', 'moving_average_days', fallback=7)
+        
+        # 1. hours_back stats
+        start_hb = int((now - timedelta(hours=hours_back)).timestamp())
+        _, hb_rows = self.db._run_query(f"SELECT {field} FROM {table} WHERE time_ut >= ? AND {field} > 0", [start_hb])
+        hb_vals = [float(r[0]) for r in hb_rows]
+        hb_stats = {
+            'max': max(hb_vals) if hb_vals else 0.0,
+            'min': min(hb_vals) if hb_vals else 0.0,
+            'median': self._calculate_median(hb_vals)
+        }
+
+        # 2. X-day median (default 7)
+        start_xd = int((now - timedelta(days=moving_avg_days)).timestamp())
+        _, dx_rows = self.db._run_query(f"SELECT {field} FROM {table} WHERE time_ut >= ? AND {field} > 0", [start_xd])
+        dx_vals = [float(r[0]) for r in dx_rows]
+        median_xd = self._calculate_median(dx_vals)
+
+        # 3. 3-month stats
+        start_3m = int((now - timedelta(days=90)).timestamp())
+        _, m3_rows = self.db._run_query(f"SELECT {field} FROM {table} WHERE time_ut >= ? AND {field} > 0", [start_3m])
+        m3_vals = [float(r[0]) for r in m3_rows]
+        m3_stats = {
+            'max': max(m3_vals) if m3_vals else 0.0,
+            'min': min(m3_vals) if m3_vals else 0.0,
+            'median': self._calculate_median(m3_vals)
+        }
+        
+        return hb_stats, median_xd, m3_stats, moving_avg_days
+
     def _generate_charts(self, hours=24):
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         charts = []
+        
+        moving_avg_days = self.config.getint('Charts', 'moving_average_days', fallback=7)
+        
         for i in range(1, 5):
             table = self.config.get('Charts', f'table_{i}', fallback=None)
             field = self.config.get('Charts', f'field_{i}', fallback=None)
             label = self.config.get('Charts', f'label_{i}', fallback=field)
             if not table or not field: continue
+            
+            # Haupt-Daten für den Anzeige-Zeitraum
             start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
             _, rows = self.db._run_query(f"SELECT time_ut, {field} FROM {table} WHERE time_ut >= ? ORDER BY time_ut", [start_ts])
             if not rows: continue
+            
             ts, vs = [], []
             for r in rows:
                 try:
@@ -1439,25 +1495,48 @@ class Reporter:
                         vs.append(v)
                 except: continue
             if not vs: continue
+            
             fig, ax = plt.subplots(figsize=(12, 4))
-            ax.plot(ts, vs, color='#4acbd6', linewidth=2, marker='o', markerfacecolor='#93365e', markeredgecolor='#93365e', markersize=6)
+            ax.plot(ts, vs, color='#4acbd6', linewidth=2, marker='o', markerfacecolor='#93365e', markeredgecolor='#93365e', markersize=6, label=label)
             ax.fill_between(ts, vs, min(vs)-0.1, color='#4acbd6', alpha=0.1)
             
+            # SPEZIALFALL: SNR Downstream (meist i=1) - Gleitender Durchschnitt
             if i == 1:
-                three_months_start = int((datetime.now() - timedelta(days=90)).timestamp())
-                _, min_max_rows = self.db._run_query(f"SELECT MIN({field}), MAX({field}) FROM {table} WHERE time_ut >= ? AND {field} > 0", [three_months_start])
-                if min_max_rows and min_max_rows[0][0] is not None:
-                    try:
-                        min_val = float(min_max_rows[0][0])
-                        max_val = float(min_max_rows[0][1])
-                        ax.axhline(min_val, color='red', linestyle='--', linewidth=1.5, alpha=0.8, label=f'3M Min: {min_val:.1f}')
-                        ax.axhline(max_val, color='green', linestyle='--', linewidth=1.5, alpha=0.8, label=f'3M Max: {max_val:.1f}')
-                        ax.legend(loc='lower left', fontsize=8, frameon=True)
-                    except:
-                        pass
+                # Hole Daten für gleitenden Durchschnitt (Anzeigezeitraum + N Tage Puffer davor)
+                ma_start_ts = int((datetime.now() - timedelta(hours=hours, days=moving_avg_days)).timestamp())
+                _, ma_rows = self.db._run_query(f"SELECT time_ut, {field} FROM {table} WHERE time_ut >= ? AND {field} > 0 ORDER BY time_ut", [ma_start_ts])
+                
+                if ma_rows:
+                    ma_ts_all = [int(r[0]) for r in ma_rows]
+                    ma_vs_all = [float(r[1]) for r in ma_rows]
+                    
+                    ma_curve_ts = []
+                    ma_curve_vs = []
+                    
+                    # Für jeden Punkt im Anzeige-Zeitraum berechne Durchschnitt der letzten N Tage
+                    window_sec = moving_avg_days * 24 * 3600
+                    
+                    # Effizienterer gleitender Durchschnitt (einfachere Implementierung ohne neue Imports)
+                    for target_t in [int(r[0]) for r in rows]:
+                        window_vals = [ma_vs_all[j] for j, ts_val in enumerate(ma_ts_all) if (target_t - window_sec) <= ts_val <= target_t]
+                        if window_vals:
+                            ma_curve_ts.append(datetime.fromtimestamp(target_t))
+                            ma_curve_vs.append(sum(window_vals) / len(window_vals))
+                    
+                    if ma_curve_vs:
+                        ax.plot(ma_curve_ts, ma_curve_vs, color='#666666', linestyle='--', linewidth=1.5, alpha=0.9, label=f'Ø {moving_avg_days} Tage')
+                
+                ax.legend(loc='lower left', fontsize=8, frameon=True)
                         
             ax.grid(True, linestyle='--', linewidth=0.5, color='#ddd')
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.\n%H:%M'))
+            
+            # Y-Achse optimieren: Fokus auf die aktuellen Werte
+            if vs:
+                v_min, v_max = min(vs), max(vs)
+                margin = (v_max - v_min) * 0.2 if v_max > v_min else 1.0
+                ax.set_ylim(v_min - margin, v_max + margin)
+
             plt.tight_layout()
             buf = io.BytesIO()
             plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
@@ -1666,6 +1745,19 @@ class Reporter:
         for idx, (lbl, chart_data) in enumerate(charts):
             img_src = f"cid:chart_{idx}" if send_email else f"data:image/png;base64,{chart_data}"
             html += f"<tr><td style='padding: 10px 20px;'><table width='100%'><tr><td style='background-color: #4acbd6; color: white; padding: 5px;'>{lbl}</td></tr><tr><td style='text-align: center;'><img src='{img_src}' style='width: 100%; max-width: 700px;'></td></tr></table></td></tr>"
+            
+            # Zusatz-Statistiken für den ersten Chart (SNR Downstream)
+            if idx == 0:
+                t_table = self.config.get('Charts', 'table_1', fallback='dsl')
+                t_field = self.config.get('Charts', 'field_1', fallback='downstream_noise_margin')
+                hb_stats, median_xd, m3_stats, ma_days = self._get_snr_stats(t_table, t_field, hours_back)
+                
+                stats_html = f"<div style='font-size: 13px; color: #333; margin-top: 5px; margin-bottom: 15px; font-family: sans-serif; line-height: 1.6; background: #f9f9f9; padding: 10px; border-left: 4px solid #4acbd6;'>"
+                stats_html += self.t['snr_stats_hours'].format(hours=hours_back, max=f"{hb_stats['max']:.1f}", min=f"{hb_stats['min']:.1f}", median=f"{hb_stats['median']:.1f}") + "<br>"
+                stats_html += self.t['median_7d'].format(days=ma_days, median=f"{median_xd:.1f}") + "<br><br>"
+                stats_html += self.t['stats_3m'].format(max=f"{m3_stats['max']:.1f}", min=f"{m3_stats['min']:.1f}", median=f"{m3_stats['median']:.1f}")
+                stats_html += "</div>"
+                html += f"<tr><td style='padding: 0 20px;'>{stats_html}</td></tr>"
             
         t_table = self.config.get('Charts', 'table_1', fallback='dsl')
         t_field = self.config.get('Charts', 'field_1', fallback='downstream_noise_margin')
