@@ -34,18 +34,18 @@ except ImportError:
 TRANSLATIONS = {
     'de': {
         'title': 'Router Statusreport',
-        'subject': 'Tägliche',
+        'subject': 'Täglicher',
         'conn_overview': 'Verbindungsübersicht vom',
         'from_date': 'vom',
         'unknown': 'unbekannt',
         'hours': 'Stunden',
         'minutes': 'Minuten',
         'days': 'Tagen',
-        'connected_since': '<b>Verbunden seit</b>',
+        'connected_since': 'Verbunden seit',
         'current': 'Aktuelle',
-        'data_rate_down': '<b>Datenrate</b> Down',
+        'data_rate_down': 'Datenrate Down',
         'up': 'Up',
-        'last_ip_change': '<b>IP-Wechsel vor</b>',
+        'last_ip_change': 'IP-Wechsel vor',
         'firmware': 'Firmware:',
         'last_reboot': 'Letzter Routerneustart vor',
         'fw_notice': 'Firmware Hinweis',
@@ -85,9 +85,9 @@ TRANSLATIONS = {
         'max_hourly_fluctuation': 'Max. stündliche Schwankung (Delta):',
         'lower_is_better': '(Je geringer, desto stabiler)',
         'no_data': 'Keine Daten',
-        'snr_stats_hours': '<b>{hours} Stunden</b> Maximalwert {max} Minimalwert {min} Median {median}',
+        'snr_stats_hours': '{hours} Stunden Maximalwert {max} Minimalwert {min} Median {median}',
         'median_7d': 'Median der letzten {days} Tage {median}',
-        'stats_3m': '<b>3 Monats</b> Maximalwert {max} Minimalwert {min} Median {median}'
+        'stats_3m': '3 Monats Maximalwert {max} Minimalwert {min} Median {median}'
     },
     'en': {
         'title': 'Router Status Report',
@@ -98,11 +98,11 @@ TRANSLATIONS = {
         'hours': 'hours',
         'minutes': 'minutes',
         'days': 'days',
-        'connected_since': '<b>Connected since</b>',
+        'connected_since': 'Connected since',
         'current': 'Current',
-        'data_rate_down': '<b>Data rate</b> Down',
+        'data_rate_down': 'Data rate Down',
         'up': 'Up',
-        'last_ip_change': '<b>IP change</b>',
+        'last_ip_change': 'IP change',
         'firmware': 'Firmware:',
         'last_reboot': 'Last router reboot',
         'fw_notice': 'Firmware Notice',
@@ -142,9 +142,9 @@ TRANSLATIONS = {
         'max_hourly_fluctuation': 'Max. hourly fluctuation (Delta):',
         'lower_is_better': '(Lower is more stable)',
         'no_data': 'No data',
-        'snr_stats_hours': '<b>{hours} hours</b> Maximum {max} Minimum {min} Median {median}',
+        'snr_stats_hours': '{hours} hours Maximum {max} Minimum {min} Median {median}',
         'median_7d': 'Median of the last {days} days {median}',
-        'stats_3m': '<b>3 months</b> Maximum {max} Minimum {min} Median {median}'
+        'stats_3m': '3 months Maximum {max} Minimum {min} Median {median}'
     }
 }
 # ---------------------------------------------------------------------------
@@ -1707,7 +1707,7 @@ class Reporter:
                 chg_time_ip4, prev_ip4 = self._get_last_ip_change(ip4, is_ipv6=False)
                 if chg_time_ip4 and prev_ip4:
                     diff = datetime.now() - datetime.fromtimestamp(chg_time_ip4)
-                    prev_ip4_str = f" &nbsp;&nbsp;&nbsp; {self.t['last_ip_change']} {diff.days} {self.t['days']} {diff.seconds // 3600} {self.t['hours']} ({prev_ip4})"
+                    prev_ip4_str = f" &nbsp;&nbsp;&nbsp; <b>{self.t['last_ip_change']}</b> {diff.days} {self.t['days']} {diff.seconds // 3600} {self.t['hours']} ({prev_ip4})"
 
             prev_ip6_str = ""
             if ip6:
@@ -1715,16 +1715,16 @@ class Reporter:
                 if chg_time_ip6 and prev_ip6:
                     diff = datetime.now() - datetime.fromtimestamp(chg_time_ip6)
                     short_prev_ip6 = ':'.join(prev_ip6.split(':')[:4]) + ':…' if len(prev_ip6.split(':')) > 4 else prev_ip6
-                    prev_ip6_str = f" &nbsp;&nbsp;&nbsp; {self.t['last_ip_change']} {diff.days} {self.t['days']} {diff.seconds // 3600} {self.t['hours']} ({short_prev_ip6})"
+                    prev_ip6_str = f" &nbsp;&nbsp;&nbsp; <b>{self.t['last_ip_change']}</b> {diff.days} {self.t['days']} {diff.seconds // 3600} {self.t['hours']} ({short_prev_ip6})"
 
             ipv4_str = f"IPv4 {ip4}{prev_ip4_str}" if ip4 else f"IPv4 {self.t['unknown']}"
             ipv6_str = f"IPv6 {ip6}{prev_ip6_str}" if ip6 else f"IPv6 {self.t['unknown']}"
             
-            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'>{self.t['connected_since']} {s_since}{time_diff_str}<br>{self.t['current']} {ipv4_str}<br>{self.t['current']} {ipv6_str}<br>{self.t['data_rate_down']} {s_down} {self.t['up']} {s_up}."
+            html += f"<tr><td style='padding: 20px; font-size: 13px; color: #333;'><b>{self.t['connected_since']}</b> {s_since}{time_diff_str}<br>{self.t['current']} {ipv4_str}<br>{self.t['current']} {ipv6_str}<br>{self.t['data_rate_down']} {s_down} {self.t['up']} {s_up}."
             
             if uptime_data:
                 u_days, u_hours = uptime_data
-                html += f"<br>{self.t['firmware']} {fw_act} {self.t['last_reboot']} {u_days} {self.t['days']} {u_hours} {self.t['hours']}"
+                html += f"<br><b>{self.t['firmware']}</b> {fw_act} <b>{self.t['last_reboot']}</b> {u_days} {self.t['days']} {u_hours} {self.t['hours']}"
                 
             html += "</td></tr>"
             
@@ -1901,8 +1901,8 @@ def main():
     parser.add_argument('--de', action='store_true', help='Report auf Deutsch')
     parser.add_argument('--en', action='store_true', help='Report auf Englisch')
     parser.add_argument('--update', action='store_true', help='Holt Daten via API und speichert sie')
-    parser.add_argument('--report-send', action='store_true', help='Generiert und versendet Report')
-    parser.add_argument('--report-show', action='store_true', help='Generiert HTML Report')
+    parser.add_argument('--report-send', '--send', action='store_true', help='Generiert und versendet Report')
+    parser.add_argument('--report-show', '--show', action='store_true', help='Generiert HTML Report')
     args = parser.parse_args()
 
     config_mgr = ConfigManager()
