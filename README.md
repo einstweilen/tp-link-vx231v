@@ -191,4 +191,6 @@ vx-info --OPTION
 
 ---
 
+> **AI-Transparenzhinweis**<br>ca. 90% des Code wurden per KI Gemini/DeepSeek erstellt, kleinere direkte Anpassungen erfolgten per Hand
+
 **Getestet unter MacOS und Debian/DietPi auf einem Raspberry Pi Zero 2W**
