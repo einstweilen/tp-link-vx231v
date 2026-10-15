@@ -1,4 +1,0 @@
-tplinkrouterc6u
-requests
-macaddress
-matplotlib

@@ -1,5 +1,33 @@
 ## Changelog / Updates
 
+### 15.10.2026
+
+* **Anpassung an die neue Router-Firmware (0.26.0 / Build 260908)**
+  * Der Router liefert DSL- und Clientdaten erst, nachdem die Weboberfläche sie angefragt hat - vorher kommen über die API dauerhaft leere Tabellen. Das Skript erkennt das, **weckt** die Tabellen einmal kurz per Browser-Besuch (nur die DSL-Seite) und liest danach erneut.
+  * Betroffen sind DSL-Werte, Client-Listen und die CRC-Fehlerzähler. Ohne Aufwecken bleiben die Werte leer - deshalb funktionierte die Sammlung nach dem Firmware-Update zunächst nicht.
+
+* **SNMP v3 statt v2c**
+  * Der Aufruf erfolgt jetzt mit **Benutzer-Authentifizierung (USM)**: `-v3 -l authNoPriv -u <Benutzer> -a MD5 -A <Passwort>`.
+  * In der `config.ini` ersetzt das Paar `snmpuser` / `snmppass` den bisherigen Community-String (`community`). Optional: `snmpauth`, `snmplevel`, `snmppriv`, `snmpprivproto`.
+  * Grund: Der Router kennt seit der Firmware-Umstellung keine Community-Strings mehr.
+
+* **API-Zugriff über HTTPS**
+  * Der Router verlangt HTTPS; über `http://` liefert er nur die Datenschutz-/Willkommensseite (Fehler „Unknown error rsa_key"). Das Skript spricht die API daher immer über `https://` an.
+
+* **Client-Erkennung robuster**
+  * Neue Client-Quelle per **lokalem ARP-Scan** (Ping-Sweep der eigenen Subnetze + ARP-Tabelle) - ohne SNMP und ohne Router-Login. Ist als Fallback aktiv, wenn Router- und SNMP-ARP-Liste leer sind; nutzt auch die in der Datenbank gelernten Hostnamen.
+  * SNMP-ARP bleibt die stabile Basis; API-Werte (Signalstärke, Raten, Byte-Zähler) reichern sie an.
+  * Lief die Client-Abfrage ins Leere, wurden bisher alle Clients als „offline" markiert - das verhindert das Skript jetzt.
+
+* **Sparsamer Umgang mit dem Browser**
+  * Pro Lauf wird nur noch **ein** Browser-Zugriff gestartet (Aufwecken und CRC-Nachlesen in einer Sitzung).
+  * Chromium lädt keine Bilder/Medien/Schriften mehr, Hintergrunddienste sind abgeschaltet; der Lauf startet mit niedriger Priorität (`nice`), damit z. B. ein Raspberry Pi bedienbar bleibt.
+  * Neue Schalter in der `config.ini`: `crc_source`, `warmup`, `wake_clients` (siehe [config.ini im Detail](config-details.md)).
+
+* **Statusreport**
+  * Der Firmware-Hinweis zeigt jetzt **alle** Versionen, die neuer sind als die installierte - nicht mehr nur die neueste. Beispiel: Beim Sprung von 0.24 auf 0.26 wird auch der notwendige Zwischenschritt 0.25 mit seinen Release Notes angezeigt.
+  * Wurde gerade aktualisiert, listet der Hinweis die Versionen seit dem vorherigen Stand (48 Stunden lang); bei einem ausstehenden Update steht zusätzlich „Online verfügbar" und die Reihenfolge der Updates.
+
 ### 22.03.2026
 
 * **KI-Analyse & Statusreport & Dokumentation**

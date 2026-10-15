@@ -37,9 +37,17 @@ Zentrale Steuerung für den KI/Leitungs-Analyseblock im Statusreport.
 
 ## [SNMP]
 
-Optionale Zugangsparameter für SNMP (Simple Network Management Protocol).
+Optionale Zugangsparameter für SNMP in der Version 3 (USM-Benutzerauthentifizierung).<br>
+Der Router muss dafür auf **SNMP v3** mit einem Benutzer umgestellt sein (siehe [Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)) - ein Community-String wie bei v2c gibt es dort nicht mehr.
 
-*   `community`: Das SNMP-Passwort bzw. der "Community String" (oft `public`).
+*   `snmpuser`: Der am Router angelegte SNMP-Benutzername.
+*   `snmppass`: Das zugehörige Authentifizierungs-Passwort.
+    *   **Nutzung:** Damit liest das Skript im `--update` die ARP-Tabelle des Routers aus (Client-Liste) und prüft, ob SNMP verfügbar ist. Beide Werte müssen exakt den Routerwerten entsprechen.
+*   *Optional:* `snmpauth` (Standard `MD5`, alternativ `SHA`) und `snmplevel` (Standard `authNoPriv`, alternativ `noAuthNoPriv`/`authPriv`).
+*   *Nur für `snmplevel = authPriv`:* `snmppriv` (Privacy-Passwort) und `snmpprivproto` (Standard `DES`, alternativ `AES`).
+
+> Hinweis: Das Passwort steht beim Aufruf in der Prozessliste (`ps`). Wer das vermeiden will, kann stattdessen `~/.snmp/snmp.conf` mit `defSecurityName`, `defAuthType`, `defAuthPassphrase` und `defSecurityLevel` nutzen.<br>
+> Fehlen `snmpuser`/`snmppass`, arbeitet das Skript weiter - Clients werden dann über die API bzw. den lokalen ARP-Scan im eigenen Netz ermittelt.
 
 ## [GUI]
 
@@ -47,7 +55,10 @@ Login-Daten für das reguläre TP-Link Web-Interface.
 
 *   `username` / `password`: Die Zugangsdaten, mit denen auch der Login im Router im Browser erfolgt.
     *   **Nutzung:** Das Skript nutzt entweder eine API oder einen headless Browser, um die Daten vom Router auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (`--update`) automatisch auf diesem Weg ermittelt.
-* `force_scraping` False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen. 
+* `force_scraping` False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen.
+*   `crc_source` (`gui` oder `aus`): Die DSL-Fehlerzähler (CRC) liefert nur die Weboberfläche, nicht die API. `gui` (Standard) liest sie bei jedem `--update` per kurzem Browser-Zugriff nach, `aus` überspringt das (Zähler bleiben `0`, der Lauf wird schneller).
+*   `warmup` (`auto` oder `aus`): Die aktuelle Router-Firmware füllt ihre DSL-/Client-Tabellen erst, nachdem die Weboberfläche sie angefragt hat - über die API kommen sonst leere Werte. `auto` (Standard) besucht in diesem Fall einmal kurz die Weboberfläche (Aufwecken) und liest danach erneut; `aus` verzichtet darauf.
+*   `wake_clients` (`an` oder `aus`): Beim Aufwecken standardmäßig nur die DSL-Seite öffnen (`aus`). `an` öffnet zusätzlich den Netzplan - das liefert die Clientdaten samt Signalstärke/Raten aus der API, braucht aber deutlich länger (auf einem Raspberry Pi spürbar). Ohne diesen Schritt kommen die Clients wie gehabt über SNMP/den lokalen ARP-Scan.
 
 ## [Email]
 

@@ -24,9 +24,11 @@ Ohne superadmin Account wechselt das Skript **automatisch** zurück in den API M
 ## Funktionen
 
 ### 1. Abfrage der Routerdaten via Telnet, SNMP, API und Web-Scraping
-Das Skript nutzt bei aktiviertem **superadmin Account** Telnet und SNMP für den primären Abruf von Systemzuständen und DSL-Werten.
+Das Skript nutzt bei aktiviertem **superadmin Account** Telnet und SNMP (Version 3, Benutzer-Authentifizierung) für den primären Abruf von Systemzuständen, DSL-Werten und der Client-Liste (ARP-Tabelle des Routers).
 Für Daten, die über diese Schnittstellen nicht zugänglich sind, erfolgt ein automatisierter Login in die Weboberfläche mithilfe der API und wenn dieses auch nicht zur Verfügung steht Playwright.
 Ist der **superadmin Account** nicht aktiviert, erfolgt der Datenabruf automatisch ausschließlich über die API und Web-Scraping des Routerinterface.
+
+> **Neu mit der Router-Firmware 0.26.0:** Die API liefert DSL- und Clientdaten erst, nachdem die Weboberfläche sie angefragt hat. Das Skript erkennt leere Tabellen, weckt sie einmal kurz über die Weboberfläche (nur die DSL-Seite, per `warmup = auto`) und liest danach erneut - sonst bleiben die Werte leer. Die DSL-Fehlerzähler (CRC) gibt es weiterhin nur in der Oberfläche (`crc_source = gui`). Für die Client-Liste gibt es zusätzlich einen **lokalen ARP-Scan** (`arp_scan.py`, Ping-Sweep + ARP-Tabelle) als Ausweichweg ohne SNMP und ohne Router-Login.
 
 
 ### 2. Routerclients
@@ -73,7 +75,7 @@ curl -sL https://raw.githubusercontent.com/einstweilen/tp-link-vx231v/main/insta
 
 Hauptskript `vx-info.py` mit folgenden Aufrufparametern:
 
-*   `--update`: Fragt grundlegende Daten (Systemstatus, DSL-Werte, Client-Liste) primär über Telnet/SNMP ab und speichert sie in der Datenbank. Sind Telnet/SNMP nicht verfügbar, wird die API oder das Web-Scraping-Interface genutzt.
+*   `--update`: Fragt grundlegende Daten (Systemstatus, DSL-Werte, Client-Liste) primär über Telnet/SNMP ab und speichert sie in der Datenbank. Sind Telnet/SNMP nicht verfügbar, wird die API oder das Web-Scraping-Interface genutzt. Für die Client-Liste dient die SNMP-ARP-Tabelle als stabile Basis, ergänzt um die Werte der API (Signalstärke, Raten, Byte-Zähler); fehlt beides, werden die Geräte per lokalem ARP-Scan im eigenen Netz ermittelt.
 <br>
 *   `--log`: Lädt das vollständige Systemprotokoll ("Logbuch") des Routers via API und Web-Scraping herunter und importiert neue Ereignisse (wie DHCP/Mesh). Häufig in Kombination mit `--update` genutzt.
 <br>

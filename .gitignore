@@ -38,3 +38,8 @@ nogit*
 # Tools und externe Skripte
 update_clients.sh
 vx_status_snmp.8s.sh
+
+# Reasonix (KI-Assistenz) - lokale Sitzungsdateien nicht veröffentlichen
+.reasonix/
+reasonix.toml
+ai_prompt_debug.txt

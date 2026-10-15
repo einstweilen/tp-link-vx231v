@@ -37,7 +37,14 @@ You should now see three additional sub menus
 </details>
 
 * Go to **SNMP Settings** and enable the SNMP Agent. But make sure to disable it for WAN.
-Set your Community Strings for Read-only and Write access.
+
+* Create an **SNMP v3 user** and note its access rights and authentication data:
+  * Access rights: **read-only**
+  * Security level: **authNoPriv** (authenticated, without encryption)
+  * Authentication: **MD5** with a passphrase of your choice
+
+  Community strings (v2c) are no longer supported by the current firmware. The tracker reads the
+  credentials from the `[SNMP]` section of the `config.ini` (`snmpuser` / `snmppass`).
 
 * Go to the **Administration** menu, select the standard user from the dropdown, and set a login password.<details>
   <img src="images/account-00.jpg" alt="SNMP Settings Screenshot" width="800">

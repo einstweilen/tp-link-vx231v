@@ -2,7 +2,7 @@
 
 **Version:** 1.1  
 **Device:** TP-Link VX231v (FW 231.0.19)  
-**Protocol:** SNMP v2c  
+**Protocol:** SNMP v3 (USM, Standard: Sicherheitsstufe authNoPriv, Authentifizierung MD5)  
 
 ---
 
@@ -10,20 +10,32 @@
 This is a very basic introduction to [SNMP](https://www.wikipedia.org/wiki/Simple_Network_Management_Protocol) and a collection of some useful [OIDs](https://www.rfc-editor.org/rfc/rfc4293.html).<br>It is mainly based on a standard SNMPwalk, some OIDs are missing as enterprise-specific MIBs are restricted by the firmware.
 
 ### Used variables in this document
-**$COMMUNITY** your read-only password (default 'public')
+**$SNMP_USER** the SNMP user created on the router (free choice)
+
+**$SNMP_PASS** its authentication passphrase
 
 **$IP** the IP auf your router (default '192.168.1.1')
 
+The SNMP v3 options are defined once and then used in every call (a shell array keeps
+special characters in the passphrase intact):
+
+```bash
+SNMP_OPTS=(-v3 -l authNoPriv -u "$SNMP_USER" -a MD5 -A "$SNMP_PASS")
+```
+Instead of passing the passphrase on the command line, it can also be stored in
+`~/.snmp/snmp.conf` (`defSecurityName`, `defAuthType`, `defAuthPassphrase`, `defSecurityLevel`) -
+then the options can be left out completely.
+
 **snmpwalk** lists 363 OIDs for the VX231v<br>
-`snmpwalk -v2c -c "$COMMUNITY" "$IP" .1`
+`snmpwalk "${SNMP_OPTS[@]}" "$IP" .1`
 <br>
 
 ### How to access a specfic OID<br>
 
 Either symbolic OID e.g. 'SNMPv2-MIB::sysName.0'<br>
-snmpget -v2c -c "$COMMUNITY" "$IP" SNMPv2-MIB::sysName.0<br>
+snmpget "${SNMP_OPTS[@]}" "$IP" SNMPv2-MIB::sysName.0<br>
 or numeric OID e.g. '.1.3.6.1.2.1.1.5.0'<br>
-snmpget -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.1.5.0<br>
+snmpget "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.1.5.0<br>
 
 
 Use SNMP flags to format command output<br>
@@ -36,13 +48,13 @@ Use SNMP flags to format command output<br>
 1.3.6.1.2.1.1.5.0 | SNMPv2-MIB::sysName.0
 <br>
 
-snmpget -v2c -c "$COMMUNITY" "$IP" 1.3.6.1.2.1.1.5.0<br>
+snmpget "${SNMP_OPTS[@]}" "$IP" 1.3.6.1.2.1.1.5.0<br>
 OUTPUT: SNMPv2-MIB::sysName.0 = STRING: VX231v
 
-snmpget -v2c -c "$COMMUNITY" **-Ov** "$IP" 1.3.6.1.2.1.1.5.0<br>
+snmpget "${SNMP_OPTS[@]}" **-Ov** "$IP" 1.3.6.1.2.1.1.5.0<br>
 OUTPUT: STRING: VX231v
 
-snmpget -v2c -c "$COMMUNITY" **-Ovq** "$IP" 1.3.6.1.2.1.1.5.0<br>
+snmpget "${SNMP_OPTS[@]}" **-Ovq** "$IP" 1.3.6.1.2.1.1.5.0<br>
 OUTPUT: VX231v
 
 ---
@@ -50,7 +62,7 @@ OUTPUT: VX231v
 ## 2. Interface Mapping (ifIndex)
 Use the **ifIndex** for granular traffic analysis:
 
-snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.2.2.1.2
+snmpwalk "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.2.2.1.2
 
 | Index | Interface Name | Description |
 | :--- | :--- | :--- |
@@ -68,7 +80,7 @@ snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.2.2.1.2
 ### 3.1 Bandwidth & Traffic
 
 ip4 ipAdEntIfIndex<br>
-snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.4.20.1.2
+snmpwalk "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.4.20.1.2
 
 | OID (numeric) | OID (symbolic)
 | :--- | :--- |
@@ -104,9 +116,9 @@ snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.4.20.1.2
 
  ```
  oid=".1.3.6.1.2.1.7.3.0" # Faulty UDP packets
- a=$(snmpget -v2c -c "$COMMUNITY" -Ovq "$IP" "$oid")
+ a=$(snmpget "${SNMP_OPTS[@]}" -Ovq "$IP" "$oid")
  sleep 60
- b=$(snmpget -v2c -c "$COMMUNITY" -Ovq "$IP" "$oid")
+ b=$(snmpget "${SNMP_OPTS[@]}" -Ovq "$IP" "$oid")
  echo "Faulty UDP packets $((b-a))/min"
  ```
  
@@ -122,17 +134,17 @@ snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.4.20.1.2
 This OID maps IP addresses to physical MAC addresses for all devices in the ARP cache.
 
 oid='.1.3.6.1.2.1.4.22.1.2' # ipNetToMediaPhysAddress<br>
-snmpwalk -v2c -c "$COMMUNITY" "$IP" "$oid"
+snmpwalk "${SNMP_OPTS[@]}" "$IP" "$oid"
 
  ```
-IP-MIB::ipNetToMediaPhysAddress.19.192.168.178.152 = STRING: b8:27:eb:8e:7f:39
-IP-MIB::ipNetToMediaPhysAddress.19.192.168.178.153 = STRING: e4:5f:1:58:7:fd
-IP-MIB::ipNetToMediaPhysAddress.19.192.168.178.176 = STRING: 70:4f:57:51:c4:30
-IP-MIB::ipNetToMediaPhysAddress.19.192.168.178.190 = STRING: ee:90:2:43:ad:36
+IP-MIB::ipNetToMediaPhysAddress.19.192.168.1.52  = STRING: b8:27:eb:8e:ca:fe
+IP-MIB::ipNetToMediaPhysAddress.19.192.168.1.53  = STRING: e4:5f:1:58:ca:fe
+IP-MIB::ipNetToMediaPhysAddress.19.192.168.1.76  = STRING: 70:4f:57:51:ca:fe
+IP-MIB::ipNetToMediaPhysAddress.19.192.168.1.90  = STRING: ee:90:2:43:ca:fe
  ```
 
 ### 4.3 Listening Ports
-Nmap scan report for 192.168.178.1
+Nmap scan report for 192.168.1.1
 
  ```
 PORT    STATE         SERVICE
@@ -152,11 +164,11 @@ MAC Address: 3C:64:CF:ED:CA:FE (TP-Link PTE.)
 ## 5. Misc. information
 ```
 Firware Version
-> snmpget -v2c -c 'public' 192.168.1.1 1.3.6.1.2.1.1.1.0
+> snmpget "${SNMP_OPTS[@]}" 192.168.1.1 1.3.6.1.2.1.1.1.0
 SNMPv2-MIB::sysDescr.0 = STRING: 231.0.19
 
 Uptime
-> snmpget -v2c -c 'public' 192.168.1.1 1.3.6.1.2.1.1.3.0
+> snmpget "${SNMP_OPTS[@]}" 192.168.1.1 1.3.6.1.2.1.1.3.0
 DISMAN-EVENT-MIB::sysUpTimeInstance = Timeticks: (2228800) 6:11:28.00
 ```
 

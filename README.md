@@ -61,7 +61,7 @@ Die Expressvariante ist ideal für Nutzer, die nur einen täglichen Statusberich
 Wer tiefer in die Konfiguration einsteigen möchte, sieht sich die [große Lösung VX-Info Tracker](vx-info.md) an.<br>
 Beide Varianten nutzen die gleiche Datenstruktur, ein Wechsel ist jederzeit möglich, bereits erfaßte Daten lassen sich weiterverwenden.
 <br>
-Bei der Expressvariante wird nur die Datenerfassung per Third-Party-API unterstützt, wenn die z.B. nach einem Firmware Update nicht mehr funktionieren sollte, kann man auf die große Lösung wechseln, die die Daten auch per Scraping der Routeroberfläche und optional auch per SNMP/Telnet erfassen kann und automatisch immer die schnellste verfügbare Methode nutzt.
+Die Expressvariante nutzt primär die Third-Party-API und ergänzt sie um einen lokalen ARP-Scan für die Client-Liste sowie - nur bei Bedarf - um die Weboberfläche (Headless-Browser) für Daten, die die API nicht liefert.<br>Sollte das nach einem Firmware Update nicht mehr funktionieren, kann man auf die große Lösung wechseln, die zusätzlich per Scraping der Routeroberfläche und optional per SNMP/Telnet erfasst und automatisch immer die schnellste verfügbare Methode nutzt.
 
 [Zur Installationsanleitung: TP-Link Report](tp-report/tp-report-setup-guide.md)
 
@@ -70,7 +70,7 @@ Bei der Expressvariante wird nur die Datenerfassung per Third-Party-API unterst�
 ### 3. Große Lösung: [Router Monitoring: VX-Info Tracker](vx-info.md)
 Ein Set aus Python-Skripten (`vx-info.py`) zur automatisierten Erfassung und Darstellung der Routerdaten.
 **Inhalte:**
-* Datenabruf von DSL-Werten und der verbundenen Clients via API, Web-Scraping und optional SNMP, Telnet
+* Datenabruf von DSL-Werten und der verbundenen Clients via API, Web-Scraping und optional SNMP (Version 3), Telnet
 * Speicherung der Daten in einer Datenbank
 * Automatisierte Generierung von HTML-Statusreports
   <details>
