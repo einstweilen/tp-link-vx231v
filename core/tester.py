@@ -2,6 +2,9 @@ import sys
 import shutil
 import subprocess
 
+from core.snmp import SnmpConfig, SnmpConfigError
+
+
 def print_result(label, success, results=None):
     icon = "✓" if success else "✗"
     line = f"  {icon}  {label}"
@@ -84,6 +87,15 @@ def run_tests(config, debug=False):
         print_result("playwright chromium installiert", pw_chromium_installed, test_report)
         print_result("GUI Zugangsdaten in der Config", has_gui_creds, test_report)
         print_result("Login in Routerweboberfläche erfolgreich", gui_login_ok, test_report)
+        if not pw_installed:
+            log("     Hinweis: virtuelle Umgebung aktivieren (source .venv/bin/activate)"
+                " und 'pip install -r requirements.txt' ausführen.")
+        elif not pw_chromium_installed:
+            log("     Hinweis: Browser fehlt -> 'playwright install chromium' ausführen.")
+        elif has_gui_creds and not gui_login_ok:
+            log("     Hinweis: Details stehen in logs/error_*.txt. Meldet der Router"
+                " 'admin account has logged in', ist noch eine Admin-Sitzung aktiv"
+                " -> im Browser abmelden und Test wiederholen.")
 
     # --- API Client ---
     log("\nAPI Konfiguration")
@@ -147,7 +159,7 @@ def run_tests(config, debug=False):
                 ip=config.get('Router', 'routerip', fallback='192.168.1.1'),
                 username=telnet_user,
                 password=telnet_pass,
-                community=config.get('SNMP', 'community', fallback=''),
+                snmp_config=SnmpConfig.from_config(config),
                 debug=debug
             )
             if client.login():
@@ -172,29 +184,31 @@ def run_tests(config, debug=False):
     snmpget_cmd = shutil.which('snmpget') is not None
     snmpwalk_cmd = shutil.which('snmpwalk') is not None
     snmp_cmd_ok = snmpget_cmd and snmpwalk_cmd
-    
-    try:
-        snmp_community = config.get('SNMP', 'community', fallback='')
-    except Exception:
-        if debug:
-            import traceback
-            traceback.print_exc()
-        snmp_community = ''
 
-    has_snmp_creds = bool(snmp_community)
+    snmp_cfg = SnmpConfig.from_config(config)
+    has_snmp_creds = not snmp_cfg.missing()
     snmp_access_ok = False
-    
+
     if snmp_cmd_ok and has_snmp_creds:
-        ip = config.get('Router', 'routerip', fallback='192.168.1.1')
-        cmd = ["snmpget", "-v2c", "-c", snmp_community, ip, "1.3.6.1.2.1.1.1.0"]
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
-            if proc.returncode == 0:
-                snmp_access_ok = True
-        except Exception as e:
-            if debug:
-                print(f"snmpget error: {e}")
-            pass
+            cmd = snmp_cfg.argv("snmpget", "1.3.6.1.2.1.1.1.0")
+        except SnmpConfigError as e:
+            cmd = None
+            print(f"SNMP: {e}")
+        if cmd:
+            try:
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+                if proc.returncode == 0:
+                    snmp_access_ok = True
+            except Exception as e:
+                if debug:
+                    print(f"snmpget error: {e}")
+                pass
+    elif not has_snmp_creds:
+        try:
+            snmp_cfg.validate()
+        except SnmpConfigError as e:
+            print(f"SNMP: {e}")
 
     if snmp_access_ok:
         print_result("snmp Zugriff erfolgreich", True, test_report)

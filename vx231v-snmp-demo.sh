@@ -1,10 +1,16 @@
 #!/bin/bash
 
-IP="192.168.1.1"   # router ip
-COMMUNITY="public" # SNMP community string
-INTERVAL=5         # traffic data sample interval in seconds
-MAX_32=4294967296  # 32 bit max. numbers of bytes befor tilt to 0
-IF_INDEX=52        # nas9
+IP="192.168.1.1"        # router ip
+SNMP_USER="DEIN_SNMP_BENUTZER" # SNMP v3 user (frei waehlbar, muss dem Routerwert entsprechen)
+SNMP_PASS="DEIN_SNMP_PASSWORT" # SNMP v3 auth passphrase
+SNMP_AUTH="MD5"         # authentication protocol: MD5 or SHA
+SNMP_LEVEL="authNoPriv" # security level: authNoPriv, noAuthNoPriv or authPriv
+INTERVAL=5              # traffic data sample interval in seconds
+MAX_32=4294967296       # 32 bit max. numbers of bytes befor tilt to 0
+IF_INDEX=52             # nas9
+
+# SNMP v3 options (defined once, replace the old v2c community parameter)
+SNMP_OPTS=(-v3 -l "$SNMP_LEVEL" -u "$SNMP_USER" -a "$SNMP_AUTH" -A "$SNMP_PASS")
 
 OID_IN=".1.3.6.1.2.1.2.2.1.10.$IF_INDEX"   # ifInOctets
 OID_OUT=".1.3.6.1.2.1.2.2.1.16.$IF_INDEX"  # ifOutOctets
@@ -13,13 +19,13 @@ OID_OUT=".1.3.6.1.2.1.2.2.1.16.$IF_INDEX"  # ifOutOctets
 # -Ov	Output values only (hides OID).
 # -Oq	Quick format (removes "=" and data type)
 #
-# snmpget -v2c -c "$COMMUNITY" "$IP" 1.3.6.1.2.1.1.5.0
+# snmpget "${SNMP_OPTS[@]}" "$IP" 1.3.6.1.2.1.1.5.0
 # OUTPUT: SNMPv2-MIB::sysName.0 = STRING: VX231v
 #
-# snmpget -v2c -c "$COMMUNITY" -Ov "$IP" 1.3.6.1.2.1.1.5.0
+# snmpget "${SNMP_OPTS[@]}" -Ov "$IP" 1.3.6.1.2.1.1.5.0
 # OUTPUT: STRING: VX231v
 #
-# snmpget -v2c -c "$COMMUNITY" -Ovq "$IP" 1.3.6.1.2.1.1.5.0
+# snmpget "${SNMP_OPTS[@]}" -Ovq "$IP" 1.3.6.1.2.1.1.5.0
 # OUTPUT: VX231v
 
 echo
@@ -27,23 +33,23 @@ echo "TP-Link VX231v SNMP Demo"
 echo
 
 # --- router data ---
-echo "Router Name      : $(snmpget -v2c -c "$COMMUNITY" -Ovq "$IP" 1.3.6.1.2.1.1.5.0)"
-echo "Firmware Version : $(snmpget -v2c -c "$COMMUNITY" -Ovq $IP 1.3.6.1.2.1.1.1.0)"
-echo "Uptime d:hh:mm:ss: $(snmpget -v2c -c "$COMMUNITY" -Ovq $IP 1.3.6.1.2.1.1.3.0)"
+echo "Router Name      : $(snmpget "${SNMP_OPTS[@]}" -Ovq "$IP" 1.3.6.1.2.1.1.5.0)"
+echo "Firmware Version : $(snmpget "${SNMP_OPTS[@]}" -Ovq $IP 1.3.6.1.2.1.1.1.0)"
+echo "Uptime d:hh:mm:ss: $(snmpget "${SNMP_OPTS[@]}" -Ovq $IP 1.3.6.1.2.1.1.3.0)"
 echo
 
 # --- Link status & external IP address ---
 #    check if connected to the internet
 
 # Retrieve all router IPs, excluding loopback and private address ranges
-EXT_IP=$(snmpwalk -v 2c -c "$COMMUNITY" -Ovq  "$IP" .1.3.6.1.2.1.4.20.1.1 2>/dev/null | awk '!/127\.|192\.168\.|10\.|172\.16\./')
+EXT_IP=$(snmpwalk "${SNMP_OPTS[@]}" -Ovq  "$IP" .1.3.6.1.2.1.4.20.1.1 2>/dev/null | awk '!/127\.|192\.168\.|10\.|172\.16\./')
 
 # Check if the external IP list is not empty
 if [ -n "$EXT_IP" ];  then
     echo "ONLINE: external IP $EXT_IP"
 else
     # Check if physical DSL Link is up
-    if snmpget -v 2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.2.2.1.8.14 2>/dev/null | grep -q "up"; then
+    if snmpget "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.2.2.1.8.14 2>/dev/null | grep -q "up"; then
         echo "OFFLINE: DSL sync established, but PPPoE login failed"
     else
         echo "OFFLINE: No DSL sync, link completely down"
@@ -54,12 +60,12 @@ fi
 # --- Dynamic Interface IP Discovery ---
 # Identify LAN_IP via ifIndex 19 and GUEST_IP via ifIndex 38
 # Walk ipAdEntIfIndex (.1.3.6.1.2.1.4.20.1.2) to extract the IP suffix
-  LAN_IP=$(snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.4.20.1.2 | grep ": 19$" | awk -F'ipAdEntIfIndex.' '{print $2}' | awk '{print $1}')
-GUEST_IP=$(snmpwalk -v2c -c "$COMMUNITY" "$IP" .1.3.6.1.2.1.4.20.1.2 | grep ": 38$" | awk -F'ipAdEntIfIndex.' '{print $2}' | awk '{print $1}')
+  LAN_IP=$(snmpwalk "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.4.20.1.2 | grep ": 19$" | awk -F'ipAdEntIfIndex.' '{print $2}' | awk '{print $1}')
+GUEST_IP=$(snmpwalk "${SNMP_OPTS[@]}" "$IP" .1.3.6.1.2.1.4.20.1.2 | grep ": 38$" | awk -F'ipAdEntIfIndex.' '{print $2}' | awk '{print $1}')
 
 # Fetch subnet masks using the discovered IP addresses
-  LAN_MASK=$(snmpget -v2c -c "$COMMUNITY" -Oqv "$IP" .1.3.6.1.2.1.4.20.1.3."$LAN_IP")
-GUEST_MASK=$(snmpget -v2c -c "$COMMUNITY" -Oqv "$IP" .1.3.6.1.2.1.4.20.1.3."$GUEST_IP")
+  LAN_MASK=$(snmpget "${SNMP_OPTS[@]}" -Oqv "$IP" .1.3.6.1.2.1.4.20.1.3."$LAN_IP")
+GUEST_MASK=$(snmpget "${SNMP_OPTS[@]}" -Oqv "$IP" .1.3.6.1.2.1.4.20.1.3."$GUEST_IP")
 
 # --- Network Ranges ---
 echo "--- Networks ---"
@@ -71,7 +77,7 @@ echo "Guest Network: $GUEST_IP / $GUEST_MASK"
 if [ -n "$EXT_IP" ];  then
   # Retrieve Counter32 values for ingress and egress traffic
   get_traffic() {
-    snmpget -v2c -c "$COMMUNITY" -Oqv "$IP" "$OID_IN" "$OID_OUT" | tr '\n' ' '
+    snmpget "${SNMP_OPTS[@]}" -Oqv "$IP" "$OID_IN" "$OID_OUT" | tr '\n' ' '
   }
 
   echo -e "\n--- Live Internet Traffic  ---"
@@ -96,8 +102,8 @@ fi
 # Dynamic walk of ipNetToMediaTable to map IP to MAC
 echo -e "\n--- Connected Clients ---"
 printf "%-15s | %-17s\n" "IP-Address" "MAC-Address"
- ips=($(snmpwalk -v2c -c "$COMMUNITY" -Ovq "$IP" .1.3.6.1.2.1.4.22.1.3))
-macs=($(snmpwalk -v2c -c "$COMMUNITY" -Ovq "$IP" .1.3.6.1.2.1.4.22.1.2))
+ ips=($(snmpwalk "${SNMP_OPTS[@]}" -Ovq "$IP" .1.3.6.1.2.1.4.22.1.3))
+macs=($(snmpwalk "${SNMP_OPTS[@]}" -Ovq "$IP" .1.3.6.1.2.1.4.22.1.2))
 
 for i in "${!ips[@]}"; do
     printf "%-15s | %-17s\n" "${ips[$i]}" "${macs[$i]}"

@@ -3,18 +3,28 @@ import socket
 import time
 from datetime import datetime
 from core.database import DatabaseManager
+from core.snmp import SnmpConfig, SnmpConfigError
 
 
 class TPLinkVX231vTelnet:
 
-    def __init__(self, ip, username, password, community, debug=False):
+    def __init__(self, ip, username, password, snmp_config=None, debug=False):
         self.ip = ip
         self.username = username
         self.password = password
-        self.community = community
+        # SNMP v3 (USM): Werte kommen aus der config.ini, nicht aus dem Code
+        self.snmp = snmp_config if snmp_config is not None else SnmpConfig(ip=ip)
         self.debug = debug
         self.sock = None
         self.prompt_pattern = re.compile(r'TP-Link.*#')
+        self._snmp_config_reported = False
+
+    def _report_snmp_config_error(self, error):
+        """Meldet fehlende/unzulässige SNMP-v3-Angaben einmal pro Lauf deutlich."""
+        self._log(f"SNMP nicht nutzbar: {error}")
+        if not self._snmp_config_reported:
+            self._snmp_config_reported = True
+            print(f"SNMP: {error}")
 
     def check_services(self):
         import subprocess
@@ -26,7 +36,11 @@ class TPLinkVX231vTelnet:
             telnet_enabled = False
 
         snmp_enabled = False
-        cmd = ["snmpget", "-v2c", "-c", self.community, self.ip, "1.3.6.1.2.1.1.1.0"]
+        try:
+            cmd = self.snmp.argv("snmpget", "1.3.6.1.2.1.1.1.0")
+        except SnmpConfigError as e:
+            self._report_snmp_config_error(e)
+            return telnet_enabled, snmp_enabled
         try:
             proc = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
             if proc.returncode == 0:
@@ -39,7 +53,11 @@ class TPLinkVX231vTelnet:
     def get_snmp_uptime(self):
         import subprocess
         try:
-            cmd = ["snmpget", "-v2c", "-c", self.community, "-Ovq", self.ip, "1.3.6.1.2.1.1.3.0"]
+            cmd = self.snmp.argv("snmpget", "1.3.6.1.2.1.1.3.0", output_opts=("-Ovq",))
+        except SnmpConfigError as e:
+            self._report_snmp_config_error(e)
+            return None
+        try:
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if res.returncode == 0:
                 output = res.stdout.strip()
@@ -163,15 +181,23 @@ class TPLinkVX231vTelnet:
         dsl_dict.update({'ip4_curr': ip4, 'ip6_curr': self._parse_block("lan show info").get('IPv6Address', '')})
         return dsl_dict
 
-    def get_clients(self, db_manager=None):
+    def get_arp_clients(self, db_manager=None):
+        """Client-Liste aus der SNMP-ARP-Tabelle (ipNetToMediaTable).
+
+        Stabile Quelle: liefert auch dann Clients, wenn die WLAN-/Mesh-Tabellen
+        des Routers leer sind (die API/Weboberfläche liefert dann nichts).
+        """
         import subprocess
-        self._log("Starte Client-Erfassung (SNMP)...")
-        system_info = self.get_system_data()
-        clients_wlan = []
-        cmd = ["snmpwalk", "-v2c", "-c", self.community, "-Ox", self.ip, "1.3.6.1.2.1.4.22.1.2"]
+        clients = []
+        cmd = None
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-            if proc.returncode == 0:
+            cmd = self.snmp.argv("snmpwalk", "1.3.6.1.2.1.4.22.1.2", output_opts=("-Ox",))
+        except SnmpConfigError as e:
+            self._report_snmp_config_error(e)
+
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5) if cmd else None
+            if proc is not None and proc.returncode == 0:
                 for line in proc.stdout.strip().split('\n'):
                     if "=" not in line: continue
                     oid_part, val_part = line.split("=")
@@ -188,12 +214,18 @@ class TPLinkVX231vTelnet:
                                 name = socket.gethostbyaddr(ip)[0]
                             except:
                                 name = "Unknown"
-                        clients_wlan.append({'mac': mac, 'hostname': name, 'ip': ip, 'is_connected': 1,
-                                             'signal_strength': 0, 'wifi_standard': 'SNMP-ARP',
-                                             'download_rate_mbps': 0, 'upload_rate_mbps': 0, 'bytes_total': 0})
+                        clients.append({'mac': mac, 'hostname': name, 'ip': ip, 'is_connected': 1,
+                                        'signal_strength': 0, 'wifi_standard': 'SNMP-ARP',
+                                        'download_rate_mbps': 0, 'upload_rate_mbps': 0, 'bytes_total': 0})
         except Exception as e:
             self._log(f"SNMP-Fehler: {e}")
 
+        return clients
+
+    def get_clients(self, db_manager=None):
+        self._log("Starte Client-Erfassung (SNMP v3/ARP)...")
+        system_info = self.get_system_data()
+        clients_wlan = self.get_arp_clients(db_manager=db_manager)
         return {'timestamp': time.time(), 'system': system_info, 'wlan': clients_wlan, 'lan': []}
 
     def downloadrouterlog_to_memory(self):

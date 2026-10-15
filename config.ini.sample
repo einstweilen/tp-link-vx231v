@@ -15,8 +15,23 @@ username = DEIN_TELNET_BENUTZER
 password = DEIN_TELNET_PASSWORT
 
 [SNMP]
-# SNMP Community String (Standard oft 'public' oder modellspezifisch)
-community = DEIN_SNMP_COMMUNITY_STRING
+# SNMP v3 (USM) - Zugangsdaten des am Router angelegten SNMP-Benutzers
+# Benutzername (frei wählbar, muss exakt dem Routerwert entsprechen)
+snmpuser = DEIN_SNMP_BENUTZER
+# Authentifizierungs-Passwort (muss exakt dem Routerwert entsprechen)
+snmppass = DEIN_SNMP_PASSWORT
+# Authentifizierungsprotokoll: MD5 oder SHA (Voreinstellung: MD5)
+#snmpauth = MD5
+# Sicherheitsstufe: authNoPriv, noAuthNoPriv oder authPriv (Voreinstellung: authNoPriv)
+#snmplevel = authNoPriv
+# Nur bei snmplevel = authPriv erforderlich (sonst "ohne Privacy"):
+# Privacy-Passwort und Privacy-Protokoll: DES oder AES (Voreinstellung: DES)
+#snmppriv = DEIN_SNMP_PRIVACY_PASSWORT
+#snmpprivproto = DES
+#
+# Hinweis: Das Passwort steht in der Prozessliste (ps). Sicherer ist eine
+# Datei ~/.snmp/snmp.conf mit defSecurityName, defAuthType, defAuthPassphrase
+# und defSecurityLevel - die Passphrase steht dann nicht auf der Kommandozeile.
 
 [GUI]
 # Benutzername für das Web-Interface des Routers
@@ -25,6 +40,15 @@ username = DEIN_ROUTER_BENUTZER
 password = DEIN_ROUTER_PASSWORT
 # normalerweise wird zuerst die API genutzt, falls das fehlschlägt wird Playwright verwendet
 force_scraping = False # True => Playwright GUI Scraping statt API verwenden
+# Die DSL-Fehlerzähler (UCRC/DCRC) liefert nur die Weboberfläche, nicht die API/JSON-Seite.
+# gui = diese zwei Werte per kurzem Browser-Zugriff nachlesen (Standard)
+# aus = nicht nachlesen; --update/--gui laufen dann komplett ohne Browser (Zähler bleiben 0)
+crc_source = gui
+# Die Firmware ab 09/2026 füllt DSL-/Client-Tabellen erst, wenn die Weboberfläche sie
+# angefragt hat (die JSON-/API-Seite liefert sonst dauerhaft leer).
+# auto = nur bei leeren Daten einmal die Weboberfläche besuchen (Standard)
+# aus  = nie aufwecken
+warmup = auto
 
 [Email]
 # Postausgangsserver (SMTP) für den Report-Versand

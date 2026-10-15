@@ -2,10 +2,17 @@ import time
 import subprocess
 import re
 
-# Configuration
+# Configuration (SNMP v3 / USM)
 ROUTER_IP = "192.168.1.1"
-COMMUNITY = "public"
+SNMP_USER = "DEIN_SNMP_BENUTZER"   # frei waehlbar, muss dem Routerwert entsprechen
+SNMP_PASS = "DEIN_SNMP_PASSWORT"   # Authentifizierungs-Passphrase
+SNMP_AUTH = "MD5"                  # MD5 oder SHA
+SNMP_LEVEL = "authNoPriv"          # authNoPriv, noAuthNoPriv oder authPriv
 WAN_INDEX = "52"
+
+# Net-SNMP-Optionen fuer SNMP v3: als Liste uebergeben, damit Leerzeichen und
+# Sonderzeichen in Benutzer/Passphrase unproblematisch bleiben
+SNMP_OPTS = ["-v3", "-l", SNMP_LEVEL, "-u", SNMP_USER, "-a", SNMP_AUTH, "-A", SNMP_PASS]
 
 # OIDs
 OID_ARP_TABLE = "1.3.6.1.2.1.4.22.1.2"  # ipNetToMediaPhysAddress
@@ -15,7 +22,7 @@ OID_OUT_OCTETS = f"1.3.6.1.2.1.2.2.1.16.{WAN_INDEX}"
 
 def get_snmp_counter(oid):
     """Fetches a single SNMP counter value."""
-    cmd = ["snmpget", "-v2c", "-c", COMMUNITY, ROUTER_IP, oid]
+    cmd = ["snmpget", *SNMP_OPTS, ROUTER_IP, oid]
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
         match = re.findall(r'\d+', res.stdout.strip())
@@ -30,7 +37,7 @@ def show_arp_table():
     print("-" * 36)
 
     # -Ox forces hex format for the MAC address
-    cmd = ["snmpwalk", "-v2c", "-c", COMMUNITY, "-Ox", ROUTER_IP, OID_ARP_TABLE]
+    cmd = ["snmpwalk", *SNMP_OPTS, "-Ox", ROUTER_IP, OID_ARP_TABLE]
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
         if res.returncode != 0:
@@ -79,7 +86,7 @@ last = get_snmp_counter(OID_IN_OCTETS)
 last_out = get_snmp_counter(OID_OUT_OCTETS)
 
 if last is None or last_out is None:
-    print("Error: Could not retrieve SNMP data. Please check IP and Community string.")
+    print("Error: Could not retrieve SNMP data. Please check IP and SNMP v3 credentials.")
     exit(1)
 
 try:
