@@ -34,13 +34,105 @@ class TPLinkVX231vPlaywright:
         from playwright.sync_api import sync_playwright
         self._log("Initialisiere Browser...")
         self.playwright = sync_playwright().start()
+        # Sparsame Einstellungen - Chromium ist auf einem Raspberry Pi der teuerste
+        # Teil des Laufs (mehrere Prozesse, viel RAM/CPU).
         self.browser = self.playwright.chromium.launch(headless=True, args=[
             '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
-            '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions'
+            '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions',
+            '--disable-background-networking', '--disable-sync', '--disable-default-apps',
+            '--disable-translate', '--no-first-run', '--mute-audio',
+            '--js-flags=--max-old-space-size=256'
         ])
         context = self.browser.new_context(ignore_https_errors=True, viewport={'width': 1280, 'height': 800})
+        # Bilder/Medien/Schriften nicht laden - spart CPU und RAM.
+        # (JS und CSS bleiben nötig: Login und Statusanzeigen laufen darüber.)
+        try:
+            context.route('**/*', lambda route: route.abort()
+                          if route.request.resource_type in ('image', 'media', 'font')
+                          else route.continue_())
+        except Exception:
+            pass
         self.page = context.new_page()
         self.page.set_default_timeout(30000)
+
+    def _page_text(self, limit=200):
+        """Sichtbaren Text der aktuellen Seite (für aussagekräftige Fehlermeldungen)."""
+        try:
+            text = self.page.evaluate("() => document.body ? document.body.innerText : ''") or ''
+        except Exception:
+            return ''
+        return " ".join(text.split())[:limit]
+
+    def _wait_until_logged_in(self, timeout_ms=15000):
+        """Wartet auf den eingeloggten Zustand.
+
+        Die Firmware benennt die Elemente je Version unterschiedlich, deshalb
+        zusätzlich ein Text-Fallback ('Ausloggen'/'Log out').
+        """
+        deadline = time.time() + timeout_ms / 1000
+        while time.time() < deadline:
+            try:
+                if self.page.query_selector('#topLogout, ul#ul-nav, #logOut, .logout, a[href*="logout"]'):
+                    return True
+                text = (self.page.evaluate("() => document.body ? document.body.innerText : ''") or '').lower()
+                if 'ausloggen' in text or 'log out' in text or 'logout' in text:
+                    return True
+            except Exception:
+                pass
+            time.sleep(0.5)
+        return False
+
+    def trigger_advanced_settings(self, timeout=5000):
+        """Wechselt in der Weboberfläche auf 'Erweiterte Einstellungen'."""
+        try:
+            self.page.locator("ul#ul-nav li").filter(has_text="Erweiterte Einstellungen").first.click(timeout=timeout)
+            time.sleep(1.5)
+            return True
+        except Exception:
+            return False
+
+    def get_dsl_error_counters(self):
+        """Liest nur die DSL-Fehlerzähler (UCRC/DCRC) aus der Weboberfläche.
+
+        Diese beiden Zähler liefert die JSON-/API-Seite des Routers nicht (im
+        Device-Test hat kein OID CRC-/FEC-Zähler geliefert). Rückgabe:
+        {'Fehler Upload (Pakete)': str, 'Fehler Download (Pakete)': str} oder None.
+        """
+        if not self.page and not self.login():
+            return None
+
+        ids = {"Fehler Upload (Pakete)": "UCRC", "Fehler Download (Pakete)": "DCRC"}
+
+        def read():
+            return self.page.evaluate("""(ids) => {
+                const out = {};
+                for (const [k, id] of Object.entries(ids)) {
+                    const el = document.getElementById(id);
+                    out[k] = el ? (el.textContent || '').trim() : '';
+                }
+                return out;
+            }""", ids)
+
+        try:
+            values = read()
+            if not all(values.values()):
+                # Werte erscheinen erst kurz nach dem Wechsel auf die DSL-Seite ->
+                # bis zu 12 s warten (auf schwacher Hardware dauert das Laden länger)
+                self.trigger_advanced_settings()
+                deadline = time.time() + 12
+                while time.time() < deadline:
+                    values = read()
+                    if all(values.values()):
+                        break
+                    time.sleep(1.0)
+            if not all(values.values()):
+                self._log("Fehlerzähler (UCRC/DCRC) nicht gefunden.")
+                return None
+            self._log(f"Fehlerzähler gelesen: {values}")
+            return values
+        except Exception as e:
+            self._log(f"Fehler beim Lesen der Fehlerzähler: {e}")
+            return None
 
     def _write_error_file(self, message, playwright_log=""):
         Path('logs').mkdir(exist_ok=True)
@@ -58,39 +150,79 @@ class TPLinkVX231vPlaywright:
             f.write("\nLogin fehlgeschlagen!")
         sys.exit(1)
 
-    def login(self):
+    def login(self, fatal=True):
+        """Login in der Weboberfläche.
+
+        fatal=False: Fehlschläge werden nur gemeldet (für optionale Schritte wie
+        das Aufwecken der Router-Tabellen oder das Nachlesen der Fehlerzähler).
+        """
         if not self.page: self._init_browser()
         try:
             self._log(f"\nLogin {self.base_url}...")
-            self.page.goto(self.base_url, wait_until='domcontentloaded')
+            response = self.page.goto(self.base_url, wait_until='load')
+            status = response.status if response else None
 
-            self._log("Eingabe der Anmeldedaten...")
-            self.page.evaluate(f"document.getElementById('pc-login-user').value = '{self.username}';")
-            self.page.evaluate(f"document.getElementById('pc-login-password').value = '{self.password}';")
+            # Mehrere Versuche: auf langsamen Geräten (Raspberry Pi) ist das Login-JS
+            # noch nicht bereit, wenn geklickt wird - der Klick verpufft dann.
+            for attempt in (1, 2, 3):
+                try:
+                    self.page.wait_for_selector('#pc-login-user', state='attached', timeout=15000)
+                except Exception:
+                    # Kein Formular: entweder bereits angemeldet oder Fehlerseite
+                    # (z. B. HTTP 415 "admin account has logged in").
+                    if self._wait_until_logged_in(3000):
+                        self._log("Bereits angemeldet.")
+                        return True
+                    message = (f"Loginformular nicht gefunden (HTTP {status})."
+                               f" Stattdessen angezeigt: {self._page_text()}")
+                    if fatal:
+                        self._write_error_file(message)
+                    else:
+                        self._log(f"Login nicht möglich: {message}", force=True)
+                    return False
 
-            self._log("Klicke Login-Button...")
-            self.page.evaluate("const btn = document.getElementById('pc-login-btn'); if(btn) btn.click();")
+                self._log(f"Eingabe der Anmeldedaten (Versuch {attempt})...")
+                self.page.evaluate(f"document.getElementById('pc-login-user').value = '{self.username}';")
+                self.page.evaluate(f"document.getElementById('pc-login-password').value = '{self.password}';")
+                time.sleep(1.0)
 
-            # Kurze Pause für die Verarbeitung des Logins
-            time.sleep(2)
+                self._log("Klicke Login-Button...")
+                self.page.evaluate("const btn = document.getElementById('pc-login-btn'); if(btn) btn.click();")
+                time.sleep(2)
 
-            # Popup-Handling gemäß Referenz-Skript (Text-basiert)
-            popup_active = self.page.evaluate("""() => {
-                return document.body && document.body.innerText && 
-                       document.body.innerText.toLowerCase().includes('gleichzeitig anmelden');
-            }""")
+                # Popup-Handling gemäß Referenz-Skript (Text-basiert)
+                popup_active = self.page.evaluate("""() => {
+                    return document.body && document.body.innerText && 
+                           document.body.innerText.toLowerCase().includes('gleichzeitig anmelden');
+                }""")
+                if popup_active:
+                    self._log("Popup 'Gleichzeitig anmelden' erkannt und bestätigt.")
+                    self.page.evaluate("document.querySelector('.btn-msg-ok')?.click();")
+                    time.sleep(1)
 
-            if popup_active:
-                self._log("Popup 'Gleichzeitig anmelden' erkannt und bestätigt.")
-                self.page.evaluate("document.querySelector('.btn-msg-ok')?.click();")
-                time.sleep(1)
+                if self._wait_until_logged_in(8000):
+                    self._log("Login-Vorgang abgeschlossen.")
+                    return True
 
-            self._log("Login-Vorgang abgeschlossen.")
-            return True
+                self._log("Login noch nicht bestätigt - neuer Versuch...")
+                try:
+                    self.page.reload(wait_until='load')
+                except Exception:
+                    pass
+
+            message = f"Login nicht erfolgreich (HTTP {status}). Angezeigt wird: {self._page_text()}"
+            if fatal:
+                self._write_error_file(message)
+            else:
+                self._log(message, force=True)
+            return False
 
         except Exception as e:
             msg = f"Login-Fehler: {str(e)}"
-            self._write_error_file(msg, f"URL: {self.base_url}")
+            if fatal:
+                self._write_error_file(msg, f"URL: {self.base_url}")
+            else:
+                self._log(msg, force=True)
             return False
 
     def downloadrouterlog_to_memory(self):
@@ -307,11 +439,9 @@ class TPLinkVX231vPlaywright:
             })
         return result
 
-    def get_dsl_data(self):
-        if not self.page:
-            return {}
-
-        def read_dsl_ids():
+    def _read_dsl_ids(self):
+        """DSL-Werte aus der Weboberfläche lesen (Element-IDs der Status-/DSL-Seite)."""
+        try:
             return self.page.evaluate("""() => {
                 const ids = {
                     "Aktuelle Upload-Rate (kbit/s)": "upstreamCurrRate",
@@ -340,15 +470,45 @@ class TPLinkVX231vPlaywright:
                 out.ip6_curr = ip6 ? (ip6.value || '').trim() : '';
                 return out;
             }""")
+        except Exception:
+            return {}
+
+    def wake_dsl(self, timeout_ms=12000):
+        """Nur die DSL-Seite anfragen.
+
+        Das weckt die DSL-Tabelle (die neuere Firmware füllt sie erst nach einem
+        Besuch der Weboberfläche) und ist zugleich die Seite mit den Fehlerzählern.
+        Der Netzplan (Clientdaten) wird dafür nicht gebraucht - die kommen per
+        SNMP-ARP/lokalem ARP-Scan.
+        """
+        try:
+            if not self.page:
+                return False
+            self._log("Wecke DSL-Tabelle (Seite 'Erweiterte Einstellungen')...")
+            self.trigger_advanced_settings()
+            deadline = time.time() + timeout_ms / 1000
+            while time.time() < deadline:
+                values = self._read_dsl_ids()
+                if values.get('Aktuelle Download-Rate (kbit/s)') or values.get('Aktuelle Upload-Rate (kbit/s)'):
+                    return True
+                time.sleep(1.0)
+            self._log("DSL-Werte kamen nicht innerhalb des Zeitlimits.")
+            return False
+        except Exception as e:
+            self._log(f"Aufwecken der DSL-Seite fehlgeschlagen: {e}")
+            return False
+
+    def get_dsl_data(self):
+        if not self.page:
+            return {}
 
         try:
-            dsl_data = read_dsl_ids()
+            dsl_data = self._read_dsl_ids()
             has_rates = bool(dsl_data.get("Aktuelle Download-Rate (kbit/s)") or dsl_data.get("Aktuelle Upload-Rate (kbit/s)"))
             if has_rates:
                 return dsl_data
-            self.page.locator("ul#ul-nav li").filter(has_text="Erweiterte Einstellungen").first.click()
-            time.sleep(1.0)
-            return read_dsl_ids()
+            self.trigger_advanced_settings()
+            return self._read_dsl_ids()
         except Exception:
             return {}
 
