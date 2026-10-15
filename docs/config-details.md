@@ -38,7 +38,7 @@ Zentrale Steuerung für den KI/Leitungs-Analyseblock im Statusreport.
 ## [SNMP]
 
 Optionale Zugangsparameter für SNMP in der Version 3 (USM-Benutzerauthentifizierung).<br>
-Der Router muss dafür auf **SNMP v3** mit einem Benutzer umgestellt sein (siehe [Aktivierung superadmin, Telnet, SNMP und iPerf3](superadmin_telnet_snmp_iperf.md)) - ein Community-String wie bei v2c gibt es dort nicht mehr.
+Der Router muss dafür auf **SNMP v3** mit einem Benutzer umgestellt sein (siehe [Aktivierung superadmin, Telnet, SNMP und iPerf3](https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md)) - ein Community-String wie bei v2c gibt es dort nicht mehr.
 
 *   `snmpuser`: Der am Router angelegte SNMP-Benutzername.
 *   `snmppass`: Das zugehörige Authentifizierungs-Passwort.
