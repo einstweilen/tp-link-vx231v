@@ -39,6 +39,8 @@ nav:
   - Auswertungen:
     - Statusreport: report.md
     - Browser-Dashboard: dashboard.md
+  - Für Entwickler:
+    - OID-Referenz (Datenmodell): oid-referenz.md
   - Sonstiges:
     - Lokalisierung: lokalisierung.md
 

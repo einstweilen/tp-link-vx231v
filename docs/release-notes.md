@@ -24,6 +24,11 @@
   * Chromium lädt keine Bilder/Medien/Schriften mehr, Hintergrunddienste sind abgeschaltet; der Lauf startet mit niedriger Priorität (`nice`), damit z. B. ein Raspberry Pi bedienbar bleibt.
   * Neue Schalter in der `config.ini`: `crc_source`, `warmup`, `wake_clients` (siehe [config.ini im Detail](config-details.md)).
 
+* **Dokumentation**
+  * Neue [OID-Referenz](oid-referenz.md): alle Datenquellen des Routers - welche 22 der 776 `DEV2_*`-OIDs
+    Daten liefern, welche leer bleiben, die wichtigsten Felder (Clients, DSL, WAN, WLAN) und die
+    SNMP-OIDs inkl. 32-Bit-Fallstricke.
+
 * **Statusreport**
   * Der Firmware-Hinweis zeigt jetzt **alle** Versionen, die neuer sind als die installierte - nicht mehr nur die neueste. Beispiel: Beim Sprung von 0.24 auf 0.26 wird auch der notwendige Zwischenschritt 0.25 mit seinen Release Notes angezeigt.
   * Wurde gerade aktualisiert, listet der Hinweis die Versionen seit dem vorherigen Stand (48 Stunden lang); bei einem ausstehenden Update steht zusätzlich „Online verfügbar" und die Reihenfolge der Updates.
