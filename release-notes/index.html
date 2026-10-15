@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -614,6 +614,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#15102026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.10.2026
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#22032026" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -961,6 +972,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#15102026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.10.2026
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#22032026" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1076,6 +1098,49 @@
   <h1>Release Notes</h1>
 
 <h2 id="changelog-updates">Changelog / Updates</h2>
+<h3 id="15102026">15.10.2026</h3>
+<ul>
+<li><strong>Anpassung an die neue Router-Firmware (0.26.0 / Build 260908)</strong></li>
+<li>Der Router liefert DSL- und Clientdaten erst, nachdem die Weboberfläche sie angefragt hat - vorher kommen über die API dauerhaft leere Tabellen. Das Skript erkennt das, <strong>weckt</strong> die Tabellen einmal kurz per Browser-Besuch (nur die DSL-Seite) und liest danach erneut.</li>
+<li>
+<p>Betroffen sind DSL-Werte, Client-Listen und die CRC-Fehlerzähler. Ohne Aufwecken bleiben die Werte leer - deshalb funktionierte die Sammlung nach dem Firmware-Update zunächst nicht.</p>
+</li>
+<li>
+<p><strong>SNMP v3 statt v2c</strong></p>
+</li>
+<li>Der Aufruf erfolgt jetzt mit <strong>Benutzer-Authentifizierung (USM)</strong>: <code>-v3 -l authNoPriv -u &lt;Benutzer&gt; -a MD5 -A &lt;Passwort&gt;</code>.</li>
+<li>In der <code>config.ini</code> ersetzt das Paar <code>snmpuser</code> / <code>snmppass</code> den bisherigen Community-String (<code>community</code>). Optional: <code>snmpauth</code>, <code>snmplevel</code>, <code>snmppriv</code>, <code>snmpprivproto</code>.</li>
+<li>
+<p>Grund: Der Router kennt seit der Firmware-Umstellung keine Community-Strings mehr.</p>
+</li>
+<li>
+<p><strong>API-Zugriff über HTTPS</strong></p>
+</li>
+<li>
+<p>Der Router verlangt HTTPS; über <code>http://</code> liefert er nur die Datenschutz-/Willkommensseite (Fehler „Unknown error rsa_key"). Das Skript spricht die API daher immer über <code>https://</code> an.</p>
+</li>
+<li>
+<p><strong>Client-Erkennung robuster</strong></p>
+</li>
+<li>Neue Client-Quelle per <strong>lokalem ARP-Scan</strong> (Ping-Sweep der eigenen Subnetze + ARP-Tabelle) - ohne SNMP und ohne Router-Login. Ist als Fallback aktiv, wenn Router- und SNMP-ARP-Liste leer sind; nutzt auch die in der Datenbank gelernten Hostnamen.</li>
+<li>SNMP-ARP bleibt die stabile Basis; API-Werte (Signalstärke, Raten, Byte-Zähler) reichern sie an.</li>
+<li>
+<p>Lief die Client-Abfrage ins Leere, wurden bisher alle Clients als „offline" markiert - das verhindert das Skript jetzt.</p>
+</li>
+<li>
+<p><strong>Sparsamer Umgang mit dem Browser</strong></p>
+</li>
+<li>Pro Lauf wird nur noch <strong>ein</strong> Browser-Zugriff gestartet (Aufwecken und CRC-Nachlesen in einer Sitzung).</li>
+<li>Chromium lädt keine Bilder/Medien/Schriften mehr, Hintergrunddienste sind abgeschaltet; der Lauf startet mit niedriger Priorität (<code>nice</code>), damit z. B. ein Raspberry Pi bedienbar bleibt.</li>
+<li>
+<p>Neue Schalter in der <code>config.ini</code>: <code>crc_source</code>, <code>warmup</code>, <code>wake_clients</code> (siehe <a href="../config-details/">config.ini im Detail</a>).</p>
+</li>
+<li>
+<p><strong>Statusreport</strong></p>
+</li>
+<li>Der Firmware-Hinweis zeigt jetzt <strong>alle</strong> Versionen, die neuer sind als die installierte - nicht mehr nur die neueste. Beispiel: Beim Sprung von 0.24 auf 0.26 wird auch der notwendige Zwischenschritt 0.25 mit seinen Release Notes angezeigt.</li>
+<li>Wurde gerade aktualisiert, listet der Hinweis die Versionen seit dem vorherigen Stand (48 Stunden lang); bei einem ausstehenden Update steht zusätzlich „Online verfügbar" und die Reihenfolge der Updates.</li>
+</ul>
 <h3 id="22032026">22.03.2026</h3>
 <ul>
 <li><strong>KI-Analyse &amp; Statusreport &amp; Dokumentation</strong></li>
@@ -1272,7 +1337,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

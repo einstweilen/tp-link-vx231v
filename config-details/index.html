@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1170,10 +1170,21 @@
 </li>
 </ul>
 <h2 id="snmp">[SNMP]</h2>
-<p>Optionale Zugangsparameter für SNMP (Simple Network Management Protocol).</p>
+<p>Optionale Zugangsparameter für SNMP in der Version 3 (USM-Benutzerauthentifizierung).<br>
+Der Router muss dafür auf <strong>SNMP v3</strong> mit einem Benutzer umgestellt sein (siehe <a href="https://github.com/einstweilen/tp-link-vx231v/blob/main/superadmin_telnet_snmp_iperf.md">Aktivierung superadmin, Telnet, SNMP und iPerf3</a>) - ein Community-String wie bei v2c gibt es dort nicht mehr.</p>
 <ul>
-<li><code>community</code>: Das SNMP-Passwort bzw. der "Community String" (oft <code>public</code>).</li>
+<li><code>snmpuser</code>: Der am Router angelegte SNMP-Benutzername.</li>
+<li><code>snmppass</code>: Das zugehörige Authentifizierungs-Passwort.<ul>
+<li><strong>Nutzung:</strong> Damit liest das Skript im <code>--update</code> die ARP-Tabelle des Routers aus (Client-Liste) und prüft, ob SNMP verfügbar ist. Beide Werte müssen exakt den Routerwerten entsprechen.</li>
 </ul>
+</li>
+<li><em>Optional:</em> <code>snmpauth</code> (Standard <code>MD5</code>, alternativ <code>SHA</code>) und <code>snmplevel</code> (Standard <code>authNoPriv</code>, alternativ <code>noAuthNoPriv</code>/<code>authPriv</code>).</li>
+<li><em>Nur für <code>snmplevel = authPriv</code>:</em> <code>snmppriv</code> (Privacy-Passwort) und <code>snmpprivproto</code> (Standard <code>DES</code>, alternativ <code>AES</code>).</li>
+</ul>
+<blockquote>
+<p>Hinweis: Das Passwort steht beim Aufruf in der Prozessliste (<code>ps</code>). Wer das vermeiden will, kann stattdessen <code>~/.snmp/snmp.conf</code> mit <code>defSecurityName</code>, <code>defAuthType</code>, <code>defAuthPassphrase</code> und <code>defSecurityLevel</code> nutzen.<br>
+Fehlen <code>snmpuser</code>/<code>snmppass</code>, arbeitet das Skript weiter - Clients werden dann über die API bzw. den lokalen ARP-Scan im eigenen Netz ermittelt.</p>
+</blockquote>
 <h2 id="gui">[GUI]</h2>
 <p>Login-Daten für das reguläre TP-Link Web-Interface.</p>
 <ul>
@@ -1181,7 +1192,10 @@
 <li><strong>Nutzung:</strong> Das Skript nutzt entweder eine API oder einen headless Browser, um die Daten vom Router auszulesen.<br>Ohne aktiviertes Telnet/SNMP werden auch die DSL-Parameter (<code>--update</code>) automatisch auf diesem Weg ermittelt.</li>
 </ul>
 </li>
-<li><code>force_scraping</code> False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen. </li>
+<li><code>force_scraping</code> False oder True : Normalerweise wird zuerst die API genutzt, um die Routerdaten auszulesen,falls das fehlschlägt wird automatisch Playwright verwendet. Wenn man den Parameter auf True setzt, wird sofort das Playwright GUI Scraping verwendet, anstatt die API zu nutzen.</li>
+<li><code>crc_source</code> (<code>gui</code> oder <code>aus</code>): Die DSL-Fehlerzähler (CRC) liefert nur die Weboberfläche, nicht die API. <code>gui</code> (Standard) liest sie bei jedem <code>--update</code> per kurzem Browser-Zugriff nach, <code>aus</code> überspringt das (Zähler bleiben <code>0</code>, der Lauf wird schneller).</li>
+<li><code>warmup</code> (<code>auto</code> oder <code>aus</code>): Die aktuelle Router-Firmware füllt ihre DSL-/Client-Tabellen erst, nachdem die Weboberfläche sie angefragt hat - über die API kommen sonst leere Werte. <code>auto</code> (Standard) besucht in diesem Fall einmal kurz die Weboberfläche (Aufwecken) und liest danach erneut; <code>aus</code> verzichtet darauf.</li>
+<li><code>wake_clients</code> (<code>an</code> oder <code>aus</code>): Beim Aufwecken standardmäßig nur die DSL-Seite öffnen (<code>aus</code>). <code>an</code> öffnet zusätzlich den Netzplan - das liefert die Clientdaten samt Signalstärke/Raten aus der API, braucht aber deutlich länger (auf einem Raspberry Pi spürbar). Ohne diesen Schritt kommen die Clients wie gehabt über SNMP/den lokalen ARP-Scan.</li>
 </ul>
 <h2 id="email">[Email]</h2>
 <p>Einstellungen für den automatisierten E-Mail-Versand des HTML-Statusreports (<code>vx-info.py --report-send</code>).</p>
@@ -1329,7 +1343,7 @@ Die hatte ich ursprünglich für mich ergänzt und dann im Report gelassen, fall
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
