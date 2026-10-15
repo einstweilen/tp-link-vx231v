@@ -104,6 +104,9 @@ main() {
         success "config.ini existiert bereits."
     fi
 
+    # Die Datei enthält Zugangsdaten - nur für den Eigentümer lesbar
+    chmod 600 config.ini 2>/dev/null || true
+
     step "[8/12] Interaktive Router-Konfiguration"
     while true; do
         prompt_text "Wie lautet die IP-Adresse des Routers? [192.168.1.1]: "
@@ -122,6 +125,9 @@ main() {
             sed -i "s/routerip = .*/routerip = $ROUTER_IP/g" config.ini
             sed -i "s/password = .*/password = $GUI_PASS/g" config.ini
         fi
+
+        # sed ersetzt die Datei (u. a. macOS) und setzt die Rechte dabei zurück
+        chmod 600 config.ini 2>/dev/null || true
 
         info "Teste Login mit den angegebenen Daten (API)..."
         python_test_code="

@@ -117,3 +117,37 @@ ai_api_key = AIza …
 ```
 
 Um das Modul im Statusreport zu deaktivieren, muss der Abschnittsname von `[AI]` in `[noAI]` geändert werden bzw. um es wieder zu reaktivieren, muss der Abschnittsname von `[noAI]` zurück in `[AI]` geändert werden.
+
+## Zugangsdaten und Dateirechte
+
+Die `config.ini` enthält alle Zugangsdaten (Router-Passwort, SNMP-Benutzer und -Passwort, Mail-Zugang,
+API-Keys). Sie ist per `.gitignore` vom Repository ausgeschlossen und wird **nur lokal** gehalten -
+zweckmäßig zusätzlich mit restriktiven Dateirechten:
+
+```bash
+chmod 600 config.ini      # nur der Eigentümer darf lesen und schreiben
+```
+
+`install.sh` setzt das automatisch mit (auch nach dem Schreiben der interaktiven Eingaben in Schritt 8,
+weil `sed` die Datei ersetzt und die Rechte dabei zurücksetzt).
+
+### Alternative für manuelle SNMP-Befehle: `~/.snmp/snmp.conf`
+
+net-snmp liest Zugangsdaten auch aus einer eigenen Datei (Verzeichnis `700`, Datei `600`):
+
+```ini
+defVersion        3
+defSecurityLevel  authNoPriv
+defSecurityName   <snmpuser>
+defAuthType       MD5
+defAuthPassphrase <snmppass>
+```
+
+Damit genügt für Handabfragen `snmpget -v3 <routerip> 1.3.6.1.2.1.1.5.0` ohne `-u`/`-a`/`-A` - der
+Benutzername und das Passwort stehen dann nicht mehr in der Prozessliste (`ps`) und nicht in der
+Shell-Historie. Alternative Orte sind `~/.snmp/snmp.conf` (pro Benutzer, hat Vorrang) und eine
+systemweite `snmp.conf` (z. B. `/etc/snmp/snmp.conf`; auf dem Raspberry Pi vorhanden).
+
+Die Skripte nutzen diese Datei **nicht**: sie bauen die Optionen immer aus `[SNMP]` in der `config.ini` und
+melden fehlende Werte als Konfigurationsfehler (siehe [SNMP](#snmp)). Wer die Zugangsdaten ausschließlich
+dort pflegen möchte, muss diese Prüfung anpassen.
