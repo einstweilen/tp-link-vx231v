@@ -43,6 +43,91 @@ class TPLinkVX231vReport:
         _, rows = self._run_query("SELECT model FROM system ORDER BY time_ut DESC LIMIT 1")
         return rows[0][0] if rows else "Router"
 
+    def _get_firmware_entries(self):
+        """Alle Firmware-Einträge der TP-Link-Downloadseite (neueste zuerst).
+
+        TP-Link listet jede Version als eigene Tabelle - bisher wurde nur die erste
+        (neueste) ausgewertet. Es erscheinen aber mehrere Versionen gleichzeitig
+        (z. B. 0.25.0 und 0.26.0; 0.26.0 setzt laut Release Notes 0.25.0 voraus).
+        """
+        import urllib.request
+        url = "https://www.tp-link.com/de/support/download/vx231v/#Firmware"
+        entries = []
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                content = response.read().decode('utf-8', errors='ignore')
+
+            for table_content in re.findall(
+                    r'<table[^>]*class="download-resource-table"[^>]*>(.*?)</table>', content, re.S | re.I):
+                title_match = re.search(r'<th[^>]*class="download-resource-name"[^>]*>.*?<p>(.*?)</p>',
+                                        table_content, re.S | re.I)
+                title = title_match.group(1).strip() if title_match else "Unbekannt"
+
+                link_match = re.search(r'href="([^"]+\.zip)"', table_content, re.I)
+                link = link_match.group(1).strip() if link_match else None
+
+                date_ut = 0
+                date_match = re.search(r'Datum der Veröffentlichung:.*?</span>\s*<span>(.*?)</span>',
+                                       table_content, re.S | re.I)
+                if date_match:
+                    try:
+                        date_ut = int(datetime.strptime(date_match.group(1).strip(), '%Y-%m-%d').timestamp())
+                    except Exception:
+                        pass
+
+                notes_html = ""
+                more_row = re.search(r'<tr[^>]*class="more-info"[^>]*>(.*?)</tr>', table_content, re.S | re.I)
+                if more_row:
+                    td_match = re.search(r'<td[^>]*class="more"[^>]*>(.*?)</td>', more_row.group(1), re.S | re.I)
+                    if td_match:
+                        notes_html = td_match.group(1).strip()
+
+                version_str = ""
+                for source in (title, link.split('/')[-1] if link else ""):
+                    m = re.search(r'_V?\d+_((\d+\.)+\d+)', source) or re.search(r'_V?(\d+\.\d[\d\.]*)_', source)
+                    if m:
+                        version_str = m.group(1)
+                        break
+
+                entries.append({'title': title, 'version_str': version_str,
+                                'version': self._extract_version_tuple(version_str),
+                                'date_ut': date_ut, 'notes_html': notes_html, 'link': link})
+        except Exception as e:
+            self._log(f"Firmware-Scraping fehlgeschlagen: {e}")
+        return entries
+
+    def _extract_version_tuple(self, fw_str, fallback_str=None):
+        """Versionsnummer in ein vergleichbares Tupel wandeln.
+
+        Online: '0.26.0' (aus ..._V1_0.26.0 Build ...) | Lokal: '231.0.26' -> (0, 26)
+        """
+        if not fw_str:
+            return (0,)
+
+        def to_tuple(text):
+            m = re.search(r'(\d+(?:\.\d+)+)', text)
+            if not m:
+                return None
+            parts = [int(part) for part in m.group(1).split('.')]
+            while len(parts) > 2 and parts[-1] == 0:
+                parts.pop()
+            return tuple(parts) if parts else None
+
+        if fw_str.startswith('231.'):
+            m = re.match(r'^231\.((\d+\.)*\d+)', fw_str)
+            if m:
+                return to_tuple(m.group(1)) or (0,)
+
+        result = to_tuple(fw_str)
+        if result:
+            return result
+        if fallback_str:
+            m = re.search(r'_V?[\d\.]+_((\d+\.)+\d+)', fallback_str)
+            if m:
+                return to_tuple(m.group(1)) or (0,)
+        return (0,)
+
     def _get_latest_firmware_info(self):
         import urllib.request
         url = "https://www.tp-link.com/de/support/download/vx231v/#Firmware"
@@ -75,65 +160,39 @@ class TPLinkVX231vReport:
             return None, None, None, None
 
     def _check_firmware_update(self):
-        rn_title, rn_date, rn_txt, dl_link = self._get_latest_firmware_info()
+        """Neuere Firmware-Versionen zur installierten ermitteln (alle, nicht nur die neueste).
+
+        Rückgabe: (anzeigen?, vorherige_version, installierte_version, eintraege)
+        eintraege: neuere Versionen (neueste zuerst); im 48-h-Fall die Notizen zur
+        gerade installierten Version.
+        """
+        entries = self._get_firmware_entries()
         _, rows = self._run_query("SELECT firmware, time_ut FROM system ORDER BY id DESC LIMIT 2")
-        if not rows or len(rows) < 1: 
-            return False, None, None, None, None, None
-            
-        act_fw, act_ts = rows[0][0], int(rows[0][1])
+        if not rows or len(rows) < 1:
+            return False, None, None, []
+
+        act_fw = rows[0][0]
         old_fw = rows[1][0] if len(rows) > 1 else None
         old_ts = int(rows[1][1]) if len(rows) > 1 else 0
-        
-        def extract_version_tuple(fw_str, fallback_str=None):
-            if not fw_str: return (0,)
-            import re
-            
-            # Check online standard structure: e.g. VX231v(DE)v1_0.23.0_...
-            # The version is between the first and second underscore.
-            m = re.search(r'^[^_]+_([^_]+)_', fw_str)
-            if m:
-                ver_str = m.group(1)
-                parts = [int(p) for p in ver_str.split('.') if p.isdigit()]
-                while len(parts) > 2 and parts[-1] == 0:
-                    parts.pop()
-                if parts:
-                    return tuple(parts)
-            
-            # Check local standard structure: e.g. 231.0.23 / 231.0.19
-            if fw_str.startswith('231.') or fw_str.startswith('0.'):
-                m = re.search(r'^\d+\.((\d+\.)*\d+)', fw_str)
-                if m:
-                    parts = [int(p) for p in m.group(1).split('.') if p.isdigit()]
-                    while len(parts) > 2 and parts[-1] == 0:
-                        parts.pop()
-                    if parts:
-                        return tuple(parts)
-                        
-            # Use fallback (rn_title) if parsing the link failed but it's an online check
-            if fallback_str:
-                m = re.search(r'_V?[\d\.]+_((\d+\.)+\d+)', fallback_str)
-                if m:
-                    parts = [int(p) for p in m.group(1).split('.') if p.isdigit()]
-                    while len(parts) > 2 and parts[-1] == 0:
-                        parts.pop()
-                    if parts:
-                        return tuple(parts)
-                
-            return (0,)
+        act_v = self._extract_version_tuple(act_fw)
 
-        act_v = extract_version_tuple(act_fw)
-        filename = dl_link.split('/')[-1] if dl_link else ""
-        web_v = extract_version_tuple(filename, fallback_str=rn_title)
-        
-        if act_v < web_v and web_v != (0,):
-            return True, old_fw, act_fw, rn_title, rn_date, rn_txt
-            
-        if act_v == web_v and web_v != (0,):
+        if act_v != (0,):
+            newer = [e for e in entries if e['version'] != (0,) and act_v < e['version']]
+            if newer:
+                return True, old_fw, act_fw, newer
+
             cutoff = (datetime.now() - timedelta(hours=48)).timestamp()
             if old_fw and old_fw != act_fw and old_ts > cutoff:
-                return True, old_fw, act_fw, rn_title, rn_date, rn_txt
-                
-        return False, old_fw, act_fw, rn_title, rn_date, rn_txt
+                # Wie beim Sprung 0.24 -> 0.26: alle Versionen zeigen, die seit dem
+                # vorherigen Stand dazugekommen sind (Zwischenschritte inklusive).
+                old_v = self._extract_version_tuple(old_fw)
+                if old_v != (0,) and old_v < act_v:
+                    match = [e for e in entries if e['version'] != (0,) and old_v < e['version']]
+                else:
+                    match = [e for e in entries if e['version'] == act_v]
+                return True, old_fw, act_fw, match or entries[:1]
+
+        return False, old_fw, act_fw, []
 
     def _build_client_sessions(self, hours=24):
         start_ts = int((datetime.now() - timedelta(hours=hours)).timestamp())
@@ -984,7 +1043,7 @@ class TPLinkVX231vReport:
         conn_since, ip4, ip6, down, up = self._get_connection_status()
         uptime_data = self._get_router_uptime()
         latest_ips = self._get_ip_changes(10)
-        fw_upd, fw_old, fw_act, rn_t, rn_d, rn_txt = self._check_firmware_update()
+        fw_upd, fw_old, fw_act, fw_entries = self._check_firmware_update()
         ai_text = self._run_ai_analysis(evt_hours)
         conn_analysis_html = self._get_connection_analysis(evt_hours)
         timeline = self._generate_timeline(evt_hours)
@@ -1048,13 +1107,33 @@ class TPLinkVX231vReport:
                 
             html += "</td></tr>"
             
-        if fw_upd:
-            rn_ds = datetime.fromtimestamp(rn_d).strftime('%d.%m.%Y') if rn_d else "Unbekannt"
+        if fw_upd and fw_entries:
+            def _ver_label(entry):
+                return entry.get('version_str') or '.'.join(str(p) for p in entry.get('version', ())) or entry.get('title', '')
+
+            act_v = self._extract_version_tuple(fw_act)
+            has_newer = any(e['version'] != (0,) and e['version'] > act_v for e in fw_entries)
+            available_line = ""
+            if has_newer:
+                available_line = ("Online verfügbar: <strong>"
+                                  + ", ".join(_ver_label(e) for e in fw_entries) + "</strong><br>")
+
+            order_line = ""
+            if has_newer and len(fw_entries) > 1:
+                ascending = sorted(fw_entries, key=lambda e: e['version'])
+                order_line = ("<div style='margin-top: 10px;'><strong>Bitte in dieser Reihenfolge aktualisieren:</strong> "
+                              + " &#10142; ".join(_ver_label(e) for e in ascending) + "</div>")
+
+            notes_blocks = ""
+            for e in fw_entries:
+                ds = datetime.fromtimestamp(e['date_ut']).strftime('%d.%m.%Y') if e.get('date_ut') else "Unbekannt"
+                notes_blocks += (f"<div style=\"border-top: 1px solid #ffcc80; margin-top: 10px; padding-top: 10px;\">"
+                                 f"<strong>Release Notes {_ver_label(e)} ({ds}):</strong><br>{e.get('notes_html') or ''}</div>")
+
             html += f"""<tr><td style="padding: 20px;"><div style="border: 2px solid #ff9800; background-color: #fff3e0; padding: 15px; border-radius: 5px;">
                 <h3 style="margin-top: 0; color: #e65100;">Firmware Hinweis</h3><div style="font-size: 14px; color: #333;">
                 Aktuell installiert <span style="color: #2e7d32; font-weight: bold;">{fw_act}</span><br>
-                Online verfügbar: <strong>{rn_t}</strong><br>
-                <div style="border-top: 1px solid #ffcc80; margin-top: 10px; padding-top: 10px;"><strong>Release Notes ({rn_ds}):</strong><br>{rn_txt}</div></div></div></td></tr>"""
+                {available_line}{order_line}{notes_blocks}</div></div></td></tr>"""
         if ai_text:
             html += f"<tr><td style='padding: 20px;'><div style='border: 2px solid #4acbd6; background-color: #f9ffff; padding: 15px; border-radius: 5px;'><h3 style='margin-top: 0; color: #008ba3;'>Auf einen Blick</h3><div style='font-size: 14px; color: #333;'>{ai_text}</div></div></td></tr>"
         if conn_analysis_html:
